@@ -20,11 +20,28 @@ function want(name: string): string | undefined {
   return process.env[name] || undefined;
 }
 
+/**
+ * Supabase issues two key formats. The legacy JWT keys are `anon` and
+ * `service_role`; the newer ones are `sb_publishable_…` and `sb_secret_…`, and
+ * the dashboard exports them under different names. Either form works with
+ * supabase-js, so accept both names rather than making someone rename a
+ * variable they pasted straight from the dashboard.
+ */
+function needEither(primary: string, alias: string): string {
+  const value = process.env[primary] || process.env[alias];
+  if (!value) {
+    throw new Error(
+      `${primary} is not set (${alias} also accepted). See .env.example. This route cannot work without it.`,
+    );
+  }
+  return value;
+}
+
 export const serverEnv = {
   supabaseUrl: () => need('SUPABASE_URL'),
-  supabaseAnonKey: () => need('SUPABASE_ANON_KEY'),
+  supabaseAnonKey: () => needEither('SUPABASE_ANON_KEY', 'SUPABASE_PUBLISHABLE_KEY'),
   /** Bypasses row level security. Never import this into a client component. */
-  supabaseServiceRoleKey: () => need('SUPABASE_SERVICE_ROLE_KEY'),
+  supabaseServiceRoleKey: () => needEither('SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SECRET_KEY'),
 
   redisUrl: () => want('UPSTASH_REDIS_REST_URL'),
   redisToken: () => want('UPSTASH_REDIS_REST_TOKEN'),
