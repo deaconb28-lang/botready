@@ -13,20 +13,35 @@
 @theme {
   /* surfaces */
   --color-ink:        #16181C;
-  --color-ink-60:     #5C6069;
+  --color-ink-60:     #5C6069;   /* 5.01:1 on paper: the lightest readable text */
+  /* 2.10:1 on paper. Never text. Meter segments, hairline dividers and the
+     input prefix only, and rule 7 below says so. */
   --color-ink-30:     #9AA0A6;
   --color-paper:      #E4E6E1;   /* cool ash, deliberately not cream */
   --color-card:       #F4F5F2;
   --color-rule:       #C6C9C1;
   --color-sheet:      #D6D9D2;   /* one step darker than paper, for page gutters */
 
-  /* status classes */
+  /* status classes.
+
+     Two of these are a shade darker than the values in the original palette,
+     and the reason is measured rather than aesthetic. Against --color-paper,
+     the surface almost every piece of text in this product sits on:
+
+                     was     now    WCAG AA needs 4.5:1
+       --color-warn  3.16    4.62   #B4702A -> #8F5921
+       --color-fail  4.43    4.61   #C2321F -> #BD311E
+       --color-pass  4.79    4.79   unchanged, already passed
+
+     Both were darkened by scaling toward black, which moves lightness and
+     leaves the hue where it was, so amber still reads as amber and the status
+     mapping is untouched. See the note in BUILD-PLAN.md. */
   --color-pass:       #1F6F5C;   /* 2xx */
-  --color-warn:       #B4702A;   /* 3xx */
-  --color-fail:       #C2321F;   /* 4xx */
+  --color-warn:       #8F5921;   /* 3xx */
+  --color-fail:       #BD311E;   /* 4xx */
   --color-server:     #5B3A7E;   /* 5xx */
-  --color-fail-dark:  #F0705C;   /* 4xx on the ink background only */
-  --color-ink-key:    #8E948C;   /* header-block key names on the ink surface */
+  --color-fail-dark:  #F0705C;   /* 4xx on the ink background only, 6.07:1 there */
+  --color-ink-key:    #8E948C;   /* header-block key names on the ink surface, 5.73:1 */
   --color-ink-seg:    #3A3D42;   /* empty meter segments on the ink surface */
 
   /* type */
@@ -76,4 +91,10 @@
    6. Findings carry a 3px left border in the status colour. Severity is never
       communicated by background fill, because a wall of tinted cards makes the
       worst finding indistinguishable from the third worst.
+
+   7. --color-ink-30 and --color-rule are never used for text. They measure
+      2.10:1 and 1.33:1 against paper, which is fine for a meter segment and
+      unreadable for a word. The lightest text colour is --color-ink-60. On the
+      inverted grade block the readable pair is --color-ink-key at 5.73:1.
+      apps/web/__tests__/contrast.test.ts asserts all of this.
 */

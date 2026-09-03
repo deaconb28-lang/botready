@@ -6,6 +6,11 @@ const config: NextConfig = {
   // worker, the web app and the tests all read the same files.
   transpilePackages: ['@botready/core'],
   poweredByHeader: false,
+  // The share card reads its two TTFs off disk. Without this they are not part
+  // of the deployed bundle and the card silently falls back to a default face.
+  outputFileTracingIncludes: {
+    '/api/og/[id]': ['./assets/fonts/**'],
+  },
   async headers() {
     return [
       {

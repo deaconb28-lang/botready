@@ -241,10 +241,27 @@ export function Microcopy({
   );
 }
 
-/** A raw request or response, printed as it happened. */
-export function EvidenceBlock({ children }: { children: ReactNode }) {
+/**
+ * A raw request or response, printed as it happened.
+ *
+ * tabIndex and the group role are not decoration: a block wide enough to scroll
+ * sideways is unreachable by keyboard without them, and these blocks are the
+ * part of the page a reader is most likely to want to select and forward.
+ */
+export function EvidenceBlock({
+  children,
+  label = 'Raw evidence',
+}: {
+  children: ReactNode;
+  label?: string;
+}) {
   return (
-    <pre className="mt-3 overflow-x-auto rounded-[4px] border border-dashed border-rule bg-paper px-[13px] py-[11px] font-data text-[12px] whitespace-pre-wrap text-ink-60">
+    <pre
+      tabIndex={0}
+      role="group"
+      aria-label={label}
+      className="mt-3 overflow-x-auto rounded-[4px] border border-dashed border-rule bg-paper px-[13px] py-[11px] font-data text-[12px] whitespace-pre-wrap text-ink-60"
+    >
       {children}
     </pre>
   );

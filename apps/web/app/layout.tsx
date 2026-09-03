@@ -11,8 +11,11 @@ import './globals.css';
  */
 const archivo = Archivo({
   subsets: ['latin'],
+  // No `weight`: naming one pins the font to a static instance and next/font
+  // then refuses the axes list. Leaving it out loads the variable font with
+  // both wght and wdth live, which is what the design needs — the width axis
+  // carries emphasis here instead of italics or colour.
   axes: ['wdth'],
-  weight: ['400', '600', '700', '800'],
   variable: '--font-archivo',
   display: 'swap',
 });

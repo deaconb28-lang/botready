@@ -142,7 +142,41 @@
     "observed": {
       "status": 200,
       "url_count": 214,
-      "has_lastmod": true
+      "has_lastmod": true,
+      "urls": [
+        {
+          "loc": "https://linear.app/",
+          "lastmod": "2026-08-30"
+        },
+        {
+          "loc": "https://linear.app/pricing",
+          "lastmod": "2026-08-12"
+        },
+        {
+          "loc": "https://linear.app/docs",
+          "lastmod": "2026-07-28"
+        },
+        {
+          "loc": "https://linear.app/about",
+          "lastmod": "2026-02-19"
+        },
+        {
+          "loc": "https://linear.app/changelog",
+          "lastmod": "2026-08-29"
+        },
+        {
+          "loc": "https://linear.app/integrations",
+          "lastmod": "2026-06-11"
+        },
+        {
+          "loc": "https://linear.app/security",
+          "lastmod": "2026-04-02"
+        },
+        {
+          "loc": "https://linear.app/customers",
+          "lastmod": "2026-05-20"
+        }
+      ]
     },
     "durationMs": 82
   },
@@ -189,17 +223,37 @@
     "observed": {
       "pages": [
         {
-          "url": "https://example.com/",
-          "title": "Example",
-          "description": "What Example does."
+          "url": "https://linear.app/",
+          "status": 200,
+          "title": "Linear",
+          "description": "Purpose-built issue tracking for software teams."
         },
         {
-          "url": "https://example.com/pricing",
-          "title": "Pricing — Example",
-          "description": "What it costs."
+          "url": "https://linear.app/pricing",
+          "status": 200,
+          "title": "Pricing — Linear",
+          "description": "Free, Basic, Business and Enterprise plans."
+        },
+        {
+          "url": "https://linear.app/docs",
+          "status": 200,
+          "title": "Docs — Linear",
+          "description": "How to use the API and the CLI."
+        },
+        {
+          "url": "https://linear.app/about",
+          "status": 200,
+          "title": "About — Linear",
+          "description": "Who builds Linear."
+        },
+        {
+          "url": "https://linear.app/changelog",
+          "status": 200,
+          "title": "Changelog — Linear",
+          "description": "What shipped, weekly."
         }
       ],
-      "pages_compared": 2,
+      "pages_compared": 5,
       "missing_title_or_description": 0,
       "duplicate_titles": 0,
       "duplicate_descriptions": 0
@@ -240,7 +294,7 @@
       "offer_nodes": 3,
       "prices_in_raw_html": 6,
       "prices_after_render": 6,
-      "read_from": "https://example.com/pricing"
+      "read_from": "https://linear.app/pricing"
     },
     "durationMs": 131
   },
@@ -248,7 +302,7 @@
     "key": "canonical_og",
     "status": "pass",
     "observed": {
-      "canonical": "https://example.com/",
+      "canonical": "https://linear.app/",
       "og_missing": [],
       "og_present": [
         "og:title",
@@ -285,7 +339,7 @@
     "status": "pass",
     "observed": {
       "hops": 1,
-      "url": "https://example.com/docs/api"
+      "url": "https://linear.app/docs/api"
     },
     "durationMs": 152
   },
@@ -313,7 +367,7 @@
       "walled_paths": [],
       "paths_checked": [
         {
-          "url": "https://example.com/docs",
+          "url": "https://linear.app/docs",
           "status": 200
         }
       ]

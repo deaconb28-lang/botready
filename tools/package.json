@@ -1,0 +1,15 @@
+{
+  "name": "@botready/tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Checks that need a real browser pointed at a running app: accessibility, focus, reduced motion, and the share card.",
+  "scripts": {
+    "audit:ui": "node audit-ui.mjs",
+    "typecheck": "echo 'no TypeScript in tools'"
+  },
+  "dependencies": {
+    "axe-core": "^4.13.0",
+    "playwright": "1.56.0"
+  }
+}

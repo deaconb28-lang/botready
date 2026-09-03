@@ -23,10 +23,18 @@ export function TwoReaders({
   left,
   right,
   example = false,
+  heading,
 }: {
   left: ReaderSide;
   right: ReaderSide;
   example?: boolean;
+  /**
+   * A heading for the pair. The result page has a visible h2 above this
+   * component; the landing page does not, and without one the reader headings
+   * are an h3 straight after the hero's h1. Pass the text and it renders
+   * screen-reader-only, so the outline is intact either way.
+   */
+  heading?: string;
 }) {
   // Bars are drawn in proportion to the character counts, so the visual gap is
   // the measured gap rather than a decision made in CSS.
@@ -34,6 +42,7 @@ export function TwoReaders({
 
   return (
     <div>
+      {heading ? <h2 className="sr-only">{heading}</h2> : null}
       <div className="grid grid-cols-1 border-y border-ink md:grid-cols-2">
         <Reader side={left} peak={peak} />
         <div className="border-t border-ink md:border-l md:border-t-0">
@@ -41,7 +50,7 @@ export function TwoReaders({
         </div>
       </div>
       {example ? (
-        <p className="px-6 pt-3 font-data text-micro text-ink-30">
+        <p className="px-6 pt-3 font-data text-micro text-ink-60">
           An example, drawn from a real scan of a client-rendered site. Run a check to see
           your own.
         </p>

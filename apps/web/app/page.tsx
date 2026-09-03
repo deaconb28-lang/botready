@@ -34,6 +34,7 @@ export default function LandingPage() {
         </section>
 
         <TwoReaders
+          heading="The same page, two readers"
           example
           left={{
             heading: 'What Chrome gets',

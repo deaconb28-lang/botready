@@ -247,8 +247,12 @@ function semanticLandmarksCheck(input: DocumentCheckInput): CheckResult {
 }
 
 function titleMetaDistinctCheck(input: DocumentCheckInput): CheckResult {
+  // The status travels with each page because the fix pack reads this: the
+  // generated llms.txt may only name URLs the scan actually saw return 200,
+  // and this is the only place that fact is recorded per URL.
   const target = {
     url: input.targetUrl,
+    status: input.rawResponse.status,
     title: input.renderFailed ? input.rawFacts.title : input.renderedFacts.title,
     description: input.renderFailed
       ? input.rawFacts.metaDescription
@@ -256,7 +260,12 @@ function titleMetaDistinctCheck(input: DocumentCheckInput): CheckResult {
   };
   const others = input.pages
     .filter((p) => p.status >= 200 && p.status < 300)
-    .map((p) => ({ url: p.url, title: p.facts.title, description: p.facts.metaDescription }));
+    .map((p) => ({
+      url: p.url,
+      status: p.status,
+      title: p.facts.title,
+      description: p.facts.metaDescription,
+    }));
 
   const pages = [target, ...others];
   const observed = { pages };

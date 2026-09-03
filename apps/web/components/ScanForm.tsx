@@ -64,7 +64,7 @@ export function ScanForm({
         <div className="flex flex-1 items-center">
           <span
             aria-hidden="true"
-            className="pl-4 font-data text-[14px] text-ink-30 select-none"
+            className="pl-4 font-data text-[14px] text-ink-60 select-none"
           >
             https://
           </span>
@@ -74,7 +74,6 @@ export function ScanForm({
             autoComplete="url"
             autoCapitalize="off"
             spellCheck={false}
-            /* eslint-disable-next-line jsx-a11y/no-autofocus */
             autoFocus={autoFocus}
             value={value}
             onChange={(e) => {
@@ -85,7 +84,7 @@ export function ScanForm({
             aria-label="Site to check"
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? 'scan-error' : 'scan-limits'}
-            className="w-full flex-1 border-0 bg-transparent px-2.5 py-[15px] font-data text-[14px] text-ink outline-none placeholder:text-ink-30"
+            className="w-full flex-1 border-0 bg-transparent px-2.5 py-[15px] font-data text-[14px] text-ink outline-none placeholder:text-ink-60"
           />
         </div>
         <button

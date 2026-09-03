@@ -84,13 +84,19 @@
 /* Every animation in the app is declared here so the reduced-motion opt-out is
    in one place and cannot be forgotten in a component. */
 
+/* Never applied to text. Dimming a word to 42% takes it below the contrast
+   floor for as long as the animation runs, and "it was only mid-keyframe" is
+   not a defence to somebody who cannot read it. The pulse belongs on a marker
+   that carries no words: see .br-pulse-dot below. */
 @keyframes br-pulse {
   0%,
   100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.42;
+    opacity: 0.35;
+    transform: scale(0.72);
   }
 }
 
@@ -105,7 +111,9 @@
   }
 }
 
-.br-pulse {
+/* A 7px square that breathes while something is in flight. Decorative, so it
+   is aria-hidden at every call site and the live region carries the words. */
+.br-pulse-dot {
   animation: br-pulse 1.4s ease-in-out infinite;
 }
 
@@ -122,7 +130,7 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .br-pulse,
+  .br-pulse-dot,
   .br-slide-in {
     animation: none !important;
     opacity: 1 !important;

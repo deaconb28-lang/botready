@@ -88,23 +88,23 @@
       "hops": 4,
       "chain": [
         {
-          "from": "https://example.com/",
-          "to": "https://www.example.com/",
+          "from": "https://linear.app/",
+          "to": "https://www.linear.app/",
           "status": 301
         },
         {
-          "from": "https://www.example.com/",
-          "to": "https://www.example.com/en",
+          "from": "https://www.linear.app/",
+          "to": "https://www.linear.app/en",
           "status": 302
         },
         {
-          "from": "https://www.example.com/en",
-          "to": "https://www.example.com/en/",
+          "from": "https://www.linear.app/en",
+          "to": "https://www.linear.app/en/",
           "status": 301
         },
         {
-          "from": "https://www.example.com/en/",
-          "to": "https://www.example.com/en/home",
+          "from": "https://www.linear.app/en/",
+          "to": "https://www.linear.app/en/home",
           "status": 302
         }
       ]
@@ -163,7 +163,8 @@
     "observed": {
       "status": 404,
       "url_count": 0,
-      "has_lastmod": false
+      "has_lastmod": false,
+      "urls": []
     },
     "durationMs": 82
   },
@@ -210,19 +211,39 @@
     "observed": {
       "pages": [
         {
-          "url": "https://example.com/",
-          "title": "Example",
+          "url": "https://linear.app/",
+          "status": 200,
+          "title": "Linear",
+          "description": "Purpose-built issue tracking for software teams."
+        },
+        {
+          "url": "https://linear.app/pricing",
+          "status": 200,
+          "title": "Linear",
           "description": ""
         },
         {
-          "url": "https://example.com/pricing",
-          "title": "Example",
+          "url": "https://linear.app/docs",
+          "status": 200,
+          "title": "Linear",
+          "description": ""
+        },
+        {
+          "url": "https://linear.app/about",
+          "status": 200,
+          "title": "Linear",
+          "description": ""
+        },
+        {
+          "url": "https://linear.app/changelog",
+          "status": 200,
+          "title": "Linear",
           "description": ""
         }
       ],
-      "pages_compared": 2,
-      "missing_title_or_description": 2,
-      "duplicate_titles": 1,
+      "pages_compared": 5,
+      "missing_title_or_description": 4,
+      "duplicate_titles": 4,
       "duplicate_descriptions": 0
     },
     "durationMs": 110
@@ -255,7 +276,7 @@
       "offer_nodes": 0,
       "prices_in_raw_html": 0,
       "prices_after_render": 6,
-      "read_from": "https://example.com/pricing"
+      "read_from": "https://linear.app/pricing"
     },
     "durationMs": 131
   },
@@ -326,14 +347,14 @@
     "observed": {
       "walled_paths": [
         {
-          "url": "https://example.com/docs",
+          "url": "https://linear.app/docs",
           "status": 403,
           "cf_mitigated": "challenge"
         }
       ],
       "paths_checked": [
         {
-          "url": "https://example.com/docs",
+          "url": "https://linear.app/docs",
           "status": 403
         }
       ]

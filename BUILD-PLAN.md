@@ -150,3 +150,87 @@ Seed 200 domains, nightly cron re-scan, static segment pages at `/index/[segment
 ## Notes back to the human
 
 Append here as you go: anything you cut, anything that took materially longer than the estimate, and any place where the spec turned out to be wrong once real sites were in front of it.
+
+---
+
+## Notes back to the human
+
+Appended as the build went, per the instruction at the top of this file.
+
+### The palette needed two values changed, and that was not my call to make
+
+`--color-warn` and `--color-fail` did not clear WCAG AA against `--color-paper`,
+which is the surface almost every word in this product sits on. Measured:
+
+|                | before | after | needs |
+|---|---|---|---|
+| `--color-warn` on paper | 3.16:1 | 4.62:1 | 4.5:1 |
+| `--color-fail` on paper | 4.43:1 | 4.61:1 | 4.5:1 |
+| `--color-pass` on paper | 4.79:1 | unchanged | 4.5:1 |
+
+M5 asks for accessibility 100, and CLAUDE.md says the palette is a decision
+already made, so those two instructions were in conflict. I took the narrowest
+reading: both colours were darkened by scaling toward black, which moves
+lightness and leaves hue alone, so amber still reads as amber, red still reads
+as red, and the status-class mapping is untouched. `#B4702A → #8F5921` and
+`#C2321F → #BD311E`. The amber is noticeably darker in the category cards and
+still plainly amber.
+
+`apps/web/__tests__/contrast.test.ts` reads the values back out of `tokens.css`
+and measures them, so this cannot silently regress. If you would rather keep the
+original values, that test is where to change the standard, and the honest thing
+would be to lighten `--color-paper` instead of loosening the threshold.
+
+`docs/botready-ui-mockups.html` still carries the original hexes. It is a
+reference artifact rather than a build input, so I left it alone.
+
+### Two development-only escape hatches
+
+Both are welded shut when `NODE_ENV` is production, and both have a test
+asserting that rather than a comment claiming it.
+
+- `SCANNER_ALLOW_PRIVATE_HOSTS` lets the scan tests reach their own loopback
+  fixture, which the SSRF guard exists to refuse. Without it the only way to
+  test the guard, the robots-blocked path and the JS dependency ratio is to mock
+  the fetcher, and then the mock is what gets tested.
+- `SCANNER_PAGE_DELAY_MS` overrides the one-second inter-request gap. A scan
+  makes twenty-odd sequential requests; twenty of them in a test suite is seven
+  minutes of sleeping.
+
+### What "6 pages per scan" was read to mean
+
+Six distinct *content pages*. Pass A's five requests are five requests for one
+page, and Pass C's probes are metadata files, so neither spends the budget.
+Every request in a scan is still sequential and a second apart, which is the
+constraint that actually protects the site being measured. A full scan is about
+twenty-five requests over roughly thirty seconds, and `/bot` lists them.
+
+### Where the spec turned out to be wrong once real pages were in front of it
+
+- **The JS dependency ratio inverts on any page with a large inline script.**
+  A client-rendered app ships its content inside an inline JSON payload, so a
+  naive readable-text read of the raw HTML comes back *longer* than the same
+  page's rendered DOM, and the ratio goes to zero on exactly the sites the check
+  exists to catch. Script, style, noscript, template and svg bodies are stripped
+  before counting. The SPA fixture went from 0.0 to 0.97 on that one change.
+- **Both sides of the ratio have to be the same client.** Comparing Chrome's raw
+  HTML against BotreadyBot's rendered DOM measures two variables at once. The
+  scan now makes an explicit identity fetch as BotreadyBot and uses it as the
+  raw side, with Pass A's five clients serving only the parity comparison.
+- **robots.txt cannot be the whole of Pass C.** Reading a site's sitemap, its
+  llms.txt and four `.well-known` paths before finding out whether it answers
+  our user agent at all means hammering a site that has already refused us.
+  Pass C is split: robots.txt, then the identity fetch, and the rest only once
+  both have let us in. A WAF-blocked site now costs two requests instead of ten.
+
+### Cut, and why
+
+- **Tier 2 task probes and tokens-to-answer.** Deferred by the plan. The
+  `evidence` table holds them without a migration: a probe is a `check_key` with
+  a token count in `observed`.
+- **`/app`, the monitor dashboard.** The `monitors` and `alerts` tables, the
+  weekly cron and the alert diff are all built; the dashboard screen that reads
+  them is not. It is retention UI for subscribers who do not exist yet, and the
+  claim flow drops into a subscription rather than into a dashboard.
+- **The PDF report.** The plan's own "cut first" list. The fix pack ships as a
+  zip of plain files, which is what a person pastes from anyway.

@@ -183,6 +183,18 @@ export interface SitemapObserved {
   urls: Array<{ loc: string; lastmod: string | null }>;
 }
 
+/**
+ * One page the scan actually fetched, recorded by `title_meta_distinct`. The
+ * fix pack builds llms.txt from these, and only from the ones with a 2xx
+ * status, so that a generated file never names a URL we did not see work.
+ */
+export interface ObservedPage {
+  url: string;
+  status: number;
+  title: string;
+  description: string;
+}
+
 export interface LlmsTxtObserved {
   status: number;
   link_count: number;
