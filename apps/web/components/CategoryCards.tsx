@@ -1,9 +1,10 @@
 /**
- * The six category cards, each with a ten-segment meter.
+ * The six categories as one strip, not six cards.
  *
- * The weight is printed on every card because the weights are published, and a
- * subscore without its weight is a number with no units. Arguing about the
- * weights in public is free marketing, which only works if they are visible.
+ * A row of columns separated by hairlines reads as one measurement with six
+ * parts, which is what it is. The weight is printed under every score because
+ * the weights are published, and a subscore without its weight is a number with
+ * no units.
  */
 
 import Link from 'next/link';
@@ -23,67 +24,54 @@ const VALUE_COLOUR = {
   fail: 'text-fail',
 } as const;
 
-export function CategoryCards({ categories }: { categories: CategoryBreakdown[] }) {
-  // One column on a phone, three on a desktop, matching the mockup's two frames.
+export function CategoryStrip({ categories }: { categories: CategoryBreakdown[] }) {
   return (
-    <div className="mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+    <ol className="grid list-none grid-cols-2 gap-x-6 gap-y-7 border-y border-ink p-0 py-6 sm:grid-cols-3 lg:grid-cols-6 lg:gap-x-0 lg:gap-y-0">
       {categories.map((category) => (
-        <CategoryCard key={category.key} category={category} />
+        <li key={category.key} className="lg:border-l lg:border-rule lg:px-5 lg:first:border-l-0 lg:first:pl-0 lg:last:pr-0">
+          <Category category={category} />
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }
 
-function CategoryCard({ category }: { category: CategoryBreakdown }) {
+function Category({ category }: { category: CategoryBreakdown }) {
   const measured = category.available > 0;
   const tone = scoreTone(category.score);
 
   return (
-    <section className="rounded-[6px] border border-rule bg-card px-[18px] py-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="font-body text-[14.5px] font-semibold">
-          <Link href={`/what-we-check#${category.key}`} className="hover:underline">
-            {category.label}
-          </Link>
-        </h3>
-        <span
-          className={`font-data text-[15px] font-bold ${measured ? VALUE_COLOUR[tone] : 'text-ink-60'}`}
-        >
-          {measured ? category.score : '—'}
-        </span>
+    <div>
+      <p className="mono text-[11px] font-bold uppercase tracking-[0.08em] text-ink-60">
+        <Link href={`/what-we-check#${category.key}`} className="hover:text-ink hover:underline">
+          {category.label}
+        </Link>
+      </p>
+      <p className={`display-section mt-2 text-[34px] ${measured ? VALUE_COLOUR[tone] : 'text-ink-60'}`}>
+        {measured ? category.score : '—'}
+      </p>
+      <div className="mt-2.5">
+        {measured ? (
+          <Meter value={category.score} segments={10} tone={tone} label={category.label} height={6} />
+        ) : (
+          <div className="flex gap-[3px]" aria-hidden="true">
+            {Array.from({ length: 10 }, (_, i) => (
+              <i key={i} className="block h-[6px] flex-1 rounded-[1px] bg-rule" />
+            ))}
+          </div>
+        )}
       </div>
-
-      <p className="mt-0.5 font-data text-[11px] text-ink-60">
+      <p className="mono mt-2 text-[11px] text-ink-60">
         weight {category.weight}%
         {measured ? (
           <>
             {' · '}
-            {category.earned % 1 === 0 ? category.earned : category.earned.toFixed(1)} of{' '}
-            {category.available} points
+            {category.earned % 1 === 0 ? category.earned : category.earned.toFixed(1)}/{category.available}
           </>
         ) : (
           ' · nothing measured'
         )}
       </p>
-
-      <div className="mt-3">
-        {measured ? (
-          <Meter value={category.score} segments={10} tone={tone} label={category.label} />
-        ) : (
-          <div className="flex gap-[2px]" aria-hidden="true">
-            {Array.from({ length: 10 }, (_, i) => (
-              <i key={i} className="block h-2 flex-1 rounded-[1px] bg-rule" />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {!measured ? (
-        <p className="mt-2 font-data text-micro text-ink-60">
-          Every check here was skipped, so this category&rsquo;s {category.weight}% was shared out
-          across the rest rather than counted as a zero.
-        </p>
-      ) : null}
-    </section>
+    </div>
   );
 }

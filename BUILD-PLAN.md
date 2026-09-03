@@ -234,3 +234,38 @@ twenty-five requests over roughly thirty seconds, and `/bot` lists them.
   claim flow drops into a subscription rather than into a dashboard.
 - **The PDF report.** The plan's own "cut first" list. The fix pack ships as a
   zip of plain files, which is what a person pastes from anyway.
+
+### The redesign, after M8
+
+Asked for after the nine milestones, with Mobbin as the reference source. The
+searches were for a URL-input hero, an audit report, a ranking table, a pricing
+section and a live progress log. What they showed: Firecrawl puts the
+*machine's output* on the hero rather than a slogan; Render, Laravel Cloud and
+Mintlify render progress as a dark log with status marks; Contra Labs and
+basement.studio show rankings as calm full-width rows with no card chrome;
+Retool and IFTTT elevate a featured tier by inverting it. Semrush, HubSpot and
+Wix are the generic audit dashboards this product is positioned against.
+
+The palette, the three faces and the status-colour semantics are pinned in
+CLAUDE.md and were kept. The redesign spent its freedom on layout, hierarchy
+and one signature:
+
+- **The wire.** The two-readers split is now two literal HTTP transcripts —
+  request line, headers, status line, body — and it is the landing hero, landing
+  line by line (static under reduced motion). The who-gets-in table is five
+  `HTTP/1.1 403 Forbidden` status lines inside the grade band. The live log,
+  the paywall preview and the footer's own `robots.txt` are the same material.
+- **A ledger, not cards.** The page is paper edge to edge; the result page is a
+  full-width ink band, a six-column category strip, and findings as rule-
+  separated sections with a status-coloured left rule.
+- **The width axis.** Archivo at wdth 125 for headlines against wdth 100 labels.
+  It was the design system's stated emphasis mechanism and was barely used.
+- **One inverted material.** The grade band, the live log, the paywall and the
+  featured pricing tier all sit on ink, so "the measurement", "the thing that is
+  happening" and "the thing you pay for" read as one substance.
+
+`tools/audit-ui.mjs` now waits for entrance animations to finish before running
+axe, because a line at 20% opacity mid-entrance is not a contrast failure and
+the previous version flagged it as one. The audit is clean at 1280 and 390
+across every page, focus is visible on all 32 stops, and reduced motion stops
+every animation.

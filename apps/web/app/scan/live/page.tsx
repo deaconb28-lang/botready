@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
-import { Footer, Nav } from '@/components/primitives';
+import { Footer, Nav, Shell } from '@/components/primitives';
 import { LiveScan } from './LiveScan';
 
 export const metadata: Metadata = {
@@ -13,21 +13,17 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-export default async function LiveScanPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ id?: string }>;
-}) {
+export default async function LiveScanPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const { id } = await searchParams;
   if (!id) redirect('/');
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[1240px] bg-paper">
+    <Shell>
       <Nav />
       <main id="main">
         <LiveScan scanId={id} />
       </main>
       <Footer />
-    </div>
+    </Shell>
   );
 }

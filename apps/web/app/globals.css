@@ -12,7 +12,7 @@
 
   html {
     /* One committed look. Colour here means an HTTP status class, and a dark
-       inversion would put the grade block's inverted surface on the same value
+       inversion would put the grade band's inverted surface on the same value
        as the page, which is the one thing the design cannot afford. */
     color-scheme: light;
     -webkit-text-size-adjust: 100%;
@@ -20,7 +20,8 @@
 
   body {
     margin: 0;
-    background: var(--color-sheet);
+    /* Paper edge to edge. The page is a document, not a card on a desk. */
+    background: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-body);
     font-size: var(--text-body);
@@ -39,18 +40,15 @@
     font-size: inherit;
   }
 
-  /* Display face only where rule 1 in tokens.css allows it. */
-  .display {
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
-    font-variation-settings: 'wdth' 112;
-  }
-
   code,
   kbd,
   pre,
   samp {
     font-family: var(--font-data);
+  }
+
+  pre {
+    margin: 0;
   }
 
   a {
@@ -79,15 +77,108 @@
   }
 }
 
+/* ------------------------------------------------------------------ display type */
+
+/* Archivo's width axis is the emphasis system: no italics, no colour for
+   emphasis, only width. These are the instances the design uses, named so a
+   component asks for a role rather than a number. */
+
+@utility display-hero {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: 'wdth' 125;
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+}
+
+@utility display-section {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: 'wdth' 112;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+@utility display-grade {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: 'wdth' 122;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+}
+
+/* Every URL, status code, user agent, header and count. */
+@utility mono {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The small uppercase label: an eyebrow, a table header, a key in a header
+   block. Set narrow so it reads as a different voice from the wide display. */
+@utility label {
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------ the wire */
+
+/* A transcript line: request or response, as it went over the wire. Used by
+   the landing hero, the who-gets-in block and the live log, so the three read
+   as one material. */
+@utility wire-line {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* ------------------------------------------------------------------ motion */
 
-/* Every animation in the app is declared here so the reduced-motion opt-out is
-   in one place and cannot be forgotten in a component. */
+/* Every animation in the app is declared here so the reduced-motion opt-out
+   is in one place and cannot be forgotten in a component. */
 
-/* Never applied to text. Dimming a word to 42% takes it below the contrast
-   floor for as long as the animation runs, and "it was only mid-keyframe" is
-   not a defence to somebody who cannot read it. The pulse belongs on a marker
-   that carries no words: see .br-pulse-dot below. */
+/* The landing transcript: lines land one after another. Each line gets a
+   --i and the delay is derived, so the sequence is one rule, not twenty. */
+@keyframes br-land {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.br-land {
+  animation: br-land 260ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 80ms + var(--offset, 0ms));
+}
+
+/* The 20-segment meter fills left to right, once, on load. */
+@keyframes br-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.br-fill {
+  transform-origin: left center;
+  animation: br-fill 180ms ease-out both;
+  animation-delay: calc(var(--i, 0) * 22ms + 120ms);
+}
+
+/* Never applied to text. Dimming a word to 35% takes it below the contrast
+   floor for as long as the animation runs. The pulse belongs on a marker that
+   carries no words. */
 @keyframes br-pulse {
   0%,
   100% {
@@ -100,6 +191,10 @@
   }
 }
 
+.br-pulse-dot {
+  animation: br-pulse 1.4s ease-in-out infinite;
+}
+
 @keyframes br-slide-in {
   from {
     opacity: 0;
@@ -109,12 +204,6 @@
     opacity: 1;
     transform: none;
   }
-}
-
-/* A 7px square that breathes while something is in flight. Decorative, so it
-   is aria-hidden at every call site and the live region carries the words. */
-.br-pulse-dot {
-  animation: br-pulse 1.4s ease-in-out infinite;
 }
 
 .br-slide-in {
@@ -130,17 +219,12 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .br-land,
+  .br-fill,
   .br-pulse-dot,
   .br-slide-in {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
-}
-
-/* ------------------------------------------------------------------ utilities */
-
-@utility mono {
-  font-family: var(--font-data);
-  font-variant-numeric: tabular-nums;
 }

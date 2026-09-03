@@ -100,6 +100,22 @@ for (const [viewportName, viewport] of VIEWPORTS) {
     const response = await page.goto(BASE + path, { waitUntil: 'networkidle' }).catch(() => null);
     const status = response?.status() ?? 0;
 
+    // Measure the page at rest. The landing transcript lands its lines over a
+    // couple of seconds, and a line at 20% opacity mid-entrance is not a
+    // contrast failure. A page that never settles would be, so the wait is
+    // capped and infinite animations (the running-line pulse) are ignored.
+    await page
+      .waitForFunction(
+        () =>
+          document
+            .getAnimations()
+            .filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations !== Infinity)
+            .length === 0,
+        undefined,
+        { timeout: 6000 },
+      )
+      .catch(() => {});
+
     if (SHOTS) {
       await page.screenshot({
         path: `${OUT}/${viewportName}-${name}.png`,

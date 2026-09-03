@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 import { ScanForm } from '@/components/ScanForm';
-import { TwoReaders } from '@/components/TwoReaders';
-import { ButtonLink, Eyebrow, Footer, Nav } from '@/components/primitives';
+import { Transcript } from '@/components/Transcript';
+import { ButtonLink, Eyebrow, Footer, Measure, Nav, SectionHeading, Shell } from '@/components/primitives';
 import { LIMITS } from '@/lib/site';
 
 export const metadata: Metadata = {
@@ -10,88 +11,113 @@ export const metadata: Metadata = {
     'Your site answers browsers. It might be hanging up on agents. We request your page as five different clients, compare what each one gets back, and hand you the files that fix the gaps.',
 };
 
+/**
+ * The hero is the thesis: the same request twice, and the disagreement
+ * between the two answers. It is a demonstration rather than a claim, which is
+ * the difference between this page and every audit tool's gradient headline.
+ */
 export default function LandingPage() {
   return (
-    <div className="mx-auto min-h-dvh max-w-[1240px] bg-paper">
+    <Shell>
       <Nav action={<ButtonLink href="/index/saas" tone="ghost" size="sm">The index</ButtonLink>} />
 
       <main id="main">
-        <section className="px-5 pb-10 pt-12 sm:px-7 sm:pt-16">
-          <Eyebrow>HTTP 200 for you · HTTP 403 for them</Eyebrow>
-          <h1
-            className="max-w-[17ch] font-display text-[36px] font-extrabold leading-[1.02] tracking-[-0.02em] sm:text-[52px]"
-            style={{ fontVariationSettings: "'wdth' 108" }}
-          >
-            Your site answers browsers. It might be <em className="not-italic text-fail">hanging up</em> on
+        <Measure as="section" wide className="pb-12 pt-10 sm:pt-16">
+          <Eyebrow>HTTP/1.1 200 OK for you · HTTP/1.1 403 Forbidden for them</Eyebrow>
+          <h1 className="display-hero mt-5 max-w-[15ch] text-[42px] sm:text-[64px] lg:text-[76px]">
+            Your site answers browsers. It might be <span className="text-fail">hanging up</span> on
             agents.
           </h1>
-          <p className="mt-[18px] max-w-[52ch] text-[17px] text-ink-60">
-            We request your page as five different clients, compare what each one gets back, and
-            hand you the exact files that fix the gaps.
-          </p>
-
-          <ScanForm autoFocus />
-        </section>
-
-        <TwoReaders
-          heading="The same page, two readers"
-          example
-          left={{
-            heading: 'What Chrome gets',
-            who: 'Mozilla/5.0 … Chrome/141',
-            chars: 9240,
-            status: 200,
-            verdict: '200 OK · pricing found · 8 headings',
-          }}
-          right={{
-            heading: 'What a plain fetch gets',
-            who: 'ClaudeBot/1.0',
-            chars: 312,
-            status: 403,
-            verdict: '403 Forbidden · nothing readable',
-          }}
-        />
-
-        <section className="px-5 py-12 sm:px-7">
-          <h2 className="display text-[26px] font-extrabold sm:text-h2">
-            What the check actually does
-          </h2>
-          <div className="mt-6 grid gap-6 sm:grid-cols-3">
-            <Step
-              n="Pass A"
-              title="Five clients, one URL"
-              body={`We fetch your page once as Chrome and once as each of ClaudeBot, GPTBot, PerplexityBot and Google-Extended, and record the status, headers and byte count each one got back. Same URL, same second.`}
-            />
-            <Step
-              n="Pass B"
-              title="Raw text against rendered text"
-              body="We extract the readable text from the plain response and from a headless render with the same algorithm, then report how much of your page only exists once JavaScript has run."
-            />
-            <Step
-              n="Pass C"
-              title="The paths agents look for"
-              body="robots.txt, sitemap.xml, llms.txt, llms-full.txt and the .well-known manifests, checked for existence, parseability and links that actually resolve."
-            />
+          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_minmax(0,560px)] lg:items-end">
+            <p className="max-w-[46ch] text-[17px] leading-[1.5] text-ink-60 sm:text-[18px]">
+              We request your page as five different clients, compare what each one gets back, and
+              hand you the exact files that fix the gaps.
+            </p>
+            <ScanForm autoFocus />
           </div>
-          <p className="mt-8 max-w-[70ch] font-data text-[12.5px] text-ink-60">
+        </Measure>
+
+        <Measure wide>
+          <Transcript
+            animate
+            example
+            host="linear.app"
+            left={{
+              client: 'As a browser',
+              userAgent: 'Mozilla/5.0 (Macintosh) … Chrome/141.0',
+              status: 200,
+              headers: [
+                ['content-type', 'text/html; charset=utf-8'],
+                ['server', 'cloudflare'],
+              ],
+              body: [
+                'Linear is a purpose-built tool for planning and',
+                'building products. Streamline issues, projects,',
+                'and product roadmaps. Pricing: Free, Basic $8,',
+                'Business $14, Enterprise …',
+              ],
+              chars: 9240,
+            }}
+            right={{
+              client: 'As a reading agent',
+              userAgent: 'ClaudeBot/1.0',
+              status: 403,
+              headers: [
+                ['content-type', 'text/html'],
+                ['server', 'cloudflare'],
+                ['cf-mitigated', 'challenge'],
+              ],
+              body: [],
+              chars: 312,
+            }}
+          />
+        </Measure>
+
+        <Measure as="section" wide className="mt-16 sm:mt-24">
+          <SectionHeading kicker="Three passes, about thirty seconds">
+            What the check actually does
+          </SectionHeading>
+          <dl className="mt-6 grid gap-x-10 gap-y-8 md:grid-cols-3">
+            <Pass
+              request="GET / × 5 clients"
+              title="The same URL, five ways"
+              body="Once as Chrome and once as each of ClaudeBot, GPTBot, PerplexityBot and Google-Extended, recording the status, headers and byte count each got back. Same URL, same second."
+            />
+            <Pass
+              request="raw HTML vs rendered DOM"
+              title="Text with and without JavaScript"
+              body="The readable text is extracted from the plain response and from a headless render by the same algorithm. The ratio between them is how much of your page only exists once a script has run."
+            />
+            <Pass
+              request="GET /robots.txt, /llms.txt, /.well-known/…"
+              title="The paths agents look for first"
+              body="robots.txt, sitemap.xml, llms.txt, llms-full.txt and the agent manifests, checked for existence, parseability, and links that actually resolve."
+            />
+          </dl>
+          <p className="mono mt-10 max-w-[72ch] text-[12.5px] leading-[1.7] text-ink-60">
             {LIMITS.maxPagesPerScan} pages at most, sequential, {LIMITS.pageDelayMs / 1000} second
-            apart. We identify as BotreadyBot/1.0 and obey your robots.txt. If your site refuses
-            us, we record it as refused and show it that way rather than working around it.
+            apart. We identify as BotreadyBot/1.0 and obey your robots.txt. If your site refuses us,
+            we record it as refused and show it that way rather than working around it.{' '}
+            <Link href="/what-we-check" className="underline">
+              The weights are published.
+            </Link>
           </p>
-        </section>
+        </Measure>
       </main>
 
       <Footer />
-    </div>
+    </Shell>
   );
 }
 
-function Step({ n, title, body }: { n: string; title: string; body: string }) {
+function Pass({ request, title, body }: { request: string; title: string; body: string }) {
   return (
-    <div className="border-t border-ink pt-4">
-      <p className="font-data text-[11px] font-bold uppercase tracking-[0.1em] text-ink-60">{n}</p>
-      <h3 className="mt-1.5 text-[16px] font-semibold">{title}</h3>
-      <p className="mt-2 text-[14px] text-ink-60">{body}</p>
+    <div>
+      <dt>
+        <p className="mono text-[12px] text-ink-60">{request}</p>
+        <p className="mt-1.5 text-[17px] font-semibold">{title}</p>
+      </dt>
+      <dd className="mt-2 text-[14.5px] leading-[1.55] text-ink-60">{body}</dd>
     </div>
   );
 }

@@ -3,20 +3,18 @@
  *
  * Never blurs the score. The diagnosis above it is free and fully visible; the
  * paid artifact is the generated files. What this shows is a real llms.txt,
- * built from the reader's own domain and their own page titles, cut off part
- * way through. A blurred score is annoying. A real file stopping mid-line is a
- * demonstration, and it is the only honest way to charge for something whose
- * diagnosis is free.
+ * built from the reader's own domain and their own page titles, cut off mid-line.
+ * A blurred score is annoying. A real file stopping mid-thought is a
+ * demonstration.
  *
- * There is no blur, no gradient over text, and no `user-select: none`. The fade
- * at the bottom is over the container's own background and stops before the
- * last visible line.
+ * It borrows the ink surface — the same material as the grade band — because it
+ * is the other thing on the page that is ours rather than the site's.
  */
 
 import { previewOf, type FixFile, type PunchItem } from '@botready/core';
 
 import { PRICING } from '@/lib/site';
-import { buttonClass } from './primitives';
+import { Measure, buttonClass } from './primitives';
 
 export function Paywall({
   scanId,
@@ -28,94 +26,87 @@ export function Paywall({
 }: {
   scanId: string;
   domain: string;
-  /** The generated llms.txt, or whichever file has the most to show. */
   preview: FixFile;
   punchList: PunchItem[];
   fileCount: number;
-  /** True when this reader has already bought it. */
   owned?: boolean;
 }) {
-  const { text, truncated } = previewOf(preview, 9);
+  const { text, truncated } = previewOf(preview, 10);
   const quickWins = punchList.filter((item) => item.effort === 'minutes');
   const quickPoints = quickWins.reduce((sum, item) => sum + item.pointsRecovered, 0);
+  const moreLines = Math.max(0, preview.content.trimEnd().split('\n').length - 10);
 
   return (
-    <section className="mt-9 overflow-hidden rounded-[6px] border-[1.5px] border-ink">
-      <div className="flex flex-col gap-6 px-[26px] py-6 sm:flex-row sm:items-center sm:justify-between">
+    <section className="on-ink mt-14 bg-ink text-paper" aria-labelledby="paywall-heading">
+      <Measure wide className="grid gap-10 py-10 sm:py-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
         <div>
-          <h2 className="text-[21px] font-bold">
-            {owned ? 'Your fix pack is ready' : 'Get the files, not just the verdict'}
+          <p className="label text-ink-key">{owned ? 'Your fix pack' : 'The fix pack'}</p>
+          <h2 id="paywall-heading" className="display-section mt-3 text-[28px] sm:text-[34px]">
+            {owned ? 'Generated and ready' : 'Get the files, not just the verdict'}
           </h2>
-          <p className="mt-1.5 max-w-[56ch] text-[14px] text-ink-60">
+          <p className="mt-4 max-w-[48ch] text-[15px] leading-[1.55] text-ink-key">
             {owned ? (
               <>
-                {fileCount} generated {fileCount === 1 ? 'file' : 'files'} and a punch list, built
-                from this scan of {domain}.
+                {fileCount} generated {fileCount === 1 ? 'file' : 'files'} and a punch list, built from
+                this scan of {domain}.
               </>
             ) : (
               <>
-                A generated llms.txt built from your real pages, the corrected robots.txt block
-                naming the agents currently refused, the link tags for your top 20 URLs, and a
-                JSON-LD block filled in from your own data.
-                {quickWins.length > 0 ? (
-                  <>
-                    {' '}
-                    {quickWins.length} of the {punchList.length}{' '}
-                    {punchList.length === 1 ? 'item' : 'items'}{' '}
-                    {quickWins.length === 1 ? 'is' : 'are'} minutes of work, worth {quickPoints}{' '}
-                    {quickPoints === 1 ? 'point' : 'points'}.
-                  </>
-                ) : null}
+                A generated llms.txt built from your real pages, the corrected robots.txt block naming
+                the agents currently refused, the link tags for your top 20 URLs, and a JSON-LD block
+                filled in from your own data.
               </>
             )}
           </p>
-        </div>
+          {!owned && quickWins.length > 0 ? (
+            <p className="wire-line mt-4 text-paper">
+              {quickWins.length} of the {punchList.length} {punchList.length === 1 ? 'item' : 'items'}{' '}
+              {quickWins.length === 1 ? 'is' : 'are'} minutes of work, worth {quickPoints}{' '}
+              {quickPoints === 1 ? 'point' : 'points'}.
+            </p>
+          ) : null}
 
-        <div className="shrink-0 sm:text-right">
-          {owned ? null : (
-            <p
-              className="font-display text-[38px] font-extrabold leading-none"
-              style={{ fontVariationSettings: "'wdth' 118" }}
+          <div className="mt-7 flex flex-wrap items-end gap-x-6 gap-y-4">
+            {!owned ? (
+              <p className="display-hero text-[44px] text-paper">
+                {PRICING.fixpack.label}
+                <span className="mono ml-2 text-[12px] font-normal tracking-[0.04em] text-ink-key">
+                  {PRICING.fixpack.cadence}
+                </span>
+              </p>
+            ) : null}
+            <a
+              href={owned ? `/api/fixpack/${scanId}` : `/api/checkout/${scanId}`}
+              className={buttonClass('paper', 'md')}
+              {...(owned ? { download: `botready-fixpack-${domain}.zip` } : {})}
             >
-              {PRICING.fixpack.label}
-              <span className="mt-1 block font-data text-[12px] font-normal tracking-[0.04em] text-ink-60">
-                {PRICING.fixpack.cadence}
-              </span>
-            </p>
-          )}
-          <a
-            href={owned ? `/api/fixpack/${scanId}` : `/api/checkout/${scanId}`}
-            className={buttonClass('solid', 'md', 'mt-3')}
-            {...(owned ? { download: `botready-fixpack-${domain}.zip` } : {})}
-          >
-            {owned ? 'Download the fix pack' : 'Get the fix pack'}
-          </a>
+              {owned ? 'Download the fix pack' : 'Get the fix pack'}
+            </a>
+          </div>
         </div>
-      </div>
 
-      <figure className="relative m-0 border-t border-ink bg-card px-[26px] py-5">
-        <figcaption className="mb-2.5 font-data text-micro uppercase tracking-[0.1em] text-ink-60">
-          {preview.name} · generated for {domain}
-          {truncated ? ' · cut off' : ''}
-        </figcaption>
-        <pre className="m-0 overflow-x-auto font-data text-[12px] whitespace-pre-wrap text-ink-60">
-          {text}
-        </pre>
-        {truncated ? (
-          <>
-            {/* Over the container's own background, and only under the text, so
-                nothing legible is obscured and nothing is blurred. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-[88px] bg-gradient-to-b from-transparent to-card"
-            />
-            <p className="relative mt-3 font-data text-micro text-ink-60">
-              {preview.content.split('\n').length - 9} more lines, and{' '}
-              {fileCount - 1} more {fileCount - 1 === 1 ? 'file' : 'files'}, in the pack.
-            </p>
-          </>
-        ) : null}
-      </figure>
+        <figure className="relative m-0 min-w-0">
+          <figcaption className="label text-ink-key">
+            {preview.name} · generated for {domain}
+            {truncated ? ' · cut off' : ''}
+          </figcaption>
+          <pre className="wire-line mt-3 overflow-x-auto text-paper">{text}</pre>
+          {truncated ? (
+            <>
+              {/* Over the band's own background, and only under the text, so
+                  nothing legible is obscured and nothing is blurred. */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-6 h-16 bg-gradient-to-b from-transparent to-ink"
+              />
+              <p className="wire-line relative mt-2 text-ink-key">
+                {moreLines} more {moreLines === 1 ? 'line' : 'lines'}, and {fileCount - 1} more{' '}
+                {fileCount - 1 === 1 ? 'file' : 'files'}, in the pack.
+              </p>
+            </>
+          ) : null}
+        </figure>
+      </Measure>
     </section>
   );
 }

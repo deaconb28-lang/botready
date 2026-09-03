@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
 import { CompleteResult, UnscoredResult, formatUtc } from '@/components/ScanResult';
-import { ButtonLink, Footer, Nav } from '@/components/primitives';
+import { ButtonLink, Footer, Nav, Shell } from '@/components/primitives';
 import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
 import { loadScanView } from '@/lib/scan-data';
 import { absoluteUrl } from '@/lib/site';
@@ -52,21 +52,14 @@ export default async function ScanPage({ params }: PageProps) {
   }
 
   const checkedAt = formatUtc(scan.finished_at ?? scan.created_at);
-
   const user = await currentUser();
   const owned = user ? await hasFixpackEntitlement(user.id) : false;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-[1240px] bg-paper">
-      <Nav
-        action={
-          <ButtonLink href="/" size="sm">
-            Check another site
-          </ButtonLink>
-        }
-      />
+    <Shell>
+      <Nav action={<ButtonLink href="/" size="sm">Check another site</ButtonLink>} />
 
-      <main id="main" className="px-5 pb-14 pt-8 sm:px-7">
+      <main id="main" className="pb-14">
         {score ? (
           <CompleteResult
             id={id}
@@ -94,7 +87,6 @@ export default async function ScanPage({ params }: PageProps) {
       </main>
 
       <Footer />
-    </div>
+    </Shell>
   );
 }
-

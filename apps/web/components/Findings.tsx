@@ -1,22 +1,20 @@
 /**
  * "What to fix, worst first."
  *
- * Two rules from tokens.css govern the look, and both are about legibility
- * rather than taste:
+ * A ledger rather than a stack of cards: each finding is a section under a
+ * hairline, with a 3px status-coloured rule down its left edge. Severity is
+ * never a background fill, because a wall of tinted cards makes the worst
+ * finding indistinguishable from the third worst.
  *
- *   Findings carry a 3px left border in the status colour. Severity is never a
- *   background fill, because a wall of tinted cards makes the worst finding
- *   indistinguishable from the third worst.
- *
- *   The evidence block is the raw request or the raw counts, printed as they
- *   happened, in mono. It is the part a reader forwards to whoever owns the WAF.
+ * The evidence is the raw request or the raw counts, printed as they happened.
+ * It is the part a reader forwards to whoever owns the WAF.
  */
 
 import type { Finding } from '@botready/core';
 
-import { EvidenceBlock } from './primitives';
+import { EvidenceBlock, SectionHeading } from './primitives';
 
-const LEFT_BORDER = {
+const RULE = {
   fail: 'border-l-fail',
   warn: 'border-l-warn',
   // An error is not the site's failure. Plum is the reserved-5xx colour and it
@@ -34,18 +32,12 @@ const TAG = {
   skip: 'text-ink-60 border-rule',
 } as const;
 
-export function Findings({
-  findings,
-  pointsLostTotal,
-}: {
-  findings: Finding[];
-  pointsLostTotal: number;
-}) {
+export function Findings({ findings, pointsLostTotal }: { findings: Finding[]; pointsLostTotal: number }) {
   if (findings.length === 0) {
     return (
-      <section className="mt-9">
-        <h2 className="text-[20px] font-bold">Nothing to fix</h2>
-        <p className="mt-0.5 text-[14px] text-ink-60">
+      <section className="mt-14">
+        <SectionHeading kicker="Findings">Nothing to fix</SectionHeading>
+        <p className="mt-3 text-[15px] text-ink-60">
           Every check in the catalog passed. That is rare enough that we would like to know how you
           did it.
         </p>
@@ -57,23 +49,21 @@ export function Findings({
   const topPoints = top.reduce((sum, f) => sum + f.pointsLost, 0);
 
   return (
-    <section className="mt-9">
-      <h2 className="text-[20px] font-bold">What to fix, worst first</h2>
-      <p className="mt-0.5 mb-[18px] text-[14px] text-ink-60">
-        {findings.length} {findings.length === 1 ? 'check' : 'checks'} did not pass.
-        {top.length > 1 && topPoints > 0 ? (
-          <>
-            {' '}
-            These {top.length === 2 ? 'two' : 'three'} account for {topPoints} of the{' '}
-            {pointsLostTotal} points you lost.
-          </>
-        ) : null}
-      </p>
+    <section className="mt-14">
+      <SectionHeading kicker={`${findings.length} ${findings.length === 1 ? 'check' : 'checks'} did not pass`}>
+        What to fix, worst first
+      </SectionHeading>
+      {top.length > 1 && topPoints > 0 ? (
+        <p className="mt-3 text-[15px] text-ink-60">
+          These {top.length === 2 ? 'two' : 'three'} account for {topPoints} of the {pointsLostTotal} points
+          you lost.
+        </p>
+      ) : null}
 
-      <ol className="list-none p-0">
+      <ol className="mt-8 list-none p-0">
         {findings.map((finding) => (
           <li key={finding.key}>
-            <FindingCard finding={finding} />
+            <FindingRow finding={finding} />
           </li>
         ))}
       </ol>
@@ -81,61 +71,51 @@ export function Findings({
   );
 }
 
-function FindingCard({ finding }: { finding: Finding }) {
+function FindingRow({ finding }: { finding: Finding }) {
   return (
     <article
-      className={`mb-2.5 rounded-[5px] border border-rule border-l-[3px] bg-card px-[18px] py-4 ${
-        LEFT_BORDER[finding.status]
-      }`}
+      className={`border-t border-rule border-l-[3px] py-6 pl-5 sm:pl-7 ${RULE[finding.status]}`}
       aria-labelledby={`finding-${finding.key}`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <h3 id={`finding-${finding.key}`} className="text-[15.5px] font-semibold">
-          {finding.headline}
-        </h3>
-        <span
-          className={`shrink-0 rounded-[3px] border px-[7px] py-[2px] font-data text-[10.5px] font-bold uppercase tracking-[0.06em] ${
-            TAG[finding.status]
-          }`}
-        >
-          {finding.status === 'error'
-            ? 'could not run'
-            : finding.pointsLost > 0
-              ? `−${finding.pointsLost} pts`
-              : finding.status}
-        </span>
+      <div className="grid gap-x-10 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="min-w-0">
+          <h3 id={`finding-${finding.key}`} className="text-[18px] font-semibold leading-[1.3]">
+            {finding.headline}
+          </h3>
+          <p className="mt-2 max-w-[70ch] text-[14.5px] leading-[1.55] text-ink-60">{finding.body}</p>
+        </div>
+        <div className="mono text-[11px] text-ink-60 md:text-right">
+          <span className={`inline-block rounded-[3px] border px-[7px] py-[2px] font-bold uppercase tracking-[0.06em] ${TAG[finding.status]}`}>
+            {finding.status === 'error' ? 'could not run' : finding.pointsLost > 0 ? `−${finding.pointsLost} pts` : finding.status}
+          </span>
+          <p className="mt-2">{finding.category}</p>
+          <p>{finding.key}</p>
+        </div>
       </div>
 
-      <p className="mt-[7px] max-w-[74ch] text-[13.5px] text-ink-60">{finding.body}</p>
-
       <EvidenceBlock label={`Evidence for: ${finding.label}`}>{finding.evidence}</EvidenceBlock>
-
-      <p className="mt-2.5 font-data text-micro text-ink-60">
-        {finding.label} · {finding.category}
-      </p>
     </article>
   );
 }
 
 /**
- * The short list of what already works. Not a victory lap: it tells a reader
+ * What already works, one line each. Not a victory lap: it tells a reader
  * which of the things they will read about elsewhere they can stop worrying
- * about, which is worth a line each and no more.
+ * about.
  */
 export function Passing({ passing }: { passing: Finding[] }) {
   if (passing.length === 0) return null;
 
   return (
-    <section className="mt-9">
-      <h2 className="text-[20px] font-bold">What already works</h2>
-      <p className="mt-0.5 mb-3.5 text-[14px] text-ink-60">
-        {passing.length} {passing.length === 1 ? 'check' : 'checks'} passed.
-      </p>
-      <ul className="grid list-none grid-cols-1 gap-x-8 gap-y-1.5 p-0 sm:grid-cols-2">
+    <section className="mt-14">
+      <SectionHeading kicker={`${passing.length} ${passing.length === 1 ? 'check' : 'checks'} passed`}>
+        What already works
+      </SectionHeading>
+      <ul className="mt-5 grid list-none grid-cols-1 gap-x-10 gap-y-1.5 p-0 sm:grid-cols-2">
         {passing.map((finding) => (
-          <li key={finding.key} className="flex gap-2.5 font-data text-[12.5px]">
+          <li key={finding.key} className="mono flex gap-3 border-b border-dashed border-rule py-1.5 text-[12.5px]">
             <span className="text-pass" aria-hidden="true">
-              ✓
+              200
             </span>
             <span className="text-ink-60">{finding.label}</span>
           </li>
