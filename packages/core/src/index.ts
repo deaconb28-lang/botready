@@ -12,5 +12,6 @@ export * from './types';
 export * from './catalog';
 export * from './scoring';
 export * from './domain';
+export * from './addresses';
 export * from './findings';
 export * from './remedies';

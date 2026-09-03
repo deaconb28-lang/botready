@@ -1,31 +1,11 @@
 /**
- * Upstash Redis: the per-IP rate limit and the 24 hour result cache.
+ * The per-IP rate limit, the 24 hour result cache, and the once-marker.
  *
- * Both degrade rather than fail. If Redis is unreachable the rate limiter lets
- * the request through and the cache misses. That is the right direction for a
- * free diagnostic tool: an outage in the abuse control should not take the
- * product down, and the 6-pages-a-scan cap is a harder limit on the damage than
- * the rate limiter is anyway.
+ * All three take a KV so they can be exercised against memory. All three
+ * degrade open when the KV is absent or throws; see lib/kv.ts for why.
  */
 
-import { Redis } from '@upstash/redis';
-
-import { serverEnv } from './env';
-
-let cached: Redis | null | undefined;
-
-function client(): Redis | null {
-  if (cached !== undefined) return cached;
-  const url = serverEnv.redisUrl();
-  const token = serverEnv.redisToken();
-  cached = url && token ? new Redis({ url, token }) : null;
-  return cached;
-}
-
-/** True when Redis is configured. The rate limit is skipped when it is not. */
-export function rateLimitingAvailable(): boolean {
-  return client() !== null;
-}
+import { defaultKV, type KV } from './kv';
 
 export interface RateLimitVerdict {
   allowed: boolean;
@@ -35,36 +15,38 @@ export interface RateLimitVerdict {
   resetSeconds: number;
 }
 
+const WINDOW_SECONDS = 3600;
+
 /**
  * A fixed window per hour, keyed on the caller. Fixed rather than sliding on
- * purpose: the limit is 5, the window is an hour, and a reader who understands
- * "five an hour" is better served than one who has to reason about a decaying
- * bucket. The reset is reported so the 429 can say when to come back.
+ * purpose: the limit is five, the window is an hour, and a reader who
+ * understands "five an hour" is better served than one who has to reason about
+ * a decaying bucket. The reset is reported so the 429 can say when to return.
  */
-export async function rateLimit(key: string, limit: number): Promise<RateLimitVerdict> {
-  const redis = client();
-  if (!redis) {
-    return { allowed: true, limit, remaining: limit, resetSeconds: 0 };
-  }
+export async function rateLimit(
+  identity: string,
+  limit: number,
+  kv: KV | null = defaultKV(),
+  now: number = Date.now(),
+): Promise<RateLimitVerdict> {
+  const open = { allowed: true, limit, remaining: limit, resetSeconds: 0 };
+  if (!kv) return open;
 
-  const windowSeconds = 3600;
-  const window = Math.floor(Date.now() / 1000 / windowSeconds);
-  const redisKey = `ratelimit:${key}:${window}`;
+  const seconds = Math.floor(now / 1000);
+  const window = Math.floor(seconds / WINDOW_SECONDS);
+  const key = `ratelimit:${identity}:${window}`;
 
   try {
-    const used = await redis.incr(redisKey);
-    if (used === 1) await redis.expire(redisKey, windowSeconds);
-
-    const elapsed = Math.floor(Date.now() / 1000) % windowSeconds;
+    const used = await kv.incr(key);
+    if (used === 1) await kv.expire(key, WINDOW_SECONDS);
     return {
       allowed: used <= limit,
       limit,
       remaining: Math.max(0, limit - used),
-      resetSeconds: windowSeconds - elapsed,
+      resetSeconds: WINDOW_SECONDS - (seconds % WINDOW_SECONDS),
     };
   } catch {
-    // Degrade open. See the note at the top of the file.
-    return { allowed: true, limit, remaining: limit, resetSeconds: 0 };
+    return open;
   }
 }
 
@@ -75,50 +57,57 @@ export async function rateLimit(key: string, limit: number): Promise<RateLimitVe
  * the tenth person to click through to a domain in a day gets the ninth
  * person's scan, and the site being measured sees one crawl.
  */
-export async function cachedScanId(domain: string): Promise<string | null> {
-  const redis = client();
-  if (!redis) return null;
+export async function cachedScanId(domain: string, kv: KV | null = defaultKV()): Promise<string | null> {
+  if (!kv) return null;
   try {
-    return (await redis.get<string>(`scan:${domain}`)) ?? null;
+    return await kv.get(`scan:${domain}`);
   } catch {
     return null;
   }
 }
 
-export async function cacheScanId(domain: string, scanId: string, hours = 24): Promise<void> {
-  const redis = client();
-  if (!redis) return;
+export async function cacheScanId(
+  domain: string,
+  scanId: string,
+  hours = 24,
+  kv: KV | null = defaultKV(),
+): Promise<void> {
+  if (!kv) return;
   try {
-    await redis.set(`scan:${domain}`, scanId, { ex: hours * 3600 });
+    await kv.set(`scan:${domain}`, scanId, { ex: hours * 3600 });
   } catch {
     // A cache that cannot be written is a cache miss next time. Nothing else.
   }
 }
 
-/** Drops the cache entry, so the next request crawls. Used by the cron jobs. */
-export async function forgetCachedScan(domain: string): Promise<void> {
-  const redis = client();
-  if (!redis) return;
+/** Drops the entry, so the next request crawls. The cron jobs use it. */
+export async function forgetCachedScan(domain: string, kv: KV | null = defaultKV()): Promise<void> {
+  if (!kv) return;
   try {
-    await redis.del(`scan:${domain}`);
+    await kv.del(`scan:${domain}`);
   } catch {
-    // Nothing to do: the entry expires on its own within the day.
+    // The entry expires on its own within the day.
   }
 }
 
 /**
- * Once-only marker, used for Stripe webhook idempotency alongside the unique
- * index on entitlements.stripe_event_id. Two guards rather than one because
- * Stripe retries and the database constraint is the one that must hold, while
- * this one saves the work of getting there.
+ * Once-only marker. The Stripe webhook uses it as the fast path for a replay;
+ * the unique index on entitlements.stripe_event_id is the guard that must hold,
+ * so this one is allowed to fail open.
  */
-export async function claimOnce(key: string, ttlSeconds = 86_400): Promise<boolean> {
-  const redis = client();
-  if (!redis) return true;
+export async function claimOnce(
+  key: string,
+  ttlSeconds = 86_400,
+  kv: KV | null = defaultKV(),
+): Promise<boolean> {
+  if (!kv) return true;
   try {
-    const set = await redis.set(`once:${key}`, '1', { nx: true, ex: ttlSeconds });
-    return set === 'OK';
+    return await kv.set(`once:${key}`, '1', { nx: true, ex: ttlSeconds });
   } catch {
     return true;
   }
+}
+
+export function rateLimitingAvailable(): boolean {
+  return defaultKV() !== null;
 }

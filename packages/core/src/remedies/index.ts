@@ -22,7 +22,7 @@ import { buildMarkdownAlternates } from './markdown-alternate';
 import { buildJsonLd } from './jsonld';
 import { buildPunchList, type PunchItem } from './punchlist';
 
-export type { PunchItem } from './punchlist';
+export { punchListMarkdown, type Effort, type PunchItem } from './punchlist';
 
 export interface FixFile {
   /** The filename we suggest, used as the download name. */
@@ -165,14 +165,17 @@ export function readFacts(results: CheckResult[]): ScanFacts {
  * for something whose diagnosis is free.
  */
 export function previewOf(file: FixFile, lines = 9): { text: string; truncated: boolean } {
-  const all = file.content.split('\n');
+  const all = file.content.replace(/\n+$/, '').split('\n');
   if (all.length <= lines) return { text: file.content, truncated: false };
 
   const shown = all.slice(0, lines);
+  // Never end on a blank: it reads as the end of a short file. Back up to the
+  // last line with something on it, then stop that line mid-way, so the cut
+  // reads as a cut.
+  while (shown.length > 1 && (shown[shown.length - 1] ?? '').trim() === '') shown.pop();
   const last = shown[shown.length - 1] ?? '';
-  // Stop mid-line on the last one, so the cut reads as a cut rather than as the
-  // end of a short file.
-  if (last.length > 24) shown[shown.length - 1] = `${last.slice(0, Math.floor(last.length * 0.7))} …`;
+  const keep = last.length > 24 ? Math.floor(last.length * 0.7) : last.length;
+  shown[shown.length - 1] = `${last.slice(0, keep).trimEnd()} …`;
 
   return { text: shown.join('\n'), truncated: true };
 }

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/nightly",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/monitors",
+      "schedule": "0 6 * * 1"
+    }
+  ]
+}

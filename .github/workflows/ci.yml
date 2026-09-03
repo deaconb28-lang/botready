@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # The scanner's Playwright is pinned to the Chromium this image ships.
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      # The worker reads these at boot; the tests never connect.
+      SCANNER_SHARED_SECRET: ci
+      DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm --filter @botready/web lint
+
+      # The scanner's own robots.txt compliance is asserted here, in CI, as
+      # CLAUDE.md requires: apps/scanner/src/scan.test.ts stands up a site whose
+      # robots.txt disallows BotreadyBot and proves the only path we requested
+      # was /robots.txt.
+      - run: pnpm test
+
+      - name: Build the web app
+        run: pnpm --filter @botready/web build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'

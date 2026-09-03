@@ -22,7 +22,18 @@ export interface QueueOutcome {
   messageId?: string;
 }
 
-export async function enqueueScan(job: QueuedScan): Promise<QueueOutcome> {
+export interface QueueOptions {
+  /**
+   * Seconds to hold the message before delivery. The nightly index run spreads
+   * two hundred scans across an hour with this rather than dropping them all
+   * on the worker at once: the worker's own gate would cope, but a queue of
+   * 198 accepted jobs waiting in one process is a worse failure mode than a
+   * queue of 198 messages waiting in QStash.
+   */
+  delaySeconds?: number;
+}
+
+export async function enqueueScan(job: QueuedScan, options: QueueOptions = {}): Promise<QueueOutcome> {
   const token = serverEnv.qstashToken();
   const target = new URL('/scan', serverEnv.scannerUrl()).toString();
 
@@ -36,10 +47,17 @@ export async function enqueueScan(job: QueuedScan): Promise<QueueOutcome> {
       // The worker answers 202 immediately and works afterwards, so a retry
       // means the delivery failed rather than the scan being slow.
       retries: 2,
-      // A queued scan that has not started in five minutes is not going to.
       timeout: '30s',
+      ...(options.delaySeconds ? { delay: options.delaySeconds } : {}),
+      // One scan per id, even if the cron and a person race for the same site.
+      deduplicationId: `scan:${job.scanId}`,
     });
     return { mode: 'qstash', messageId: message.messageId };
+  }
+
+  // Local: no queue, so a delay is honoured in-process and the caller waits.
+  if (options.delaySeconds) {
+    await new Promise((resolve) => setTimeout(resolve, Math.min(options.delaySeconds ?? 0, 5) * 1000));
   }
 
   const response = await fetch(target, {

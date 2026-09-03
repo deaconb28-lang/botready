@@ -136,6 +136,72 @@ create table reports (
   generated_at timestamptz not null default now()
 );
 
+-- ---------------------------------------------------------------- the index
+
+-- One row per indexed site: its most recent finished scan and that scan's
+-- most recent score row, plus the two facts the index table prints beside the
+-- grade. Reads the `scores` table rather than re-scoring evidence, because the
+-- index is two hundred rows and the result page is one; `persistScore` in the
+-- web app keeps the table current, and a nightly sweep catches anything it
+-- missed.
+--
+-- security_invoker so the underlying tables' policies apply. They are all
+-- world-readable, so this changes nothing today and keeps the view honest if
+-- that ever changes.
+
+create view index_rows with (security_invoker = true) as
+select
+  si.id                         as site_id,
+  si.domain,
+  si.segment,
+  si.is_claimed,
+  s.id                          as scan_id,
+  s.status,
+  s.finished_at,
+  s.scanner_version,
+  sc.total,
+  sc.grade,
+  sc.scoring_version,
+  sc.category_scores,
+  parity.observed -> 'per_agent' as per_agent,
+  (ratio.observed ->> 'ratio')::numeric as js_ratio
+from sites si
+join lateral (
+  select * from scans
+   where scans.site_id = si.id and scans.status in ('complete', 'blocked')
+   order by scans.created_at desc
+   limit 1
+) s on true
+left join lateral (
+  select * from scores
+   where scores.scan_id = s.id
+   order by scores.created_at desc
+   limit 1
+) sc on true
+left join evidence parity on parity.scan_id = s.id and parity.check_key = 'agent_status_parity'
+left join evidence ratio  on ratio.scan_id  = s.id and ratio.check_key  = 'js_dependency_ratio'
+where si.segment is not null;
+
+-- ---------------------------------------------------------------- claims
+
+-- A claim is proven, never asserted. The token is an HMAC over (user, domain)
+-- and is recomputed on verification rather than stored, so there is nothing
+-- here to leak: this table only records that a proof was seen, and how.
+
+create type claim_method as enum ('dns_txt', 'meta_tag');
+
+create table claims (
+  id          uuid primary key default gen_random_uuid(),
+  site_id     uuid not null references sites(id) on delete cascade,
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  method      claim_method not null,
+  verified_at timestamptz not null default now(),
+  unique (site_id, user_id)
+);
+
+alter table claims enable row level security;
+create policy "own claims" on claims for select using (auth.uid() = user_id);
+
 -- ---------------------------------------------------------------- rls
 
 alter table sites        enable row level security;

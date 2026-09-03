@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { loadScanView } from '@/lib/scan-data';
+import { loadScanView, persistScore } from '@/lib/scan-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,6 +30,13 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 
   const { scan, site, score } = view;
   const settled = scan.status === 'complete' || scan.status === 'blocked' || scan.status === 'error';
+
+  // The first read of a finished scan writes its score row. Idempotent on
+  // (scan_id, scoring_version), cheap, and it is what keeps the index view
+  // current without waiting for the nightly sweep.
+  if (scan.status === 'complete' && score) {
+    await persistScore(scan.id, view.results).catch(() => {});
+  }
 
   return NextResponse.json(
     {

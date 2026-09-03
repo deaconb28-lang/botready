@@ -75,3 +75,13 @@ export async function hasFixpackEntitlement(userId: string): Promise<boolean> {
     return new Date(entitlement.current_period_end).getTime() > Date.now();
   });
 }
+
+/**
+ * A redirect target that stays on this site. An open redirect through a
+ * sign-in link is a phishing kit, so anything that is not a path is dropped.
+ */
+export function safeNext(candidate: string | null | undefined): string {
+  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) return '/';
+  if (candidate.startsWith('/\\')) return '/';
+  return candidate;
+}
