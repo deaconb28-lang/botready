@@ -11,6 +11,18 @@ const config: NextConfig = {
   outputFileTracingIncludes: {
     '/api/og/[id]': ['./assets/fonts/**'],
   },
+  // The public URL of the ranking is /index/[segment], as the plan says. The
+  // route lives in app/ranking/ because a route segment literally named
+  // `index` collides with Next's own index.html convention: the prerendered
+  // pages land in .next/server/app/index/index/*.html and Vercel's builder,
+  // looking in app/index/*.html, fails the deploy with ENOENT. The rewrite
+  // keeps the URL and the redirect keeps it the only one.
+  async rewrites() {
+    return [{ source: '/index/:segment', destination: '/ranking/:segment' }];
+  },
+  async redirects() {
+    return [{ source: '/ranking/:segment', destination: '/index/:segment', permanent: true }];
+  },
   async headers() {
     return [
       {

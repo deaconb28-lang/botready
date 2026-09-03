@@ -299,3 +299,14 @@ Railway rejected `railway.json` as a config source ("Config as Code is
 deprecated, use `.railway/railway.ts`"), so the same settings were applied to
 the service directly. The file stays in the repo as the readable record of
 what the service is configured to do.
+
+### The ranking route directory is `app/ranking`, not `app/index`
+
+The first Vercel deploy failed after a clean Next build with `ENOENT
+.next/server/app/index/devtools.html`. A route segment literally named
+`index` collides with Next's own index.html convention: the prerendered
+pages are written to `app/index/index/*.html` and Vercel's builder looks one
+level up. The public URL is still `/index/[segment]` as the plan says; the
+route lives in `app/ranking/[segment]` with a rewrite from `/index/:segment`
+and a permanent redirect back from `/ranking/:segment`, so exactly one URL
+is reachable. ISR at one hour is unchanged.

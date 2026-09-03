@@ -13,6 +13,10 @@ import { SEGMENTS, isSegment, type SegmentKey } from '@/lib/site';
  *
  * Full-width rows and no card chrome: a ranking is a list, and the confident
  * version of a list is the list.
+ *
+ * Served at /index/[segment]. The directory is named `ranking` because a
+ * segment called `index` trips Next's index.html handling and breaks the
+ * Vercel deploy; next.config.ts carries the rewrite and the redirect.
  */
 export const revalidate = 3600;
 
