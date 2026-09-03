@@ -1,0 +1,22 @@
+{
+  "name": "botready",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.33.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "pnpm --filter @botready/web dev",
+    "build": "pnpm --filter @botready/web build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
+    "lint": "pnpm --filter @botready/web lint",
+    "db:push": "node scripts/db-push.mjs",
+    "seed:index": "node scripts/seed-index.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

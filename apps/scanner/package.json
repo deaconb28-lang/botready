@@ -1,0 +1,26 @@
+{
+  "name": "@botready/scanner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Railway worker. Fetches a target as several clients, renders it once, probes the well-known paths, and writes observations. It never computes a score.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@botready/core": "workspace:*",
+    "@mozilla/readability": "^0.5.0",
+    "@upstash/qstash": "^2.7.20",
+    "jsdom": "^25.0.1",
+    "playwright": "1.56.0",
+    "postgres": "^3.4.5",
+    "tsx": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

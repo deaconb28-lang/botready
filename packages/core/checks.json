@@ -1,0 +1,189 @@
+{
+  "scoringVersion": "1.2",
+  "grades": [
+    { "grade": "A", "min": 85 },
+    { "grade": "B", "min": 70 },
+    { "grade": "C", "min": 55 },
+    { "grade": "D", "min": 35 },
+    { "grade": "F", "min": 0 }
+  ],
+  "categories": [
+    { "key": "retrievability", "label": "Retrievability", "weight": 25 },
+    { "key": "discovery",      "label": "Discovery",      "weight": 20 },
+    { "key": "representation", "label": "Representation", "weight": 20 },
+    { "key": "structure",      "label": "Structure",      "weight": 15 },
+    { "key": "actionability",  "label": "Actionability",  "weight": 15 },
+    { "key": "freshness",      "label": "Freshness",      "weight": 5 }
+  ],
+  "agents": [
+    { "id": "chrome",      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36", "role": "control" },
+    { "id": "claudebot",   "ua": "ClaudeBot/1.0",     "role": "agent" },
+    { "id": "gptbot",      "ua": "GPTBot/1.2",        "role": "agent" },
+    { "id": "perplexity",  "ua": "PerplexityBot/1.0", "role": "agent" },
+    { "id": "googleext",   "ua": "Google-Extended",   "role": "agent" }
+  ],
+  "checks": [
+    {
+      "key": "agent_status_parity",
+      "category": "retrievability",
+      "points": 18,
+      "label": "Every client gets the same answer",
+      "fails_when": "any agent client receives a different status class than the Chrome control",
+      "observed_shape": { "per_agent": { "<agentId>": { "status": 0, "server": "", "cf_mitigated": "" } } },
+      "remedy": "waf_allow_agents"
+    },
+    {
+      "key": "js_dependency_ratio",
+      "category": "retrievability",
+      "points": 11,
+      "label": "Page text survives without JavaScript",
+      "fails_when": "ratio above 0.7",
+      "warns_when": "ratio between 0.4 and 0.7",
+      "observed_shape": { "raw_chars": 0, "rendered_chars": 0, "ratio": 0 },
+      "remedy": "prerender_key_pages"
+    },
+    {
+      "key": "raw_fetch_latency",
+      "category": "retrievability",
+      "points": 3,
+      "label": "First byte arrives quickly",
+      "fails_when": "ttfb above 2500 ms",
+      "observed_shape": { "ttfb_ms": 0, "total_ms": 0, "bytes": 0 }
+    },
+    {
+      "key": "redirect_depth",
+      "category": "retrievability",
+      "points": 3,
+      "label": "No long redirect chains",
+      "fails_when": "more than 3 hops",
+      "observed_shape": { "hops": 0, "chain": [] }
+    },
+    {
+      "key": "robots_present",
+      "category": "discovery",
+      "points": 4,
+      "label": "robots.txt exists and parses",
+      "observed_shape": { "status": 0, "parse_errors": [] }
+    },
+    {
+      "key": "robots_agent_rules",
+      "category": "discovery",
+      "points": 8,
+      "label": "robots.txt does not silently block reading agents",
+      "fails_when": "an agent user agent is disallowed while search crawlers are allowed",
+      "observed_shape": { "per_agent": { "<agentId>": { "allowed": true, "matched_rule": "" } } },
+      "remedy": "robots_block"
+    },
+    {
+      "key": "sitemap_present",
+      "category": "discovery",
+      "points": 4,
+      "label": "Sitemap exists and is not empty",
+      "observed_shape": { "status": 0, "url_count": 0, "has_lastmod": false }
+    },
+    {
+      "key": "llms_txt_present",
+      "category": "discovery",
+      "points": 5,
+      "label": "llms.txt tells agents which pages matter",
+      "observed_shape": { "status": 0, "link_count": 0, "broken_links": [] },
+      "remedy": "llms_txt"
+    },
+    {
+      "key": "markdown_alternate",
+      "category": "representation",
+      "points": 7,
+      "label": "A markdown representation is advertised",
+      "fails_when": "no link rel=alternate type=text/markdown and no Link header equivalent",
+      "observed_shape": { "link_tag": false, "link_header": false, "accept_negotiation": false },
+      "remedy": "markdown_alternate_tags"
+    },
+    {
+      "key": "semantic_landmarks",
+      "category": "representation",
+      "points": 6,
+      "label": "One h1, a sane heading order, a main landmark",
+      "observed_shape": { "h1_count": 0, "heading_order_breaks": 0, "has_main": false }
+    },
+    {
+      "key": "title_meta_distinct",
+      "category": "representation",
+      "points": 4,
+      "label": "Each page has its own title and description",
+      "observed_shape": { "pages": [] }
+    },
+    {
+      "key": "content_negotiation",
+      "category": "representation",
+      "points": 3,
+      "label": "Server honours Accept: text/markdown",
+      "observed_shape": { "status": 0, "content_type": "" }
+    },
+    {
+      "key": "jsonld_present",
+      "category": "structure",
+      "points": 6,
+      "label": "JSON-LD describes what this is",
+      "observed_shape": { "types": [], "errors": [] },
+      "remedy": "jsonld_block"
+    },
+    {
+      "key": "pricing_structured",
+      "category": "structure",
+      "points": 5,
+      "label": "Pricing is machine readable",
+      "fails_when": "prices appear only in images or JS-rendered tables",
+      "observed_shape": { "offer_nodes": 0, "prices_in_raw_html": 0 }
+    },
+    {
+      "key": "canonical_og",
+      "category": "structure",
+      "points": 4,
+      "label": "Canonical URL and OpenGraph are complete",
+      "observed_shape": { "canonical": "", "og_missing": [] }
+    },
+    {
+      "key": "agent_manifest",
+      "category": "actionability",
+      "points": 5,
+      "label": "An agent manifest or WebMCP endpoint exists",
+      "observed_shape": { "well_known_paths_found": [] }
+    },
+    {
+      "key": "api_docs_reachable",
+      "category": "actionability",
+      "points": 4,
+      "label": "API docs are two hops from the homepage",
+      "observed_shape": { "hops": null, "url": "" }
+    },
+    {
+      "key": "form_semantics",
+      "category": "actionability",
+      "points": 4,
+      "label": "Primary forms have labels, names and autocomplete tokens",
+      "observed_shape": { "forms": [] }
+    },
+    {
+      "key": "no_wall_on_docs",
+      "category": "actionability",
+      "points": 2,
+      "label": "Docs and pricing are not behind auth or a captcha",
+      "observed_shape": { "walled_paths": [] }
+    },
+    {
+      "key": "cache_headers",
+      "category": "freshness",
+      "points": 3,
+      "label": "Last-Modified or ETag is sent",
+      "observed_shape": { "last_modified": "", "etag": "" }
+    },
+    {
+      "key": "sitemap_lastmod_real",
+      "category": "freshness",
+      "points": 2,
+      "label": "Sitemap lastmod values are maintained",
+      "fails_when": "every lastmod is identical or in the future",
+      "observed_shape": { "distinct_dates": 0, "future_dates": 0 }
+    }
+  ]
+}

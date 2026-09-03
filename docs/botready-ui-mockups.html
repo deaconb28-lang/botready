@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>botready.dev — UI mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Palette derived from HTTP status classes, so colour carries meaning */
+  --ink:#16181C;
+  --ink-60:#5C6069;
+  --ink-30:#9AA0A6;
+  --paper:#E4E6E1;
+  --card:#F4F5F2;
+  --rule:#C6C9C1;
+  --pass:#1F6F5C;      /* 2xx */
+  --warn:#B4702A;      /* 3xx */
+  --fail:#C2321F;      /* 4xx */
+  --server:#5B3A7E;    /* 5xx */
+  --sheet:#D6D9D2;
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Instrument Sans',system-ui,sans-serif;
+  --data:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sheet);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);font-variation-settings:'wdth' 112;margin:0;letter-spacing:-.02em}
+a{color:inherit}
+
+/* ---------- mockup sheet chrome ---------- */
+.sheet{max-width:1240px;margin:0 auto;padding:56px 24px 120px}
+.sheet-head{margin-bottom:56px;border-bottom:2px solid var(--ink);padding-bottom:20px}
+.sheet-head h1{font-size:34px;font-weight:800;font-variation-settings:'wdth' 118}
+.sheet-head p{max-width:64ch;color:var(--ink-60);margin:10px 0 0}
+.route{font-family:var(--data);font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-60);display:flex;align-items:baseline;gap:12px;margin:52px 0 12px}
+.route::after{content:"";flex:1;height:1px;background:var(--rule)}
+.route b{color:var(--ink);font-weight:700}
+.frame{background:var(--paper);border:1px solid var(--ink);border-radius:6px;overflow:hidden;box-shadow:0 1px 0 var(--ink)}
+.bar{background:var(--card);border-bottom:1px solid var(--rule);padding:8px 14px;display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--rule)}
+.bar .url{font-family:var(--data);font-size:11px;color:var(--ink-60);margin-left:10px}
+.note{font-size:13px;color:var(--ink-60);margin:10px 2px 0;max-width:78ch}
+.note b{color:var(--ink);font-weight:600}
+
+/* ---------- app chrome ---------- */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--rule)}
+.logo{font-family:var(--data);font-weight:700;font-size:14px;letter-spacing:-.02em}
+.logo i{font-style:normal;color:var(--fail)}
+.navlinks{display:flex;gap:22px;font-size:13px;color:var(--ink-60)}
+.btn{font-family:var(--body);font-weight:600;font-size:14px;background:var(--ink);color:var(--paper);border:1px solid var(--ink);padding:10px 18px;border-radius:4px;cursor:pointer;display:inline-block}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sm{padding:6px 12px;font-size:12.5px}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 28px 40px}
+.eyebrow{font-family:var(--data);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fail);margin-bottom:18px}
+.hero h2{font-size:52px;line-height:1.02;font-weight:800;font-variation-settings:'wdth' 108;max-width:17ch}
+.hero h2 em{font-style:normal;color:var(--fail)}
+.hero p.sub{max-width:52ch;color:var(--ink-60);margin-top:18px;font-size:17px}
+.scanform{display:flex;gap:0;margin-top:30px;max-width:620px;border:1.5px solid var(--ink);border-radius:5px;overflow:hidden;background:var(--card)}
+.scanform span{font-family:var(--data);font-size:14px;color:var(--ink-30);padding:15px 0 15px 16px}
+.scanform input{flex:1;border:0;background:transparent;font-family:var(--data);font-size:14px;padding:15px 10px;outline:none;color:var(--ink)}
+.scanform button{border:0;border-left:1.5px solid var(--ink);background:var(--ink);color:var(--paper);font-family:var(--body);font-weight:600;padding:0 24px;cursor:pointer}
+.microcopy{font-size:12.5px;color:var(--ink-60);margin-top:10px;font-family:var(--data)}
+
+/* ---------- signature: two readers ---------- */
+.readers{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);margin-top:56px}
+.reader{padding:22px 26px 26px}
+.reader + .reader{border-left:1px solid var(--ink)}
+.reader h4{font-size:13px;font-family:var(--data);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+.reader .who{font-size:12px;color:var(--ink-60);font-family:var(--data);margin-bottom:16px}
+.lines div{height:7px;background:var(--ink);opacity:.82;border-radius:2px;margin-bottom:9px}
+.lines.thin div{opacity:.16}
+.lines .w90{width:90%}.lines .w75{width:75%}.lines .w100{width:100%}
+.lines .w60{width:60%}.lines .w40{width:40%}.lines .w25{width:25%}
+.readers .verdict{font-family:var(--data);font-size:12px;margin-top:18px;padding-top:12px;border-top:1px dashed var(--rule)}
+.readers .verdict.bad{color:var(--fail);font-weight:700}
+.readers .verdict.ok{color:var(--pass);font-weight:700}
+
+/* ---------- live scan ---------- */
+.livewrap{padding:60px 28px 70px;max-width:760px;margin:0 auto}
+.livewrap h3{font-size:22px;font-weight:700;margin-bottom:4px}
+.livewrap .target{font-family:var(--data);font-size:13px;color:var(--ink-60);margin-bottom:28px}
+.log{font-family:var(--data);font-size:12.5px;background:var(--card);border:1px solid var(--rule);border-radius:5px;padding:18px 20px}
+.log div{display:flex;gap:14px;padding:5px 0;align-items:baseline}
+.log .t{color:var(--ink-30);width:52px;flex:none}
+.log .m{flex:1}
+.log .s{font-weight:700}
+.log .running{color:var(--ink-60)}
+.progress{height:5px;background:var(--rule);border-radius:3px;margin-top:24px;overflow:hidden}
+.progress i{display:block;height:100%;width:62%;background:var(--ink)}
+
+/* ---------- grade block (signature) ---------- */
+.result{padding:34px 28px 60px}
+.gradeblock{background:var(--ink);color:var(--paper);border-radius:6px;padding:26px 28px;font-family:var(--data);font-size:13.5px;line-height:1.85}
+.gradeblock .k{color:#8E948C}
+.gradeblock .grade{font-family:var(--display);font-variation-settings:'wdth' 122;font-weight:800;font-size:78px;line-height:.9;letter-spacing:-.03em;display:block;margin:6px 0 12px}
+.gradeblock .grade.d{color:#F0705C}
+.meter{display:flex;gap:3px;margin:14px 0 4px}
+.meter i{flex:1;height:14px;background:#3A3D42;border-radius:1px}
+.meter i.on{background:#F0705C}
+.resulthead{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;align-items:stretch}
+.uacard{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:20px 22px}
+.uacard h4{font-family:var(--data);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-60);font-weight:700;margin-bottom:14px}
+.uarow{display:flex;justify-content:space-between;align-items:center;font-family:var(--data);font-size:13px;padding:9px 0;border-bottom:1px dashed var(--rule)}
+.uarow:last-child{border-bottom:0}
+.pill{font-family:var(--data);font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:3px;border:1px solid}
+.pill.p200{color:var(--pass);border-color:var(--pass);background:rgba(31,111,92,.08)}
+.pill.p403{color:var(--fail);border-color:var(--fail);background:rgba(194,50,31,.09)}
+.pill.p301{color:var(--warn);border-color:var(--warn);background:rgba(180,112,42,.09)}
+
+/* ---------- categories ---------- */
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}
+.cat{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:16px 18px}
+.cat .top{display:flex;justify-content:space-between;align-items:baseline}
+.cat h5{margin:0;font-family:var(--body);font-weight:600;font-size:14.5px}
+.cat .val{font-family:var(--data);font-weight:700;font-size:15px}
+.cat .wt{font-family:var(--data);font-size:11px;color:var(--ink-30);margin-top:2px}
+.segs{display:flex;gap:2px;margin-top:12px}
+.segs i{flex:1;height:8px;background:var(--rule);border-radius:1px}
+.segs i.on{background:var(--pass)}
+.segs.mid i.on{background:var(--warn)}
+.segs.low i.on{background:var(--fail)}
+
+/* ---------- findings ---------- */
+.findings{margin-top:34px}
+.findings h3{font-size:20px;font-weight:700;margin-bottom:2px}
+.findings .lead{color:var(--ink-60);font-size:14px;margin-bottom:18px}
+.finding{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--fail);border-radius:5px;padding:16px 18px;margin-bottom:10px}
+.finding.warnlvl{border-left-color:var(--warn)}
+.finding .fh{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.finding h5{margin:0;font-size:15.5px;font-weight:600;font-family:var(--body)}
+.finding p{margin:7px 0 0;font-size:13.5px;color:var(--ink-60);max-width:74ch}
+.tag{font-family:var(--data);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fail);border:1px solid var(--fail);padding:2px 7px;border-radius:3px;white-space:nowrap}
+.tag.w{color:var(--warn);border-color:var(--warn)}
+.evidence{font-family:var(--data);font-size:12px;background:var(--paper);border:1px dashed var(--rule);border-radius:4px;padding:11px 13px;margin-top:12px;color:var(--ink-60);white-space:pre-wrap}
+.evidence b{color:var(--fail);font-weight:700}
+
+/* ---------- paywall ---------- */
+.paywall{margin-top:34px;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+.paywall .pw-top{padding:24px 26px;display:flex;justify-content:space-between;align-items:center;gap:24px}
+.paywall h3{font-size:21px;font-weight:700}
+.paywall p{margin:6px 0 0;color:var(--ink-60);font-size:14px;max-width:56ch}
+.price{font-family:var(--display);font-variation-settings:'wdth' 118;font-weight:800;font-size:38px;line-height:1}
+.price small{font-family:var(--data);font-size:12px;font-weight:400;color:var(--ink-60);display:block;letter-spacing:.04em}
+.pw-preview{border-top:1px solid var(--ink);background:var(--card);padding:20px 26px;position:relative}
+.pw-preview pre{font-family:var(--data);font-size:12px;margin:0;color:var(--ink-60);white-space:pre-wrap}
+.pw-fade{position:absolute;left:0;right:0;bottom:0;height:88px;background:linear-gradient(to bottom,rgba(244,245,242,0),var(--card))}
+
+/* ---------- leaderboard ---------- */
+.board{padding:34px 28px 56px}
+.board h2{font-size:30px;font-weight:800;font-variation-settings:'wdth' 112}
+.board .lead{color:var(--ink-60);max-width:62ch;margin:8px 0 24px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-family:var(--data);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-60);padding:0 10px 9px 0;border-bottom:1px solid var(--ink);font-weight:700}
+td{padding:12px 10px 12px 0;border-bottom:1px solid var(--rule);font-family:var(--data);font-size:13px;vertical-align:middle}
+td.name{font-family:var(--body);font-weight:600;font-size:14.5px}
+.rank{color:var(--ink-30);width:42px}
+.gr{font-weight:700;font-size:15px}
+.gr.a{color:var(--pass)}.gr.c{color:var(--warn)}.gr.f{color:var(--fail)}
+.claim{font-family:var(--body);font-size:12.5px;color:var(--ink-60);text-decoration:underline}
+
+/* ---------- monitor ---------- */
+.mon{display:grid;grid-template-columns:220px 1fr;min-height:520px}
+.side{border-right:1px solid var(--rule);background:var(--card);padding:22px 18px}
+.side h4{font-family:var(--data);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-60);margin-bottom:14px}
+.sitelist div{font-family:var(--data);font-size:13px;padding:9px 10px;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
+.sitelist div.active{background:var(--ink);color:var(--paper)}
+.mon-main{padding:26px 28px}
+.alert{border:1px solid var(--fail);background:rgba(194,50,31,.06);border-radius:5px;padding:15px 18px;margin-bottom:22px}
+.alert h5{margin:0;font-size:14.5px;font-weight:600;font-family:var(--body);color:var(--fail)}
+.alert p{margin:5px 0 0;font-size:13.5px;color:var(--ink-60)}
+.spark{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:20px 22px;margin-bottom:20px}
+.spark h4{font-family:var(--data);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-60);margin-bottom:14px}
+
+/* ---------- share card ---------- */
+.og{width:100%;aspect-ratio:1200/630;background:var(--ink);color:var(--paper);padding:48px 54px;display:flex;flex-direction:column;justify-content:space-between}
+.og .oglogo{font-family:var(--data);font-size:15px;font-weight:700}
+.og .oglogo i{font-style:normal;color:#F0705C}
+.og h2{font-family:var(--display);font-variation-settings:'wdth' 120;font-weight:800;font-size:56px;line-height:1;letter-spacing:-.03em}
+.og .ogscore{font-family:var(--data);font-size:15px;color:#8E948C}
+.og .ogbig{font-family:var(--display);font-variation-settings:'wdth' 124;font-weight:800;font-size:120px;line-height:.85;color:#F0705C}
+
+/* ---------- mobile frame ---------- */
+.mobwrap{display:flex;gap:26px;flex-wrap:wrap}
+.mob{width:330px;border:1px solid var(--ink);border-radius:20px;overflow:hidden;background:var(--paper)}
+.mob .mtop{padding:14px 18px;border-bottom:1px solid var(--rule);font-family:var(--data);font-size:12px;font-weight:700}
+.mob .mbody{padding:18px}
+.mob .gradeblock{padding:20px;font-size:12px}
+.mob .gradeblock .grade{font-size:58px}
+.mob .cats{grid-template-columns:1fr;gap:8px;margin-top:16px}
+.mob .uarow{font-size:12px}
+
+@media (max-width:900px){
+  .resulthead,.readers,.cats,.mon{grid-template-columns:1fr}
+  .reader + .reader{border-left:0;border-top:1px solid var(--ink)}
+  .side{border-right:0;border-bottom:1px solid var(--rule)}
+  .hero h2{font-size:36px}
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="sheet-head">
+    <h1>botready.dev</h1>
+    <p>UI mockups, v1. Seven screens covering the full path from a cold visitor to a paying monitor subscriber. Colour is not decorative here: every accent maps to an HTTP status class, so a reader learns the legend once and it holds across every screen.</p>
+  </div>
+
+  <!-- =================== 1. LANDING =================== -->
+  <div class="route"><b>/</b> landing and scan input</div>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">botready.dev</span></div>
+
+    <div class="nav">
+      <div class="logo">botready<i>.dev</i></div>
+      <div class="navlinks"><span>Index</span><span>What we check</span><span>Pricing</span><span>Docs</span></div>
+      <span class="btn sm ghost">Sign in</span>
+    </div>
+
+    <div class="hero">
+      <div class="eyebrow">HTTP 200 for you · HTTP 403 for them</div>
+      <h2>Your site answers browsers. It might be <em>hanging up</em> on agents.</h2>
+      <p class="sub">We request your page as five different clients, compare what each one gets back, and hand you the exact files that fix the gaps.</p>
+
+      <div class="scanform">
+        <span>https://</span>
+        <input value="linear.app" readonly aria-label="Site to check">
+        <button>Run the check</button>
+      </div>
+      <p class="microcopy">Free · no account · takes about 30 seconds · 6 pages max</p>
+    </div>
+
+    <!-- SIGNATURE ELEMENT -->
+    <div class="readers">
+      <div class="reader">
+        <h4>What Chrome gets</h4>
+        <div class="who">Mozilla/5.0 … Chrome/141 · 9,240 chars</div>
+        <div class="lines">
+          <div class="w90"></div><div class="w100"></div><div class="w75"></div>
+          <div class="w100"></div><div class="w60"></div><div class="w90"></div>
+          <div class="w100"></div><div class="w40"></div>
+        </div>
+        <div class="verdict ok">200 OK · pricing found · 8 headings</div>
+      </div>
+      <div class="reader">
+        <h4>What a plain fetch gets</h4>
+        <div class="who">ClaudeBot/1.0 · 312 chars</div>
+        <div class="lines thin">
+          <div class="w25"></div><div class="w40"></div>
+          <div style="height:7px"></div><div style="height:7px"></div>
+          <div style="height:7px"></div><div style="height:7px"></div>
+          <div style="height:7px"></div><div style="height:7px"></div>
+        </div>
+        <div class="verdict bad">403 Forbidden · nothing readable</div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>The signature element is the split.</b> Every competitor opens with a percentage donut. This opens with the actual disagreement between two readers, which is the whole product thesis in one glance and reads as a screenshot people forward.</p>
+
+  <!-- =================== 2. LIVE SCAN =================== -->
+  <div class="route"><b>/scan/live</b> in-progress state</div>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">botready.dev/scan/live</span></div>
+    <div class="livewrap">
+      <h3>Reading linear.app the way agents do</h3>
+      <div class="target">6 pages · 5 clients · started 11 seconds ago</div>
+      <div class="log">
+        <div><span class="t">0.4s</span><span class="m">GET / as Chrome/141</span><span class="s" style="color:var(--pass)">200</span></div>
+        <div><span class="t">1.1s</span><span class="m">GET / as ClaudeBot/1.0</span><span class="s" style="color:var(--fail)">403</span></div>
+        <div><span class="t">1.6s</span><span class="m">GET / as GPTBot/1.2</span><span class="s" style="color:var(--fail)">403</span></div>
+        <div><span class="t">2.2s</span><span class="m">GET / as PerplexityBot</span><span class="s" style="color:var(--pass)">200</span></div>
+        <div><span class="t">2.9s</span><span class="m">GET /robots.txt</span><span class="s" style="color:var(--pass)">200</span></div>
+        <div><span class="t">3.3s</span><span class="m">GET /llms.txt</span><span class="s" style="color:var(--warn)">404</span></div>
+        <div><span class="t">4.0s</span><span class="m">Rendering with a headless browser</span><span class="s" style="color:var(--pass)">done</span></div>
+        <div class="running"><span class="t">…</span><span class="m">Comparing raw text against rendered text</span><span class="s">running</span></div>
+      </div>
+      <div class="progress"><i></i></div>
+      <p class="microcopy" style="margin-top:14px">We identify ourselves as BotreadyBot/1.0 and obey your robots.txt.</p>
+    </div>
+  </div>
+  <p class="note">The wait is the demo. Watching real requests come back with real status codes is more persuasive than a spinner, and the 403 lines land before the score does.</p>
+
+  <!-- =================== 3. RESULT =================== -->
+  <div class="route"><b>/scan/[id]</b> result, public and shareable</div>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">botready.dev/scan/8f2a1c</span></div>
+    <div class="nav">
+      <div class="logo">botready<i>.dev</i></div>
+      <div class="navlinks"><span>Index</span><span>What we check</span><span>Pricing</span></div>
+      <span class="btn sm">Check another site</span>
+    </div>
+
+    <div class="result">
+      <div class="resulthead">
+        <div class="gradeblock">
+          <div><span class="k">site</span> linear.app</div>
+          <div><span class="k">checked</span> 2 Sep 2026, 14:02 UTC</div>
+          <span class="grade d">D</span>
+          <div><span class="k">score</span> 41 / 100 · <span class="k">scoring</span> v1.2</div>
+          <div class="meter">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div style="margin-top:14px"><span class="k">verdict</span> two of five agents cannot read this page at all</div>
+        </div>
+
+        <div class="uacard">
+          <h4>Who gets in</h4>
+          <div class="uarow"><span>Chrome 141</span><span class="pill p200">200</span></div>
+          <div class="uarow"><span>ClaudeBot/1.0</span><span class="pill p403">403</span></div>
+          <div class="uarow"><span>GPTBot/1.2</span><span class="pill p403">403</span></div>
+          <div class="uarow"><span>PerplexityBot</span><span class="pill p200">200</span></div>
+          <div class="uarow"><span>Google-Extended</span><span class="pill p301">301</span></div>
+          <p class="microcopy" style="margin-top:14px">Same URL, same second, five clients.</p>
+        </div>
+      </div>
+
+      <div class="cats">
+        <div class="cat"><div class="top"><h5>Retrievability</h5><span class="val" style="color:var(--fail)">22</span></div><div class="wt">weight 25%</div><div class="segs low"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="cat"><div class="top"><h5>Discovery</h5><span class="val" style="color:var(--warn)">55</span></div><div class="wt">weight 20%</div><div class="segs mid"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="cat"><div class="top"><h5>Representation</h5><span class="val" style="color:var(--fail)">30</span></div><div class="wt">weight 20%</div><div class="segs low"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="cat"><div class="top"><h5>Structure</h5><span class="val" style="color:var(--pass)">78</span></div><div class="wt">weight 15%</div><div class="segs"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
+        <div class="cat"><div class="top"><h5>Actionability</h5><span class="val" style="color:var(--warn)">48</span></div><div class="wt">weight 15%</div><div class="segs mid"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="cat"><div class="top"><h5>Freshness</h5><span class="val" style="color:var(--pass)">80</span></div><div class="wt">weight 5%</div><div class="segs"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
+      </div>
+
+      <div class="findings">
+        <h3>What to fix, worst first</h3>
+        <p class="lead">Nine checks failed. These three account for 34 of the 59 points you lost.</p>
+
+        <div class="finding">
+          <div class="fh"><h5>Two agent clients are refused at the edge</h5><span class="tag">−18 pts</span></div>
+          <p>Your WAF answers ClaudeBot and GPTBot with 403 while answering Chrome with 200 from the same IP. Nothing in your robots.txt asks for this, so it is almost certainly a bot-protection rule rather than a decision.</p>
+          <div class="evidence">GET / HTTP/1.1
+user-agent: ClaudeBot/1.0
+→ <b>HTTP/1.1 403 Forbidden</b>
+   server: cloudflare
+   cf-mitigated: challenge</div>
+        </div>
+
+        <div class="finding">
+          <div class="fh"><h5>97% of your page text needs JavaScript</h5><span class="tag">−11 pts</span></div>
+          <p>A plain fetch returns 312 readable characters. After rendering, the same page has 9,240. Any client that does not run a browser sees an almost empty document, including your pricing.</p>
+          <div class="evidence">raw fetch      312 chars   ▏
+rendered     9,240 chars   ████████████████████
+<b>JS dependency ratio: 0.97</b></div>
+        </div>
+
+        <div class="finding warnlvl">
+          <div class="fh"><h5>No llms.txt at the root</h5><span class="tag w">−5 pts</span></div>
+          <p>Nothing tells a reading agent which of your 214 URLs matter. Your sitemap lists all of them with equal weight, so a summariser picks whichever it hits first.</p>
+          <div class="evidence">GET /llms.txt → 404 Not Found
+sitemap.xml → 214 URLs, no priority signal</div>
+        </div>
+      </div>
+
+      <!-- paywall -->
+      <div class="paywall">
+        <div class="pw-top">
+          <div>
+            <h3>Get the files, not just the verdict</h3>
+            <p>A generated llms.txt built from your real sitemap, the corrected robots.txt block, the link tags for your top 20 URLs, and a JSON-LD block filled in with your own pricing.</p>
+          </div>
+          <div style="text-align:right">
+            <div class="price">$99<small>one time</small></div>
+            <span class="btn" style="margin-top:12px">Get the fix pack</span>
+          </div>
+        </div>
+        <div class="pw-preview">
+<pre># llms.txt for linear.app
+> Purpose-built issue tracking for software teams.
+
+## Product
+- [Plan](https://linear.app/plan): cycles, projects, roadmaps
+- [Build](https://linear.app/build): issues, triage, git integration
+- [Insights](https://linear.app/insights): reporting on delivery
+
+## Pricing
+- [Plans and pricing](https://linear.app/pricing): Free, Basic …</pre>
+          <div class="pw-fade"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>The paywall shows the artifact, half-finished.</b> A blurred score is annoying. A real generated file cut off four lines in is a demonstration, and it is the only honest way to charge $99 for something whose diagnosis is free.</p>
+
+  <!-- =================== 4. LEADERBOARD =================== -->
+  <div class="route"><b>/index</b> the public index, your distribution engine</div>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">botready.dev/index/saas</span></div>
+    <div class="nav">
+      <div class="logo">botready<i>.dev</i></div>
+      <div class="navlinks"><span>SaaS</span><span>Dev tools</span><span>Ecommerce</span><span>Media</span></div>
+      <span class="btn sm">Check your site</span>
+    </div>
+    <div class="board">
+      <h2>The agent readability index</h2>
+      <p class="lead">200 SaaS sites, re-checked every night with scoring v1.2. Weights are published. Argue with them.</p>
+      <table>
+        <thead><tr><th class="rank">#</th><th>Site</th><th>Grade</th><th>Score</th><th>Agents refused</th><th>JS dependency</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="rank">1</td><td class="name">stripe.com</td><td class="gr a">A</td><td>94</td><td>0 of 5</td><td>0.12</td><td><span class="claim">Claimed</span></td></tr>
+          <tr><td class="rank">2</td><td class="name">supabase.com</td><td class="gr a">A</td><td>91</td><td>0 of 5</td><td>0.19</td><td><span class="claim">Claimed</span></td></tr>
+          <tr><td class="rank">3</td><td class="name">railway.com</td><td class="gr a">A−</td><td>88</td><td>0 of 5</td><td>0.24</td><td><span class="claim">Claim this site</span></td></tr>
+          <tr><td class="rank">4</td><td class="name">vercel.com</td><td class="gr a">B+</td><td>84</td><td>1 of 5</td><td>0.31</td><td><span class="claim">Claim this site</span></td></tr>
+          <tr><td class="rank">…</td><td class="name" style="color:var(--ink-30)">…</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td class="rank">61</td><td class="name">linear.app</td><td class="gr f">D</td><td>41</td><td>2 of 5</td><td>0.97</td><td><span class="claim">Claim this site</span></td></tr>
+          <tr><td class="rank">62</td><td class="name">notion.so</td><td class="gr c">C−</td><td>39</td><td>1 of 5</td><td>0.94</td><td><span class="claim">Claim this site</span></td></tr>
+        </tbody>
+      </table>
+      <p class="microcopy" style="margin-top:18px">Blocked our scanner: 4 sites. We list them as blocked and do not work around it.</p>
+    </div>
+  </div>
+  <p class="note">Claiming a site is the conversion moment. Verify by DNS TXT or a meta tag, and the claim flow drops straight into the monitor subscription.</p>
+
+  <!-- =================== 5. MONITOR =================== -->
+  <div class="route"><b>/app</b> monitor dashboard, the subscription</div>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">botready.dev/app</span></div>
+    <div class="mon">
+      <div class="side">
+        <h4>Your sites</h4>
+        <div class="sitelist">
+          <div class="active"><span>linear.app</span><span>41</span></div>
+          <div><span>docs.linear.app</span><span style="color:var(--pass)">78</span></div>
+          <div><span>linear.app/blog</span><span style="color:var(--warn)">62</span></div>
+        </div>
+        <h4 style="margin-top:26px">Checks run</h4>
+        <p class="microcopy">Weekly, Mondays 06:00 UTC</p>
+      </div>
+      <div class="mon-main">
+        <div class="alert">
+          <h5>ClaudeBot started getting 403 on 28 August</h5>
+          <p>Retrievability dropped 19 points overnight. Nothing else changed, which usually means a WAF rule was tightened rather than a deploy.</p>
+        </div>
+        <div class="spark">
+          <h4>Score, last 90 days</h4>
+          <svg viewBox="0 0 640 120" width="100%" height="120" role="img" aria-label="Score falling from 60 to 41 in late August">
+            <polyline fill="none" stroke="#C6C9C1" stroke-width="1" points="0,100 640,100"/>
+            <polyline fill="none" stroke="#16181C" stroke-width="2.5" points="0,52 70,50 140,55 210,48 280,50 350,46 420,49 470,47 500,86 570,88 640,88"/>
+            <circle cx="500" cy="86" r="5" fill="#C2321F"/>
+            <text x="508" y="80" font-family="JetBrains Mono, monospace" font-size="11" fill="#C2321F">28 Aug · −19</text>
+          </svg>
+        </div>
+        <div class="spark">
+          <h4>Tokens to answer <span style="color:var(--ink-30)">· agent task probe</span></h4>
+          <div class="uarow"><span>“What does this cost?”</span><span style="color:var(--fail)">14,200 tokens · failed</span></div>
+          <div class="uarow"><span>“Who is this for?”</span><span style="color:var(--warn)">8,900 tokens</span></div>
+          <div class="uarow"><span>“How do I contact sales?”</span><span style="color:var(--pass)">2,100 tokens</span></div>
+          <p class="microcopy" style="margin-top:12px">Median across your category: 3,400 tokens.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>Tokens to answer is the retention hook.</b> The score is a number anyone can regenerate. This one needs your infrastructure and it is the metric worth putting in a weekly email.</p>
+
+  <!-- =================== 6. SHARE CARD =================== -->
+  <div class="route"><b>/api/og/[id]</b> share card, generated per scan</div>
+  <div class="frame" style="border-radius:6px">
+    <div class="og">
+      <div class="oglogo">botready<i>.dev</i></div>
+      <div>
+        <div class="ogscore">linear.app · agent readability</div>
+        <div style="display:flex;align-items:flex-end;gap:28px;margin-top:6px">
+          <div class="ogbig">D</div>
+          <h2 style="padding-bottom:10px">2 of 5 agents<br>get a 403.</h2>
+        </div>
+      </div>
+      <div class="ogscore">97% of the page text needs JavaScript · checked 2 Sep 2026</div>
+    </div>
+  </div>
+  <p class="note">One fact, one grade, one domain. This is the unit that travels on X, so it gets designed before the marketing site does.</p>
+
+  <!-- =================== 7. MOBILE =================== -->
+  <div class="route"><b>mobile</b> result page, 390px</div>
+  <div class="mobwrap">
+    <div class="mob">
+      <div class="mtop">botready<span style="color:var(--fail)">.dev</span></div>
+      <div class="mbody">
+        <div class="gradeblock">
+          <div><span class="k">site</span> linear.app</div>
+          <span class="grade d">D</span>
+          <div><span class="k">score</span> 41 / 100</div>
+          <div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="uacard" style="margin-top:14px">
+          <h4>Who gets in</h4>
+          <div class="uarow"><span>Chrome 141</span><span class="pill p200">200</span></div>
+          <div class="uarow"><span>ClaudeBot</span><span class="pill p403">403</span></div>
+          <div class="uarow"><span>GPTBot</span><span class="pill p403">403</span></div>
+          <div class="uarow"><span>PerplexityBot</span><span class="pill p200">200</span></div>
+        </div>
+        <div class="cats">
+          <div class="cat"><div class="top"><h5>Retrievability</h5><span class="val" style="color:var(--fail)">22</span></div><div class="segs low"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          <div class="cat"><div class="top"><h5>Discovery</h5><span class="val" style="color:var(--warn)">55</span></div><div class="segs mid"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div></div>
+        </div>
+        <span class="btn" style="display:block;text-align:center;margin-top:16px">Get the fix pack · $99</span>
+      </div>
+    </div>
+
+    <div class="mob">
+      <div class="mtop">botready<span style="color:var(--fail)">.dev</span></div>
+      <div class="mbody">
+        <div class="eyebrow" style="margin-bottom:12px">HTTP 200 for you · 403 for them</div>
+        <h2 style="font-family:var(--display);font-variation-settings:'wdth' 106;font-weight:800;font-size:29px;line-height:1.05">Your site answers browsers. It might be <em style="font-style:normal;color:var(--fail)">hanging up</em> on agents.</h2>
+        <div class="scanform" style="margin-top:20px;flex-direction:column">
+          <div style="display:flex;align-items:center"><span>https://</span><input value="yoursite.com" readonly aria-label="Site to check"></div>
+          <button style="border-left:0;border-top:1.5px solid var(--ink);padding:14px 0;width:100%">Run the check</button>
+        </div>
+        <p class="microcopy">Free · no account · about 30 seconds</p>
+        <div style="margin-top:22px;border-top:1px solid var(--ink);padding-top:16px">
+          <h4 style="font-family:var(--data);font-size:11px;letter-spacing:.08em;text-transform:uppercase">What Chrome gets · 9,240 chars</h4>
+          <div class="lines" style="margin-top:10px"><div class="w90"></div><div class="w100"></div><div class="w75"></div><div class="w100"></div></div>
+          <h4 style="font-family:var(--data);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:20px">What ClaudeBot gets · 312 chars</h4>
+          <div class="lines thin" style="margin-top:10px"><div class="w25"></div><div class="w40"></div><div style="height:7px"></div><div style="height:7px"></div></div>
+          <p style="font-family:var(--data);font-size:12px;color:var(--fail);font-weight:700;margin-top:12px">403 Forbidden · nothing readable</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

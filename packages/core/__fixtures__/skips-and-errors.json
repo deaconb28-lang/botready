@@ -1,0 +1,349 @@
+[
+  {
+    "key": "agent_status_parity",
+    "status": "error",
+    "observed": {
+      "control": "chrome",
+      "per_agent": {
+        "chrome": {
+          "status": 200,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "claudebot": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "gptbot": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "perplexity": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "googleext": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        }
+      }
+    },
+    "durationMs": 40
+  },
+  {
+    "key": "js_dependency_ratio",
+    "status": "error",
+    "observed": {
+      "raw_chars": 312,
+      "rendered_chars": 9240,
+      "ratio": 0.9662,
+      "raw_extraction_failed": true,
+      "rendered_extraction_failed": false
+    },
+    "durationMs": 47
+  },
+  {
+    "key": "raw_fetch_latency",
+    "status": "pass",
+    "observed": {
+      "ttfb_ms": 210,
+      "total_ms": 380,
+      "bytes": 48210
+    },
+    "durationMs": 54
+  },
+  {
+    "key": "redirect_depth",
+    "status": "pass",
+    "observed": {
+      "hops": 0,
+      "chain": []
+    },
+    "durationMs": 61
+  },
+  {
+    "key": "robots_present",
+    "status": "pass",
+    "observed": {
+      "status": 200,
+      "bytes": 214,
+      "parse_errors": [],
+      "sitemap_lines": 1
+    },
+    "durationMs": 68
+  },
+  {
+    "key": "robots_agent_rules",
+    "status": "pass",
+    "observed": {
+      "robots_status": 200,
+      "search_crawlers_allowed": true,
+      "per_agent": {
+        "chrome": {
+          "allowed": true,
+          "matched_rule": "Allow: /"
+        },
+        "claudebot": {
+          "allowed": true,
+          "matched_rule": "Allow: /"
+        },
+        "gptbot": {
+          "allowed": true,
+          "matched_rule": "Allow: /"
+        },
+        "perplexity": {
+          "allowed": true,
+          "matched_rule": "Allow: /"
+        },
+        "googleext": {
+          "allowed": true,
+          "matched_rule": "Allow: /"
+        }
+      },
+      "search_crawlers": {
+        "Googlebot": true,
+        "Bingbot": true
+      }
+    },
+    "durationMs": 75
+  },
+  {
+    "key": "sitemap_present",
+    "status": "pass",
+    "observed": {
+      "status": 200,
+      "url_count": 214,
+      "has_lastmod": true
+    },
+    "durationMs": 82
+  },
+  {
+    "key": "llms_txt_present",
+    "status": "pass",
+    "observed": {
+      "status": 200,
+      "link_count": 12,
+      "broken_links": [],
+      "llms_full_present": true
+    },
+    "durationMs": 89
+  },
+  {
+    "key": "markdown_alternate",
+    "status": "pass",
+    "observed": {
+      "link_tag": true,
+      "link_tag_in_raw_html": true,
+      "link_tag_after_render": true,
+      "link_header": false,
+      "link_header_value": "",
+      "accept_negotiation": true
+    },
+    "durationMs": 96
+  },
+  {
+    "key": "semantic_landmarks",
+    "status": "pass",
+    "observed": {
+      "h1_count": 1,
+      "heading_order_breaks": 0,
+      "has_main": true,
+      "headings": 8,
+      "heading_ids": 8,
+      "read_from": "rendered_dom"
+    },
+    "durationMs": 103
+  },
+  {
+    "key": "title_meta_distinct",
+    "status": "pass",
+    "observed": {
+      "pages": [
+        {
+          "url": "https://example.com/",
+          "title": "Example",
+          "description": "What Example does."
+        },
+        {
+          "url": "https://example.com/pricing",
+          "title": "Pricing — Example",
+          "description": "What it costs."
+        }
+      ],
+      "pages_compared": 2,
+      "missing_title_or_description": 0,
+      "duplicate_titles": 0,
+      "duplicate_descriptions": 0
+    },
+    "durationMs": 110
+  },
+  {
+    "key": "content_negotiation",
+    "status": "skip",
+    "observed": {
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 4120,
+      "differs_from_html": false
+    },
+    "durationMs": 117
+  },
+  {
+    "key": "jsonld_present",
+    "status": "pass",
+    "observed": {
+      "types": [
+        "Offer",
+        "Organization",
+        "Product"
+      ],
+      "errors": [],
+      "types_in_raw_html": [
+        "Organization"
+      ]
+    },
+    "durationMs": 124
+  },
+  {
+    "key": "pricing_structured",
+    "status": "skip",
+    "observed": {
+      "offer_nodes": 0,
+      "prices_in_raw_html": 0,
+      "prices_after_render": 6,
+      "read_from": "https://example.com/pricing"
+    },
+    "durationMs": 131
+  },
+  {
+    "key": "canonical_og",
+    "status": "pass",
+    "observed": {
+      "canonical": "https://example.com/",
+      "og_missing": [],
+      "og_present": [
+        "og:title",
+        "og:description",
+        "og:image",
+        "og:url",
+        "og:type"
+      ]
+    },
+    "durationMs": 138
+  },
+  {
+    "key": "agent_manifest",
+    "status": "pass",
+    "observed": {
+      "well_known_paths_found": [
+        "/.well-known/agent.json"
+      ],
+      "probed": [
+        {
+          "path": "/.well-known/ai-plugin.json",
+          "status": 404
+        },
+        {
+          "path": "/.well-known/agent.json",
+          "status": 200
+        }
+      ]
+    },
+    "durationMs": 145
+  },
+  {
+    "key": "api_docs_reachable",
+    "status": "pass",
+    "observed": {
+      "hops": 1,
+      "url": "https://example.com/docs/api"
+    },
+    "durationMs": 152
+  },
+  {
+    "key": "form_semantics",
+    "status": "skip",
+    "observed": {
+      "forms": [
+        {
+          "action": "/signup",
+          "fields": 3,
+          "labelled": 0,
+          "named": 1,
+          "with_autocomplete": 0
+        }
+      ],
+      "forms_seen": 2
+    },
+    "durationMs": 159
+  },
+  {
+    "key": "no_wall_on_docs",
+    "status": "skip",
+    "observed": {
+      "walled_paths": [
+        {
+          "url": "https://example.com/docs",
+          "status": 403,
+          "cf_mitigated": "challenge"
+        }
+      ],
+      "paths_checked": [
+        {
+          "url": "https://example.com/docs",
+          "status": 403
+        }
+      ]
+    },
+    "durationMs": 166
+  },
+  {
+    "key": "cache_headers",
+    "status": "skip",
+    "observed": {
+      "last_modified": "",
+      "etag": ""
+    },
+    "durationMs": 173
+  },
+  {
+    "key": "sitemap_lastmod_real",
+    "status": "skip",
+    "observed": {
+      "distinct_dates": 1,
+      "future_dates": 0,
+      "urls_with_lastmod": 214,
+      "urls_seen": 214
+    },
+    "durationMs": 180
+  }
+]

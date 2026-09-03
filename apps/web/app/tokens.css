@@ -1,0 +1,79 @@
+/* botready.dev design tokens.
+   Imported once in apps/web/app/globals.css.
+
+   Colour maps to HTTP status classes and that mapping is load-bearing.
+   Do not add a colour that does not mean something.
+
+   The three faces are loaded through next/font in app/layout.tsx rather than an
+   @import of fonts.googleapis.com. Same faces, same width axis, but self-hosted
+   from our own origin, so the first paint does not wait on a third party and
+   .dev's HSTS preload has nothing to negotiate. --font-archivo and its two
+   siblings are the variables next/font defines. */
+
+@theme {
+  /* surfaces */
+  --color-ink:        #16181C;
+  --color-ink-60:     #5C6069;
+  --color-ink-30:     #9AA0A6;
+  --color-paper:      #E4E6E1;   /* cool ash, deliberately not cream */
+  --color-card:       #F4F5F2;
+  --color-rule:       #C6C9C1;
+  --color-sheet:      #D6D9D2;   /* one step darker than paper, for page gutters */
+
+  /* status classes */
+  --color-pass:       #1F6F5C;   /* 2xx */
+  --color-warn:       #B4702A;   /* 3xx */
+  --color-fail:       #C2321F;   /* 4xx */
+  --color-server:     #5B3A7E;   /* 5xx */
+  --color-fail-dark:  #F0705C;   /* 4xx on the ink background only */
+  --color-ink-key:    #8E948C;   /* header-block key names on the ink surface */
+  --color-ink-seg:    #3A3D42;   /* empty meter segments on the ink surface */
+
+  /* type */
+  --font-display:  var(--font-archivo), system-ui, sans-serif;
+  --font-body:     var(--font-instrument-sans), system-ui, sans-serif;
+  --font-data:     var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* scale */
+  --text-hero:     3.25rem;   /* landing h2, wdth 108, weight 800 */
+  --text-grade:    4.875rem;  /* the grade letter, wdth 122, weight 800 */
+  --text-h2:       1.875rem;
+  --text-h3:       1.3125rem;
+  --text-body:     0.9375rem;
+  --text-data:     0.84375rem;
+  --text-micro:    0.78125rem;
+
+  --radius-card:   6px;
+  --radius-pill:   3px;
+}
+
+/* Rules the components must follow.
+
+   1. Display face is Archivo and appears only in: the landing headline, the
+      grade letter, the index heading, and the share card. Nowhere else.
+
+   2. Every URL, status code, user agent, header, byte count and character
+      count is set in --font-data. A status code in a proportional face reads
+      as a number rather than a status, which is wrong here.
+
+   3. Archivo's width axis carries emphasis instead of italics or colour:
+        wdth 106  hero at mobile
+        wdth 108  hero at desktop
+        wdth 112  section headings
+        wdth 118  index heading
+        wdth 122  grade letter on the result page
+        wdth 124  grade letter on the share card
+
+   4. No percentage donuts, rings or radial gauges. The score is a 20-segment
+      horizontal meter beneath the grade letter, and category subscores are
+      10-segment meters. Segments read as discrete measurements, which is what
+      a check list is.
+
+   5. The grade block is always the ink background with paper text, styled as
+      an HTTP response. It is the only inverted surface on the result page, so
+      it needs no border or shadow to stand out.
+
+   6. Findings carry a 3px left border in the status colour. Severity is never
+      communicated by background fill, because a wall of tinted cards makes the
+      worst finding indistinguishable from the third worst.
+*/

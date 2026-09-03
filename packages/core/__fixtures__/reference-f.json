@@ -1,0 +1,363 @@
+[
+  {
+    "key": "agent_status_parity",
+    "status": "fail",
+    "observed": {
+      "control": "chrome",
+      "per_agent": {
+        "chrome": {
+          "status": 200,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "claudebot": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "gptbot": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "perplexity": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        },
+        "googleext": {
+          "status": 403,
+          "server": "cloudflare",
+          "cf_mitigated": "challenge",
+          "ttfb_ms": 180,
+          "total_ms": 240,
+          "bytes": 512,
+          "redirects": 0,
+          "content_type": "text/html; charset=utf-8"
+        }
+      }
+    },
+    "durationMs": 40
+  },
+  {
+    "key": "js_dependency_ratio",
+    "status": "fail",
+    "observed": {
+      "raw_chars": 312,
+      "rendered_chars": 9240,
+      "ratio": 0.9662,
+      "raw_extraction_failed": true,
+      "rendered_extraction_failed": false
+    },
+    "durationMs": 47
+  },
+  {
+    "key": "raw_fetch_latency",
+    "status": "fail",
+    "observed": {
+      "ttfb_ms": 3120,
+      "total_ms": 4400,
+      "bytes": 48210
+    },
+    "durationMs": 54
+  },
+  {
+    "key": "redirect_depth",
+    "status": "fail",
+    "observed": {
+      "hops": 4,
+      "chain": [
+        {
+          "from": "https://example.com/",
+          "to": "https://www.example.com/",
+          "status": 301
+        },
+        {
+          "from": "https://www.example.com/",
+          "to": "https://www.example.com/en",
+          "status": 302
+        },
+        {
+          "from": "https://www.example.com/en",
+          "to": "https://www.example.com/en/",
+          "status": 301
+        },
+        {
+          "from": "https://www.example.com/en/",
+          "to": "https://www.example.com/en/home",
+          "status": 302
+        }
+      ]
+    },
+    "durationMs": 61
+  },
+  {
+    "key": "robots_present",
+    "status": "fail",
+    "observed": {
+      "status": 404,
+      "bytes": 0,
+      "parse_errors": [],
+      "sitemap_lines": 0
+    },
+    "durationMs": 68
+  },
+  {
+    "key": "robots_agent_rules",
+    "status": "fail",
+    "observed": {
+      "robots_status": 404,
+      "search_crawlers_allowed": true,
+      "per_agent": {
+        "chrome": {
+          "allowed": true,
+          "matched_rule": "Allow: /"
+        },
+        "claudebot": {
+          "allowed": false,
+          "matched_rule": "Disallow: /"
+        },
+        "gptbot": {
+          "allowed": false,
+          "matched_rule": "Disallow: /"
+        },
+        "perplexity": {
+          "allowed": false,
+          "matched_rule": "Disallow: /"
+        },
+        "googleext": {
+          "allowed": false,
+          "matched_rule": "Disallow: /"
+        }
+      },
+      "search_crawlers": {
+        "Googlebot": true,
+        "Bingbot": true
+      }
+    },
+    "durationMs": 75
+  },
+  {
+    "key": "sitemap_present",
+    "status": "fail",
+    "observed": {
+      "status": 404,
+      "url_count": 0,
+      "has_lastmod": false
+    },
+    "durationMs": 82
+  },
+  {
+    "key": "llms_txt_present",
+    "status": "fail",
+    "observed": {
+      "status": 404,
+      "link_count": 0,
+      "broken_links": [],
+      "llms_full_present": false
+    },
+    "durationMs": 89
+  },
+  {
+    "key": "markdown_alternate",
+    "status": "fail",
+    "observed": {
+      "link_tag": false,
+      "link_tag_in_raw_html": false,
+      "link_tag_after_render": false,
+      "link_header": false,
+      "link_header_value": "",
+      "accept_negotiation": false
+    },
+    "durationMs": 96
+  },
+  {
+    "key": "semantic_landmarks",
+    "status": "fail",
+    "observed": {
+      "h1_count": 3,
+      "heading_order_breaks": 2,
+      "has_main": false,
+      "headings": 8,
+      "heading_ids": 0,
+      "read_from": "rendered_dom"
+    },
+    "durationMs": 103
+  },
+  {
+    "key": "title_meta_distinct",
+    "status": "fail",
+    "observed": {
+      "pages": [
+        {
+          "url": "https://example.com/",
+          "title": "Example",
+          "description": ""
+        },
+        {
+          "url": "https://example.com/pricing",
+          "title": "Example",
+          "description": ""
+        }
+      ],
+      "pages_compared": 2,
+      "missing_title_or_description": 2,
+      "duplicate_titles": 1,
+      "duplicate_descriptions": 0
+    },
+    "durationMs": 110
+  },
+  {
+    "key": "content_negotiation",
+    "status": "fail",
+    "observed": {
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 4120,
+      "differs_from_html": false
+    },
+    "durationMs": 117
+  },
+  {
+    "key": "jsonld_present",
+    "status": "fail",
+    "observed": {
+      "types": [],
+      "errors": [],
+      "types_in_raw_html": []
+    },
+    "durationMs": 124
+  },
+  {
+    "key": "pricing_structured",
+    "status": "fail",
+    "observed": {
+      "offer_nodes": 0,
+      "prices_in_raw_html": 0,
+      "prices_after_render": 6,
+      "read_from": "https://example.com/pricing"
+    },
+    "durationMs": 131
+  },
+  {
+    "key": "canonical_og",
+    "status": "fail",
+    "observed": {
+      "canonical": "",
+      "og_missing": [
+        "og:title",
+        "og:description",
+        "og:image",
+        "og:url",
+        "og:type"
+      ],
+      "og_present": []
+    },
+    "durationMs": 138
+  },
+  {
+    "key": "agent_manifest",
+    "status": "fail",
+    "observed": {
+      "well_known_paths_found": [],
+      "probed": [
+        {
+          "path": "/.well-known/ai-plugin.json",
+          "status": 404
+        },
+        {
+          "path": "/.well-known/agent.json",
+          "status": 404
+        }
+      ]
+    },
+    "durationMs": 145
+  },
+  {
+    "key": "api_docs_reachable",
+    "status": "fail",
+    "observed": {
+      "hops": null,
+      "url": "",
+      "pages_searched": 6
+    },
+    "durationMs": 152
+  },
+  {
+    "key": "form_semantics",
+    "status": "fail",
+    "observed": {
+      "forms": [
+        {
+          "action": "/signup",
+          "fields": 3,
+          "labelled": 0,
+          "named": 1,
+          "with_autocomplete": 0
+        }
+      ],
+      "forms_seen": 2
+    },
+    "durationMs": 159
+  },
+  {
+    "key": "no_wall_on_docs",
+    "status": "fail",
+    "observed": {
+      "walled_paths": [
+        {
+          "url": "https://example.com/docs",
+          "status": 403,
+          "cf_mitigated": "challenge"
+        }
+      ],
+      "paths_checked": [
+        {
+          "url": "https://example.com/docs",
+          "status": 403
+        }
+      ]
+    },
+    "durationMs": 166
+  },
+  {
+    "key": "cache_headers",
+    "status": "fail",
+    "observed": {
+      "last_modified": "",
+      "etag": ""
+    },
+    "durationMs": 173
+  },
+  {
+    "key": "sitemap_lastmod_real",
+    "status": "fail",
+    "observed": {
+      "distinct_dates": 1,
+      "future_dates": 0,
+      "urls_with_lastmod": 214,
+      "urls_seen": 214
+    },
+    "durationMs": 180
+  }
+]

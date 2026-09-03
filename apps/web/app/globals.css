@@ -1,0 +1,138 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* ------------------------------------------------------------------ base */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    /* One committed look. Colour here means an HTTP status class, and a dark
+       inversion would put the grade block's inverted surface on the same value
+       as the page, which is the one thing the design cannot afford. */
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-sheet);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-weight: 600;
+    font-size: inherit;
+  }
+
+  /* Display face only where rule 1 in tokens.css allows it. */
+  .display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    font-variation-settings: 'wdth' 112;
+  }
+
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-data);
+  }
+
+  a {
+    color: inherit;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  /* Focus is always visible. Never removed, never made subtle: this is the only
+     affordance a keyboard reader has, and the product's whole argument is about
+     clients that are not looking at pixels. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .on-ink :focus-visible {
+    outline-color: var(--color-paper);
+  }
+
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+}
+
+/* ------------------------------------------------------------------ motion */
+
+/* Every animation in the app is declared here so the reduced-motion opt-out is
+   in one place and cannot be forgotten in a component. */
+
+@keyframes br-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+@keyframes br-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.br-pulse {
+  animation: br-pulse 1.4s ease-in-out infinite;
+}
+
+.br-slide-in {
+  animation: br-slide-in 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .br-pulse,
+  .br-slide-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ utilities */
+
+@utility mono {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
