@@ -269,3 +269,33 @@ axe, because a line at 20% opacity mid-entrance is not a contrast failure and
 the previous version flagged it as one. The audit is clean at 1280 and 390
 across every page, focus is visible on all 32 stops, and reduced motion stops
 every animation.
+
+### The Railway service exists, and it is waiting on one variable
+
+Project `botready`, service `scanner`, building from
+`deaconb28-lang/botready` on this branch with `apps/scanner/Dockerfile`,
+healthcheck `/health`, restart on failure. Public URL:
+
+    https://scanner-production-e3cc.up.railway.app
+
+Set on the service already: `NODE_ENV`, `PORT`, `SCANNER_CONCURRENCY`,
+`PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD`, `SCANNER_URL`, and a freshly generated
+`SCANNER_SHARED_SECRET`. Copy that secret's value out of the Railway variables
+into the Vercel project; the two sides must match.
+
+Still to set on Railway, in this order of urgency:
+
+1. `DATABASE_URL`, the Supabase *session* pooler string. The worker refuses to
+   boot without it, on purpose, so the first deploy will show as crashed until
+   this is in. Setting it triggers the redeploy.
+2. `QSTASH_CURRENT_SIGNING_KEY` and `QSTASH_NEXT_SIGNING_KEY`. In production the
+   worker rejects any `/scan` delivery that is not signed by QStash.
+
+The Stripe keys, Supabase keys, Upstash Redis, `QSTASH_TOKEN`, Resend and
+`CRON_SECRET` all belong to the web app on Vercel, not to the worker. The
+worker never talks to Stripe.
+
+Railway rejected `railway.json` as a config source ("Config as Code is
+deprecated, use `.railway/railway.ts`"), so the same settings were applied to
+the service directly. The file stays in the repo as the readable record of
+what the service is configured to do.
