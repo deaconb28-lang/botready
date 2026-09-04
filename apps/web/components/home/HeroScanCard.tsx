@@ -7,17 +7,22 @@ import { useRouter } from 'next/navigation';
 import { cx } from '@/components/ui';
 
 const TABS = [
-  { id: 'url', label: 'URL', prefix: 'https://', placeholder: 'yoursite.com' },
-  { id: 'sitemap', label: 'Sitemap', prefix: 'https://', placeholder: 'yoursite.com/sitemap.xml' },
-  { id: 'domain', label: 'Domain', prefix: '@', placeholder: 'yoursite.com' },
+  { id: 'url', label: 'URL', placeholder: 'yoursite.com' },
+  { id: 'sitemap', label: 'Sitemap', placeholder: 'yoursite.com/sitemap.xml' },
+  { id: 'domain', label: 'Domain', placeholder: 'yoursite.com' },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
 
 /**
- * The scan card. Three tabs change the prefix and the placeholder; the caret
- * blinks only while the field is empty; the button says what happens and the
- * error, if there is one, says what went wrong and what to do next.
+ * The scan card. Three tabs change the placeholder; the caret blinks only while
+ * the field is empty; the button says what happens and the error, if there is
+ * one, says what went wrong and what to do next.
+ *
+ * There is no `https://` printed beside the field. It was decoration: the
+ * scheme is added for you when you leave it off, and printing it made the field
+ * read as `https://https://yoursite.com` for anyone pasting a full URL, which
+ * is what most people do.
  */
 export function HeroScanCard({ compact = false, className = '' }: { compact?: boolean; className?: string }) {
   const router = useRouter();
@@ -39,7 +44,8 @@ export function HeroScanCard({ compact = false, className = '' }: { compact?: bo
     }
     setBusy(true);
     // A sitemap URL scans the site it belongs to; a domain scans its root.
-    const url = tab === 'sitemap' ? originOf(trimmed) : trimmed.replace(/^@/, '');
+    // Either way the scheme is filled in here rather than asked for.
+    const url = tab === 'sitemap' ? originOf(trimmed) : withScheme(trimmed.replace(/^@/, ''));
     try {
       const res = await fetch('/api/scan', {
         method: 'POST',
@@ -84,9 +90,6 @@ export function HeroScanCard({ compact = false, className = '' }: { compact?: bo
         ))}
       </div>
       <div className="flex items-center gap-2 rounded-[14px] border border-hairline-3 bg-surface-alt py-[6px] pl-4 pr-[6px]">
-        <span aria-hidden="true" className="font-mono text-[15px] text-placeholder">
-          {active.prefix}
-        </span>
         {!value ? <span aria-hidden="true" className="anim-input-caret h-[19px] w-[2px] flex-none bg-ink" /> : null}
         <input
           id="scan-url"
@@ -132,10 +135,14 @@ export function HeroScanCard({ compact = false, className = '' }: { compact?: bo
   );
 }
 
+/** `yoursite.com` -> `https://yoursite.com`, and a full URL is left alone. */
+function withScheme(input: string): string {
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(input) ? input : `https://${input}`;
+}
+
 function originOf(input: string): string {
   try {
-    const u = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`);
-    return u.origin;
+    return new URL(withScheme(input)).origin;
   } catch {
     return input;
   }
