@@ -491,3 +491,83 @@ container is centred with room to spare. The agent race had a third, older
 version of the same thing: an implicit grid column is sized to max-content, so
 its rows spilled out of the panel that clips them. All three are measured at
 six widths now and all are zero.
+
+---
+
+## Passing our own checks
+
+The first scan of botready.dev came back 57, grade C. Seven checks failed, four
+warned. That is an awkward number for a product whose argument is that this is
+measurable and worth fixing, so the fixes went in the same day rather than into
+a backlog.
+
+The interesting part is that almost all of it came from one structural absence:
+every one of those failures was a file or a header the site did not serve, and
+each of them was being produced independently in three different places. The
+sitemap had its own list of pages. Each page had its own hand-written `<head>`.
+Nothing generated a markdown representation because there was nowhere to
+generate it from. So the fix is one list — `lib/content.ts` — and four outputs
+derived from it: the sitemap, the `Last-Modified` header, each page's markdown,
+and llms.txt. A page added there appears in all four or in none, which is the
+only arrangement that stays true.
+
+Two decisions inside that are worth recording.
+
+`updated` is a hand-maintained content date, not the build time. Stamping every
+URL with the deploy timestamp is precisely what `sitemap_lastmod_real` fails
+sites for, and we would have been failing our own check while selling the fix
+for it. The same date becomes the `Last-Modified` header, which Next does not
+send for an app-router page at all — so before this, every revisit was a full
+download of a page that had not changed since August.
+
+Content negotiation needed middleware, and middleware needed a cache decision.
+A rewrite from `/pricing` to the markdown route means a shared cache could store
+markdown under the HTML URL. `Vary: Accept` is the correct mechanism and is set,
+but CDN support for it is uneven enough that it cannot be the only defence, so
+the markdown route reads the `Accept` header itself and answers `no-store` when
+it is standing in for an HTML URL. The first attempt passed a query parameter
+from middleware instead; it did not work, because a prerendered route handler is
+served from the build output with the query ignored, and then because a
+middleware rewrite does not carry its query into `request.url`. The header was
+there the whole time.
+
+`api_docs_reachable` was the one check that could not be satisfied by a file: it
+wants a docs path within two hops of the homepage, and there was no docs page
+because the API had never been written down. `/docs` is a real page now — the
+two public endpoints, the response fields, the rate limits, and a link to every
+machine-readable file the site serves. The check found a genuine gap, which is
+the best possible outcome for a check.
+
+Expected result on the next uncached scan: 21 checks, one skip (`form_semantics`
+has nothing to judge on the homepage), and the rest passing. Every precondition
+was verified against the deployed site by hand rather than inferred.
+
+## The live scan page
+
+Thirty seconds of a pulsing dot was an accurate account of the scan and a poor
+account of the product. The page now shows the five requests a scan makes, in
+order, and marks each one done.
+
+The constraint that shaped it: none of that may be acted out on a timer. The
+polling endpoint returns which checks have landed, so a stage is marked done
+when a check that could only have run *after* that request appears in the
+progress list — `robots_present` proves the robots.txt fetch, `agent_manifest`
+proves the well-known probes, `agent_status_parity` proves the five client
+requests, and so on. The ring counts checks rather than climbing towards a
+score, because there is no score until the scan settles and a number rising
+towards one would be an invented result.
+
+The decoration — a sweep, a scanline, a caret, a radar — sits over that and says
+nothing on its own, which is why the reduced-motion block can delete the sweep
+and the scanline outright and freeze the rest. The state is all in the text.
+
+## The launch campaign
+
+`marketing/` holds it: eight channels, one sentence, and a generator that draws
+every graphic from the same two status codes so an ad and the app look like the
+same company made them. Two rules are written into the top of the README because
+they are the whole reason the campaign can be honest — nothing states a number
+we have not measured (`[MEASURE]` markers fail the build's own warning if they
+survive), and nothing claims a high score causes citation, because we do not
+have that evidence and saying so would be the exact failure the product exists
+to argue against.
