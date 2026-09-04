@@ -87,3 +87,32 @@ export function categoryPoints(category: CategoryKey, version?: string): number 
 export function checksInCategory(category: CategoryKey, version?: string): CheckDef[] {
   return catalogFor(version).checks.filter((c) => c.category === category);
 }
+
+/**
+ * What a check is actually worth out of the final 100.
+ *
+ * `points` in the catalog is a check's share *within its category*: the
+ * category's score is `earned / available`, so only the ratios between the
+ * checks in one category matter, and the category's weight decides how much
+ * that ratio moves the total. Those two numbers multiply:
+ *
+ *     contribution = (check points / category points) × category weight
+ *
+ * Publishing the raw `points` was a small lie by omission. `agent_status_parity`
+ * carries 18 of retrievability's 35, and retrievability carries 25 of the
+ * total, so failing it costs 12.9 — which is what the findings list has always
+ * printed, while the weights page printed 18. Everything the product publishes
+ * now goes through this function, so the two agree by construction.
+ *
+ * Note that the totals fall out right: these sum to 100 across the catalog,
+ * and to the category's own weight within a category.
+ */
+export function effectivePoints(key: string, version?: string): number {
+  const cat = catalogFor(version);
+  const def = cat.checks.find((c) => c.key === key);
+  if (!def) return 0;
+  const category = cat.categories.find((c) => c.key === def.category);
+  const available = categoryPoints(def.category, version);
+  if (!category || available === 0) return 0;
+  return (def.points / available) * category.weight;
+}

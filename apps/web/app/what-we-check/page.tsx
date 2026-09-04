@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { catalog, categoryPoints, checksInCategory } from '@botready/core';
+import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
@@ -14,12 +14,17 @@ export const metadata: Metadata = {
 };
 
 const MAX_WEIGHT = Math.max(...catalog.categories.map((c) => c.weight));
-const TOTAL_POINTS = catalog.categories.reduce((sum, c) => sum + categoryPoints(c.key), 0);
+const TOTAL_POINTS = catalog.categories.reduce((sum, c) => sum + c.weight, 0);
 
 /**
  * The weights are published, and this is where. The page is generated from
  * checks.json, so it cannot drift from what the scorer actually does.
  */
+/** One decimal, and no trailing zero on the checks that land whole. */
+function formatPoints(value: number): string {
+  return value.toFixed(1).replace(/\.0$/, '');
+}
+
 export default function WhatWeCheckPage() {
   return (
     <div className="min-h-dvh bg-canvas">
@@ -32,6 +37,22 @@ export default function WhatWeCheckPage() {
           {catalog.checks.length} checks across {catalog.categories.length} categories. The weights are below because publishing them is the
           only way the score can be argued with, and a score nobody can argue with is a horoscope.
         </p>
+
+        <div className="edge mt-7 rounded-[16px] bg-surface-alt px-6 py-5">
+          <h2 className="display text-[17px]">How the arithmetic works</h2>
+          <p className="mt-2 max-w-[68ch] text-[15px] leading-[1.6] text-muted">
+            Every number on this page is out of the same 100. A category is worth its weight; the checks inside it split that weight
+            between them; and the figure beside each check is exactly what failing it takes off your score — the same number the findings
+            list on your result prints back to you. A pass earns all of it, a warn earns half, a fail and an error earn none, and a check
+            we could not run at all leaves the denominator instead of counting as a zero.
+          </p>
+          <p className="mt-3 max-w-[68ch] text-[15px] leading-[1.6] text-muted">
+            The weights themselves are our estimates, argued for one by one below and not yet measured against whether a site actually
+            gets cited. We are collecting that evidence now and will publish it, alongside whatever it says about these numbers, before we
+            change them. Changing any of them is a versioned event: every score records the version that produced it, so history is
+            re-scored rather than quietly rewritten.
+          </p>
+        </div>
 
         {/* The weights, as a bar chart. */}
         <figure id="weights" className="m-0 mt-9">
@@ -71,7 +92,7 @@ export default function WhatWeCheckPage() {
                 </div>
                 <div className="mt-[10px] flex justify-between gap-[10px] font-mono text-[12px] font-medium text-muted">
                   <span>{checks.length} checks</span>
-                  <span>{categoryPoints(c.key)} points</span>
+                  <span>{c.weight} of the 100</span>
                 </div>
               </Card>
             );
@@ -81,9 +102,9 @@ export default function WhatWeCheckPage() {
         <div className="edge mt-4 flex flex-wrap items-center justify-between gap-4 rounded-[16px] bg-lime px-6 py-[18px] shadow-hard-4">
           <span className="display text-[22px]">Everything adds up</span>
           <div className="flex gap-[22px] font-mono text-[14px] font-bold">
-            <span>{catalog.categories.reduce((s, c) => s + c.weight, 0)}%</span>
             <span>{catalog.checks.length} checks</span>
             <span>{TOTAL_POINTS} points</span>
+            <span>one score</span>
           </div>
         </div>
 
@@ -112,18 +133,20 @@ export default function WhatWeCheckPage() {
         {catalog.categories.map((c) => (
           <section key={c.key} id={c.key} className="mt-6 first:mt-0">
             <Eyebrow className="mb-3">
-              {c.label} · {c.weight}% · {categoryPoints(c.key)} points
+              {c.label} · {c.weight} of the 100
             </Eyebrow>
+            {c.rationale ? <p className="mb-3 max-w-[68ch] text-[15px] leading-[1.6] text-muted">{c.rationale}</p> : null}
             <div className="grid gap-3">
               {checksInCategory(c.key).map((ck) => (
                 <Card key={ck.key} radius="card" shadow={3} className="px-[22px] py-5">
                   <div className="flex flex-wrap items-baseline justify-between gap-4">
                     <h3 className="display text-[17.5px] font-semibold">{ck.label}</h3>
                     <span className="font-mono text-[11.5px] text-placeholder">
-                      {ck.points} {ck.points === 1 ? 'point' : 'points'}
+                      {formatPoints(effectivePoints(ck.key))} of the 100
                     </span>
                   </div>
                   <div className="mt-[7px] font-mono text-[12.5px] text-subtle-2">{ck.key}</div>
+                  {ck.rationale ? <p className="mt-3 max-w-[68ch] text-[14.5px] leading-[1.6] text-muted">{ck.rationale}</p> : null}
                   {ck.fails_when ? <div className="mt-2 font-mono text-[13px] text-coral-text">fails when {ck.fails_when}</div> : null}
                   {ck.warns_when ? <div className="mt-1 font-mono text-[13px] text-amber-text">warns when {ck.warns_when}</div> : null}
                 </Card>

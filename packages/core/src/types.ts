@@ -60,6 +60,8 @@ export interface CategoryDef {
   label: string;
   /** Percentage points of the total. The six weights sum to 100. */
   weight: number;
+  /** Why this is measured and why it is worth what it is worth. Published. */
+  rationale?: string;
 }
 
 export type AgentRole = 'control' | 'agent';
@@ -73,7 +75,14 @@ export interface AgentDef {
 export interface CheckDef {
   key: string;
   category: CategoryKey;
+  /**
+   * This check's share *within its category*, not its share of the final 100.
+   * `effectivePoints()` converts. Everything published to a reader goes
+   * through that function; see the note on it for why.
+   */
   points: number;
+  /** Why this is measured and why it is worth what it is worth. Published. */
+  rationale?: string;
   label: string;
   fails_when?: string;
   warns_when?: string;

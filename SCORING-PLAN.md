@@ -119,9 +119,24 @@ as first guesses and indefensible as permanent answers.
 
 ---
 
-## S1 — Say why, and make the two numbers one number
+## S1 — Say why, and make the two numbers one number — **done**
 
-**No arithmetic change. Scores do not move. Still v1.2.**
+**No arithmetic change. Scores did not move. Still v1.2.**
+
+Shipped. It went in as `effectivePoints()` in `packages/core/src/catalog.ts`
+rather than as the rescale this plan first proposed: rescaling would have
+needed non-terminating decimals in the catalog (`18/35 × 25 = 90/7`) to stay
+exact, and rounding them to something readable would have quietly changed every
+score — which is the one thing S1 promised not to do. Keeping the catalog's
+integers as within-category shares and publishing the derived contribution
+everywhere gets the same result with no arithmetic risk. `checks.json` now
+documents what `points` means, and the twenty-one rationales are published under
+each check.
+
+Verified: all five fixtures score exactly what they scored before, and a test
+asserts for every check that its published number equals what the findings list
+prints, that they sum to 100 across the catalog, and that they sum to each
+category's weight within it.
 
 Rescale each category's points so they sum to that category's weight. This is
 provably a no-op on every score: a category's score is `earned / available`,
@@ -136,10 +151,12 @@ why this is measured and why it is worth what it is worth, including "this is a
 first guess pending the calibration in S5" where that is the honest answer.
 Publish it on `/what-we-check` under each check.
 
-**Done when:** a test asserts, for every check in the catalog, that its points
-equal its `pointsLost` on a synthetic all-fail scan; every check and category
-carries a rationale; `/what-we-check` renders them; and re-scoring the whole
-`scores` table produces byte-identical totals.
+**Done:** `packages/core/__tests__/effective-points.test.ts` asserts the
+equality for every check, the sum to 100, the sum to each weight, and that
+nothing in the catalog is left without a rationale. `/what-we-check` publishes
+the arithmetic, the rationales, and the honest note that the weights are still
+estimates. Stored `scores` rows need no migration, because nothing they hold
+changed.
 
 ## S2 — Continuous scoring and the retrievability gate (v1.3)
 

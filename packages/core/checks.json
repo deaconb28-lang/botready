@@ -1,26 +1,91 @@
 {
   "scoringVersion": "1.2",
   "grades": [
-    { "grade": "A", "min": 85 },
-    { "grade": "B", "min": 70 },
-    { "grade": "C", "min": 55 },
-    { "grade": "D", "min": 35 },
-    { "grade": "F", "min": 0 }
+    {
+      "grade": "A",
+      "min": 85
+    },
+    {
+      "grade": "B",
+      "min": 70
+    },
+    {
+      "grade": "C",
+      "min": 55
+    },
+    {
+      "grade": "D",
+      "min": 35
+    },
+    {
+      "grade": "F",
+      "min": 0
+    }
   ],
   "categories": [
-    { "key": "retrievability", "label": "Retrievability", "weight": 25 },
-    { "key": "discovery",      "label": "Discovery",      "weight": 20 },
-    { "key": "representation", "label": "Representation", "weight": 20 },
-    { "key": "structure",      "label": "Structure",      "weight": 15 },
-    { "key": "actionability",  "label": "Actionability",  "weight": 15 },
-    { "key": "freshness",      "label": "Freshness",      "weight": 5 }
+    {
+      "key": "retrievability",
+      "label": "Retrievability",
+      "weight": 25,
+      "rationale": "Nothing else can matter if the client cannot get the page. This carries the most weight because every other category is measured on text that was retrieved, and a refusal makes the rest unobservable rather than merely worse."
+    },
+    {
+      "key": "discovery",
+      "label": "Discovery",
+      "weight": 20,
+      "rationale": "The files a client asks for before it reads anything: robots.txt, a sitemap, llms.txt. Weighted high for their cost \u2014 they are the cheapest things on this list to fix and they decide what gets fetched next."
+    },
+    {
+      "key": "representation",
+      "label": "Representation",
+      "weight": 20,
+      "rationale": "Whether your own account of what you do survives as data rather than as layout. An agent can only quote what it can extract."
+    },
+    {
+      "key": "structure",
+      "label": "Structure",
+      "weight": 15,
+      "rationale": "The scaffolding that says which page this is and what it is about: headings, canonical URLs, JSON-LD. Below representation because a well-described page with untidy structure still gets read."
+    },
+    {
+      "key": "actionability",
+      "label": "Actionability",
+      "weight": 15,
+      "rationale": "Prices, plans, docs and forms an agent can act on rather than only describe. Equal to structure because being quotable and being usable are worth the same to a buyer."
+    },
+    {
+      "key": "freshness",
+      "label": "Freshness",
+      "weight": 5,
+      "rationale": "Dates and change signals. Worth the least because a stale signal loses a citation rarely, and it is the category where a maintained site can look bad for reasons that do not matter."
+    }
   ],
   "agents": [
-    { "id": "chrome",      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36", "role": "control" },
-    { "id": "claudebot",   "ua": "ClaudeBot/1.0",     "role": "agent" },
-    { "id": "gptbot",      "ua": "GPTBot/1.2",        "role": "agent" },
-    { "id": "perplexity",  "ua": "PerplexityBot/1.0", "role": "agent" },
-    { "id": "googleext",   "ua": "Google-Extended",   "role": "agent" }
+    {
+      "id": "chrome",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "role": "control"
+    },
+    {
+      "id": "claudebot",
+      "ua": "ClaudeBot/1.0",
+      "role": "agent"
+    },
+    {
+      "id": "gptbot",
+      "ua": "GPTBot/1.2",
+      "role": "agent"
+    },
+    {
+      "id": "perplexity",
+      "ua": "PerplexityBot/1.0",
+      "role": "agent"
+    },
+    {
+      "id": "googleext",
+      "ua": "Google-Extended",
+      "role": "agent"
+    }
   ],
   "checks": [
     {
@@ -28,8 +93,17 @@
       "category": "retrievability",
       "points": 18,
       "label": "Every client gets the same answer",
+      "rationale": "The headline finding of the whole product: 200 to Chrome and 403 to ClaudeBot, same URL, same second. The largest single check in the catalog, because it is the only failure that makes every other measurement moot.",
       "fails_when": "any agent client receives a different status class than the Chrome control",
-      "observed_shape": { "per_agent": { "<agentId>": { "status": 0, "server": "", "cf_mitigated": "" } } },
+      "observed_shape": {
+        "per_agent": {
+          "<agentId>": {
+            "status": 0,
+            "server": "",
+            "cf_mitigated": ""
+          }
+        }
+      },
       "remedy": "waf_allow_agents"
     },
     {
@@ -37,9 +111,14 @@
       "category": "retrievability",
       "points": 11,
       "label": "Page text survives without JavaScript",
+      "rationale": "Text that appears only after JavaScript runs is text most agent clients never see. Second largest because it is the failure that looks perfect in a browser and is invisible to the people it costs you.",
       "fails_when": "ratio above 0.7",
       "warns_when": "ratio between 0.4 and 0.7",
-      "observed_shape": { "raw_chars": 0, "rendered_chars": 0, "ratio": 0 },
+      "observed_shape": {
+        "raw_chars": 0,
+        "rendered_chars": 0,
+        "ratio": 0
+      },
       "remedy": "prerender_key_pages"
     },
     {
@@ -47,31 +126,52 @@
       "category": "retrievability",
       "points": 3,
       "label": "First byte arrives quickly",
+      "rationale": "A slow first byte gets the request abandoned. Small because real timeouts are rare, and because this is the noisiest measurement in the catalog \u2014 see S2 in SCORING-PLAN.md.",
       "fails_when": "ttfb above 2500 ms",
-      "observed_shape": { "ttfb_ms": 0, "total_ms": 0, "bytes": 0 }
+      "observed_shape": {
+        "ttfb_ms": 0,
+        "total_ms": 0,
+        "bytes": 0
+      }
     },
     {
       "key": "redirect_depth",
       "category": "retrievability",
       "points": 3,
       "label": "No long redirect chains",
+      "rationale": "Every hop is a chance to lose the client. Small because chains are uncommon and a short one is harmless.",
       "fails_when": "more than 3 hops",
-      "observed_shape": { "hops": 0, "chain": [] }
+      "observed_shape": {
+        "hops": 0,
+        "chain": []
+      }
     },
     {
       "key": "robots_present",
       "category": "discovery",
       "points": 4,
       "label": "robots.txt exists and parses",
-      "observed_shape": { "status": 0, "parse_errors": [] }
+      "rationale": "Not a refusal in itself, but it is the first thing every client asks for, and a 5xx here stops some of them before they reach the page.",
+      "observed_shape": {
+        "status": 0,
+        "parse_errors": []
+      }
     },
     {
       "key": "robots_agent_rules",
       "category": "discovery",
       "points": 8,
       "label": "robots.txt does not silently block reading agents",
+      "rationale": "A robots.txt that disallows reading agents is a refusal you chose, usually by pasting a rule nobody read. Worth twice robots_present because this one actively turns clients away rather than merely failing to help them.",
       "fails_when": "an agent user agent is disallowed while search crawlers are allowed",
-      "observed_shape": { "per_agent": { "<agentId>": { "allowed": true, "matched_rule": "" } } },
+      "observed_shape": {
+        "per_agent": {
+          "<agentId>": {
+            "allowed": true,
+            "matched_rule": ""
+          }
+        }
+      },
       "remedy": "robots_block"
     },
     {
@@ -79,14 +179,24 @@
       "category": "discovery",
       "points": 4,
       "label": "Sitemap exists and is not empty",
-      "observed_shape": { "status": 0, "url_count": 0, "has_lastmod": false }
+      "rationale": "How a client finds the pages you did not link from the front door.",
+      "observed_shape": {
+        "status": 0,
+        "url_count": 0,
+        "has_lastmod": false
+      }
     },
     {
       "key": "llms_txt_present",
       "category": "discovery",
       "points": 5,
       "label": "llms.txt tells agents which pages matter",
-      "observed_shape": { "status": 0, "link_count": 0, "broken_links": [] },
+      "rationale": "The file agents look for to learn what you do in plain language. Just above the sitemap because it is the one file here we can generate for you in full, from pages we watched return 200.",
+      "observed_shape": {
+        "status": 0,
+        "link_count": 0,
+        "broken_links": []
+      },
       "remedy": "llms_txt"
     },
     {
@@ -94,8 +204,13 @@
       "category": "representation",
       "points": 7,
       "label": "A markdown representation is advertised",
+      "rationale": "A markdown representation advertised in a Link header or tag is the cheapest way to hand a client clean prose instead of a layout to unpick.",
       "fails_when": "no link rel=alternate type=text/markdown and no Link header equivalent",
-      "observed_shape": { "link_tag": false, "link_header": false, "accept_negotiation": false },
+      "observed_shape": {
+        "link_tag": false,
+        "link_header": false,
+        "accept_negotiation": false
+      },
       "remedy": "markdown_alternate_tags"
     },
     {
@@ -103,28 +218,44 @@
       "category": "representation",
       "points": 6,
       "label": "One h1, a sane heading order, a main landmark",
-      "observed_shape": { "h1_count": 0, "heading_order_breaks": 0, "has_main": false }
+      "rationale": "One h1, a sane heading order and a main landmark are how an extractor decides which part of the page is the content.",
+      "observed_shape": {
+        "h1_count": 0,
+        "heading_order_breaks": 0,
+        "has_main": false
+      }
     },
     {
       "key": "title_meta_distinct",
       "category": "representation",
       "points": 4,
       "label": "Each page has its own title and description",
-      "observed_shape": { "pages": [] }
+      "rationale": "Pages that share a title are pages a client cannot tell apart when it comes to cite one of them.",
+      "observed_shape": {
+        "pages": []
+      }
     },
     {
       "key": "content_negotiation",
       "category": "representation",
       "points": 3,
       "label": "Server honours Accept: text/markdown",
-      "observed_shape": { "status": 0, "content_type": "" }
+      "rationale": "Honouring Accept: text/markdown is the polite version of the markdown alternate. Small because hardly anyone implements it and its absence is unremarkable.",
+      "observed_shape": {
+        "status": 0,
+        "content_type": ""
+      }
     },
     {
       "key": "jsonld_present",
       "category": "structure",
       "points": 6,
       "label": "JSON-LD describes what this is",
-      "observed_shape": { "types": [], "errors": [] },
+      "rationale": "On most pages this is the only place the site states what it is in a form that needs no interpretation.",
+      "observed_shape": {
+        "types": [],
+        "errors": []
+      },
       "remedy": "jsonld_block"
     },
     {
@@ -132,58 +263,87 @@
       "category": "structure",
       "points": 5,
       "label": "Pricing is machine readable",
+      "rationale": "An agent quotes a price it can read as data. A price in a table is a picture of a price.",
       "fails_when": "prices appear only in images or JS-rendered tables",
-      "observed_shape": { "offer_nodes": 0, "prices_in_raw_html": 0 }
+      "observed_shape": {
+        "offer_nodes": 0,
+        "prices_in_raw_html": 0
+      }
     },
     {
       "key": "canonical_og",
       "category": "structure",
       "points": 4,
       "label": "Canonical URL and OpenGraph are complete",
-      "observed_shape": { "canonical": "", "og_missing": [] }
+      "rationale": "Which URL is the real one, and what the page says about itself when somebody shares it.",
+      "observed_shape": {
+        "canonical": "",
+        "og_missing": []
+      }
     },
     {
       "key": "agent_manifest",
       "category": "actionability",
       "points": 5,
       "label": "An agent manifest or WebMCP endpoint exists",
-      "observed_shape": { "well_known_paths_found": [] }
+      "rationale": "A manifest or WebMCP endpoint turns a page an agent can read into a service an agent can use. Scored knowing most sites will fail it for a while yet; this is the check most likely to move at the next calibration.",
+      "observed_shape": {
+        "well_known_paths_found": []
+      }
     },
     {
       "key": "api_docs_reachable",
       "category": "actionability",
       "points": 4,
       "label": "API docs are two hops from the homepage",
-      "observed_shape": { "hops": null, "url": "" }
+      "rationale": "Docs two hops from the homepage are docs an agent finds while it is answering a question about you.",
+      "observed_shape": {
+        "hops": null,
+        "url": ""
+      }
     },
     {
       "key": "form_semantics",
       "category": "actionability",
       "points": 4,
       "label": "Primary forms have labels, names and autocomplete tokens",
-      "observed_shape": { "forms": [] }
+      "rationale": "Labels, names and autocomplete tokens are what let an agent complete a form rather than describe one.",
+      "observed_shape": {
+        "forms": []
+      }
     },
     {
       "key": "no_wall_on_docs",
       "category": "actionability",
       "points": 2,
       "label": "Docs and pricing are not behind auth or a captcha",
-      "observed_shape": { "walled_paths": [] }
+      "rationale": "Docs behind a login are docs no client reads. Small because it is rare, and because when it is deliberate it is a legitimate choice we should not punish hard.",
+      "observed_shape": {
+        "walled_paths": []
+      }
     },
     {
       "key": "cache_headers",
       "category": "freshness",
       "points": 3,
       "label": "Last-Modified or ETag is sent",
-      "observed_shape": { "last_modified": "", "etag": "" }
+      "rationale": "Last-Modified or ETag tells a client whether reading you again is worth it.",
+      "observed_shape": {
+        "last_modified": "",
+        "etag": ""
+      }
     },
     {
       "key": "sitemap_lastmod_real",
       "category": "freshness",
       "points": 2,
       "label": "Sitemap lastmod values are maintained",
+      "rationale": "A lastmod that never changes is worse than no lastmod at all, because it is a claim rather than a gap.",
       "fails_when": "every lastmod is identical or in the future",
-      "observed_shape": { "distinct_dates": 0, "future_dates": 0 }
+      "observed_shape": {
+        "distinct_dates": 0,
+        "future_dates": 0
+      }
     }
   ]
 }

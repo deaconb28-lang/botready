@@ -428,3 +428,25 @@ Without them a purchase completes at Stripe and grants nothing here.
 **The scanner needs a redeploy and the database needs the migration.** Page
 detail is empty until a scan runs on 1.1.0, and the account and app pages
 404 or error until `pnpm db:migrate` has run against Supabase.
+
+### The weights page and the result page disagreed, and now do not
+
+`/what-we-check` published `agent_status_parity — 18 points` while the findings
+list on a failing scan printed `−13`. Both came from the same catalog and both
+were right: `points` in `checks.json` is a check's share *within its category*,
+and the effect on the final 100 is that share times the category's weight,
+`(18/35) × 25 = 12.9`. It survived this long because four of the six categories
+happen to have points summing exactly to their weight, so fifteen of the
+twenty-one checks agreed by coincidence — and the six that did not are the ones
+that matter most.
+
+Fixed by publishing the derived number everywhere, not by renumbering the
+catalog: an exact rescale needs `90/7` in the JSON, and a readable rounding of
+it would have moved every score, which is precisely what this change promised
+not to do. Every check and category also now carries a published rationale, and
+the page says plainly that the weights are estimates that have not yet been
+measured against whether a site gets cited.
+
+`SCORING-PLAN.md` is the rest of it: continuous scoring in place of the
+threshold cliffs, retrievability as a ceiling rather than a slice, cohort
+context, and calibration against the prompt-watch data once it accumulates.
