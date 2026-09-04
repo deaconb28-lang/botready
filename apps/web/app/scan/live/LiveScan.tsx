@@ -5,15 +5,23 @@ import { useRouter } from 'next/navigation';
 
 import { catalog, checkDef, type CheckStatus } from '@botready/core';
 
+import { BotScene } from '@/components/bot/BotScene';
 import { Container, cx } from '@/components/ui';
 
 /**
  * The wait is the demo.
  *
  * Every line in the log is a check the worker actually finished, read off the
- * same polling endpoint the result page uses. Nothing is simulated on a
- * timer: a line appears when the evidence row exists. When the scan settles
+ * same polling endpoint the result page uses. Nothing is simulated on a timer:
+ * a line appears when the evidence row exists, the ring fills to the number of
+ * checks that have landed, and a stage goes green when the check that could
+ * only have run after it appears in the progress list. When the scan settles
  * the page moves to the result, where the score counts up.
+ *
+ * The motion — the sweep, the scanline, the radar, the caret — is decoration
+ * over that number and says nothing on its own. Under prefers-reduced-motion
+ * the sweep and the scanline are removed and everything else holds still; the
+ * page is fully legible frozen, because the state is in the text.
  */
 
 interface Poll {
@@ -29,6 +37,29 @@ interface Poll {
 
 const POLL_MS = 1200;
 const GIVE_UP_MS = 180_000;
+
+/**
+ * What the worker is doing, and the check whose arrival proves it finished.
+ *
+ * These are not timers. Each stage is marked done when a check that could only
+ * have run after that request appears in the progress list, so the sequence is
+ * read off the scan rather than acted out beside it.
+ */
+const STAGES: Array<{ label: string; detail: string; provenBy: string }> = [
+  { label: 'GET /robots.txt', detail: 'First, always. If it disallows us the scan ends here.', provenBy: 'robots_present' },
+  {
+    label: 'GET /sitemap.xml, /llms.txt, /.well-known/…',
+    detail: 'The files an agent looks for before it looks at your HTML.',
+    provenBy: 'agent_manifest',
+  },
+  {
+    label: `GET / as ${catalog.agents.length} clients`,
+    detail: 'Sequentially, one second apart, from the same address.',
+    provenBy: 'agent_status_parity',
+  },
+  { label: 'Render once, headless', detail: 'Images, fonts and media declined. Then compare the two texts.', provenBy: 'js_dependency_ratio' },
+  { label: 'Read the linked pages', detail: 'Up to five more, pricing and docs first.', provenBy: 'title_meta_distinct' },
+];
 
 export function LiveScan({ scanId, next }: { scanId: string; next: string | null }) {
   const router = useRouter();
@@ -84,23 +115,37 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
   const done = poll?.progress.length ?? 0;
   const total = catalog.checks.length;
   const percent = Math.min(96, Math.round((done / total) * 100));
+  const landed = new Set(poll?.progress.map((entry) => entry.key) ?? []);
+  const stageDone = STAGES.map((stage) => landed.has(stage.provenBy));
+  // The first stage not yet proven is the one in flight. Once every stage is
+  // proven, nothing is running but the last few document checks.
+  const running = stageDone.indexOf(false);
 
   return (
     <Container width={1120} className="pb-24 pt-11">
       <div className="font-mono text-[12.5px] text-subtle-2">
-        <span className="text-ink">{poll?.domain ?? 'your site'}</span> · reading as {catalog.agents.length} clients… · {elapsed}s
+        <span className="text-ink">{poll?.domain ?? 'your site'}</span> · reading as {catalog.agents.length} clients… ·{' '}
+        <span className="tabular-nums">{elapsed}s</span>
       </div>
 
-      <div className="edge mt-[18px] overflow-hidden rounded-[24px] bg-white">
-        <div className="flex flex-wrap items-center gap-8 border-b border-hairline px-6 py-[30px] sm:px-8">
-          <div className="flex items-baseline gap-3">
-            <span className="display-tight text-[64px] leading-none tracking-[-0.04em] text-placeholder">··</span>
-            <span className="font-mono text-[14px] text-subtle-2">/ 100</span>
-          </div>
+      <div className="edge relative mt-[18px] overflow-hidden rounded-[24px] bg-white">
+        {/* A sheen crossing the card. Decoration, and the first thing the
+            reduced-motion block removes. */}
+        <div
+          aria-hidden="true"
+          className="br-sweep pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-violet-chip to-transparent opacity-70"
+        />
+        <div className="relative flex flex-wrap items-center gap-8 border-b border-hairline px-6 py-[30px] sm:px-8">
+          <ProgressRing done={done} total={total} />
           <div className="min-w-[200px] flex-1">
             <div className="flex items-center gap-[10px]">
-              <span aria-hidden="true" className="anim-pulse-dot inline-block h-[10px] w-[10px] rounded-full bg-violet" />
-              <span className="font-mono text-[12.5px] text-subtle-2">{poll ? nextLabel(done, poll.status) : 'Queueing the scan'}</span>
+              <span className="relative inline-flex h-[10px] w-[10px]" aria-hidden="true">
+                <span className="br-halo absolute inset-0 rounded-full bg-violet" />
+                <span className="anim-pulse-dot relative inline-block h-[10px] w-[10px] rounded-full bg-violet" />
+              </span>
+              <span className="font-mono text-[12.5px] text-subtle-2">
+                {poll ? nextLabel(done, poll.status) : 'Queueing the scan'}
+              </span>
             </div>
             <p className="mt-[10px] max-w-[46ch] text-[15.5px] leading-[1.5] text-muted">
               We are requesting the page as {catalog.agents.length} clients, one second apart, then rendering it once in a headless browser.
@@ -119,28 +164,45 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
         </div>
       </div>
 
-      <div className="on-dark mt-6 rounded-[20px] bg-ink px-5 py-5 text-on-ink sm:px-7" role="log" aria-live="polite" aria-relevant="additions" aria-label="Scan progress">
-        <div className="font-mono text-[12.5px] leading-[1.7]">
-          {poll ? (
-            <>
-              {poll.progress.map((entry, i) => (
-                <LogLine key={entry.key} entry={entry} index={i} />
-              ))}
-              {!poll.settled ? <RunningLine label={nextLabel(poll.progress.length, poll.status)} /> : null}
-            </>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0">
+          <Stages stageDone={stageDone} running={running} queued={poll?.status === 'queued' || !poll} />
+
+          <div
+            className="on-dark relative mt-6 overflow-hidden rounded-[20px] bg-ink px-5 py-5 text-on-ink sm:px-7"
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+            aria-label="Scan progress"
+          >
+            {/* The line a scanner draws down a page. Decorative, and removed
+                outright under reduced motion. */}
+            <div aria-hidden="true" className="br-scanline pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-lime opacity-50" />
+            <div className="relative font-mono text-[12.5px] leading-[1.7]">
+              {poll ? (
+                <>
+                  {poll.progress.map((entry, i) => (
+                    <LogLine key={entry.key} entry={entry} index={i} />
+                  ))}
+                  {!poll.settled ? <RunningLine label={nextLabel(poll.progress.length, poll.status)} /> : null}
+                </>
+              ) : (
+                <RunningLine label="Queueing the scan" />
+              )}
+            </div>
+          </div>
+
+          {error ? (
+            <p role="alert" className="mt-4 font-mono text-[12.5px] font-medium text-coral-text">
+              {error}
+            </p>
           ) : (
-            <RunningLine label="Queueing the scan" />
+            <p className="mt-4 font-mono text-[12.5px] text-subtle-2">We identify ourselves as BotreadyBot/1.0 and obey your robots.txt.</p>
           )}
         </div>
-      </div>
 
-      {error ? (
-        <p role="alert" className="mt-4 font-mono text-[12.5px] font-medium text-coral-text">
-          {error}
-        </p>
-      ) : (
-        <p className="mt-4 font-mono text-[12.5px] text-subtle-2">We identify ourselves as BotreadyBot/1.0 and obey your robots.txt.</p>
-      )}
+        <BotScene variant="scanning" shadow="shadow-hard-4" className="hidden self-start lg:block" />
+      </div>
 
       <noscript>
         <p className="mt-6 font-mono text-[12.5px] text-subtle-2">
@@ -152,6 +214,100 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
         </p>
       </noscript>
     </Container>
+  );
+}
+
+const RING_RADIUS = 34;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+/**
+ * The count, in a ring that fills as checks land. The number is the checks
+ * finished rather than a score: there is no score until the scan settles, and
+ * showing a number that climbs towards one would be an invented result.
+ */
+function ProgressRing({ done, total }: { done: number; total: number }) {
+  const fraction = total === 0 ? 0 : Math.min(1, done / total);
+  return (
+    <div className="flex items-center gap-4">
+      <div className="relative h-[84px] w-[84px] shrink-0">
+        <svg viewBox="0 0 84 84" className="h-full w-full -rotate-90" aria-hidden="true">
+          <circle cx="42" cy="42" r={RING_RADIUS} fill="none" stroke="var(--color-hairline)" strokeWidth="7" />
+          <circle
+            cx="42"
+            cy="42"
+            r={RING_RADIUS}
+            fill="none"
+            stroke="var(--color-violet)"
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeDasharray={RING_LENGTH}
+            strokeDashoffset={RING_LENGTH * (1 - fraction)}
+            className="transition-[stroke-dashoffset] duration-500 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 grid place-items-center">
+          <span className="display-tight text-[27px] leading-none tabular-nums tracking-[-0.03em]">{done}</span>
+        </div>
+      </div>
+      <div className="font-mono text-[12.5px] leading-[1.6] text-subtle-2">
+        <div className="text-ink">of {total} checks</div>
+        <div>no score yet</div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The five requests a scan makes, in the order it makes them. A stage turns
+ * green when a check that could only have run after it appears in the progress
+ * list, so this is read off the scan rather than counted out on a timer.
+ */
+function Stages({ stageDone, running, queued }: { stageDone: boolean[]; running: number; queued: boolean }) {
+  return (
+    <ol className="m-0 grid list-none gap-[10px] p-0">
+      {STAGES.map((stage, i) => {
+        const complete = stageDone[i] === true;
+        const active = !queued && !complete && i === running;
+        return (
+          <li
+            key={stage.label}
+            className={cx(
+              'edge flex items-start gap-[14px] rounded-[14px] px-[18px] py-[13px] transition-colors duration-300',
+              complete ? 'bg-lime-tint' : active ? 'bg-white shadow-hard-3' : 'bg-surface-alt',
+            )}
+          >
+            <span className="mt-[2px] flex h-[18px] w-[18px] shrink-0 items-center justify-center" aria-hidden="true">
+              {complete ? (
+                <svg viewBox="0 0 18 18" className="h-[18px] w-[18px]">
+                  <circle cx="9" cy="9" r="8" fill="var(--color-lime)" stroke="var(--color-ink)" strokeWidth="2" />
+                  <path d="M5.5 9.2l2.4 2.3 4.4-4.8" fill="none" stroke="var(--color-ink)" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              ) : active ? (
+                <span className="relative inline-flex h-[10px] w-[10px]">
+                  <span className="br-halo absolute inset-0 rounded-full bg-violet" />
+                  <span className="anim-pulse-dot relative inline-block h-[10px] w-[10px] rounded-full bg-violet" />
+                </span>
+              ) : (
+                <span className="flex gap-[3px]">
+                  <i className="br-march-1 block h-[4px] w-[4px] rounded-full bg-placeholder" />
+                  <i className="br-march-2 block h-[4px] w-[4px] rounded-full bg-placeholder" />
+                  <i className="br-march-3 block h-[4px] w-[4px] rounded-full bg-placeholder" />
+                </span>
+              )}
+            </span>
+            <span className="min-w-0">
+              <span className={cx('block font-mono text-[12.5px] font-medium', complete || active ? 'text-ink' : 'text-subtle-2')}>
+                {stage.label}
+              </span>
+              <span className="mt-[3px] block text-[13.5px] leading-[1.45] text-muted">{stage.detail}</span>
+            </span>
+            <span className="ml-auto shrink-0 self-center font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-placeholder">
+              {complete ? 'done' : active ? 'now' : 'next'}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -175,7 +331,7 @@ function LogLine({ entry, index }: { entry: { key: string; status: CheckStatus }
   const def = checkDef(entry.key);
   return (
     <div className="anim-rise-fast flex items-baseline gap-4 py-[3px]">
-      <span className="w-[32px] shrink-0 text-on-ink-muted">{String(index + 1).padStart(2, '0')}</span>
+      <span className="w-[32px] shrink-0 tabular-nums text-on-ink-muted">{String(index + 1).padStart(2, '0')}</span>
       <span className="min-w-0 flex-1">{def?.label ?? entry.key}</span>
       <span className={cx('shrink-0 font-bold', STATUS_COLOUR[entry.status])}>{STATUS_WORD[entry.status]}</span>
     </div>
@@ -188,7 +344,10 @@ function RunningLine({ label }: { label: string }) {
       <span className="flex w-[32px] shrink-0 items-center" aria-hidden="true">
         <i className="anim-pulse-dot block h-[7px] w-[7px] rounded-[1px] bg-lime" />
       </span>
-      <span className="min-w-0 flex-1">{label}</span>
+      <span className="min-w-0 flex-1">
+        {label}
+        <i className="br-caret ml-[3px] inline-block h-[12px] w-[7px] translate-y-[1px] bg-lime align-baseline" aria-hidden="true" />
+      </span>
       <span className="shrink-0 font-bold">running</span>
     </div>
   );

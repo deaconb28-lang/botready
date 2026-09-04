@@ -25,7 +25,7 @@
 
 import { cx } from '@/components/ui';
 
-export type BotVariant = 'surfing' | 'reading' | 'waiting' | 'refused';
+export type BotVariant = 'surfing' | 'reading' | 'waiting' | 'refused' | 'scanning';
 
 /** House tokens, in the roles the handoff names. */
 const PALETTE = {
@@ -44,6 +44,7 @@ const LABEL: Record<BotVariant, string> = {
   reading: 'A bot reading a robots.txt file',
   waiting: 'A bot waiting between requests, one second apart',
   refused: 'A bot stopped at a boundary marked 403, not crossing it',
+  scanning: 'A bot watching a radar sweep while a scan runs',
 };
 
 export function BotScene({
@@ -69,6 +70,7 @@ export function BotScene({
         {variant === 'reading' ? <Reading /> : null}
         {variant === 'waiting' ? <Waiting /> : null}
         {variant === 'refused' ? <Refused /> : null}
+        {variant === 'scanning' ? <Scanning /> : null}
       </svg>
     </div>
   );
@@ -311,6 +313,60 @@ function Reading() {
           </text>
           <path d="M278 182h62M278 192h40" stroke={PALETTE.ink} strokeWidth="2.5" strokeLinecap="round" opacity=".3" />
         </g>
+      </g>
+    </>
+  );
+}
+
+/**
+ * The live scan page, while the worker is out. The radar is the one honest
+ * thing to draw here: it says a request is in flight and nothing about what
+ * came back, which is exactly as much as this page knows at the time.
+ */
+function Scanning() {
+  return (
+    <>
+      <Sticker
+        className="br-fx br-float-2"
+        x={34}
+        y={48}
+        width={78}
+        height={26}
+        radius={8}
+        fill={PALETTE.lime}
+        label="GET /"
+        labelX={44}
+        labelY={66}
+        size={10}
+      />
+      <Floor />
+
+      {/* The dish. The sweep rotates about the circle's centre, which is why
+          the group carries an invisible circle of the same radius: br-fx sizes
+          transform-origin from the fill box, and a bare wedge's box is not
+          centred on the pivot. */}
+      <g transform="translate(300 132)">
+        <circle r="46" fill={PALETTE.white} stroke={PALETTE.ink} strokeWidth="2.5" />
+        <circle r="28" fill="none" stroke={PALETTE.ink} strokeWidth="1.5" opacity=".22" strokeDasharray="3 6" />
+        {/* Two contacts, holding still. They are decoration and say nothing
+            about the scan; the numbers are all in the panel beside this. */}
+        <circle className="br-fx br-ping-1" cx="18" cy="-24" r="4" fill={PALETTE.lime} stroke={PALETTE.ink} strokeWidth="2" />
+        <circle className="br-fx br-ping-2" cx="-22" cy="16" r="4" fill={PALETTE.lime} stroke={PALETTE.ink} strokeWidth="2" />
+        <g className="br-fx br-radar">
+          <circle r="46" fill="none" />
+          <path d="M0 0L0-44A44 44 0 0 1 30-32Z" fill={PALETTE.indigo} opacity=".3" />
+          <path d="M0 0V-44" stroke={PALETTE.indigo} strokeWidth="3" strokeLinecap="round" />
+        </g>
+        <circle r="4" fill={PALETTE.coral} stroke={PALETTE.ink} strokeWidth="2" />
+      </g>
+
+      <g className="br-fx br-bob-soft">
+        <Signal />
+        {/* One arm out to the dish, one down. */}
+        <path d="M232 178l28-22" stroke={PALETTE.ink} strokeWidth="7" strokeLinecap="round" />
+        <path d="M186 182l-16 18" stroke={PALETTE.ink} strokeWidth="7" strokeLinecap="round" />
+        <BotBody />
+        <Standing />
       </g>
     </>
   );

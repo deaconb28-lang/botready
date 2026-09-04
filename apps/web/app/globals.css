@@ -403,6 +403,93 @@
 .br-tick-2     { animation: br-tick 3s ease-in-out 1s infinite; }
 .br-tick-3     { animation: br-tick 3s ease-in-out 2s infinite; }
 
+/* ------------------------------------------------------------------ the wait
+
+   The live scan page. Everything here is decoration over a real number: the
+   ring's fill, the stage list and the log are driven by checks the worker has
+   actually finished, and the only thing these keyframes do is stop thirty
+   seconds of waiting from looking like thirty seconds of nothing. */
+
+/* A sheen crossing the header card, once every four seconds. */
+@keyframes br-sweep {
+  0% {
+    transform: translateX(-140%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+
+/* The line that travels down the log panel, as a scanner's line does. */
+@keyframes br-scanline {
+  0% {
+    transform: translateY(-8%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.5;
+  }
+  88% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(760%);
+    opacity: 0;
+  }
+}
+
+/* The block cursor at the end of the running line. */
+@keyframes br-caret {
+  0%,
+  48% {
+    opacity: 1;
+  }
+  49%,
+  100% {
+    opacity: 0.08;
+  }
+}
+
+/* Three dots marching, for a stage that has not started. */
+@keyframes br-march {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* The radar arc over the bot's shoulder while it reads. */
+@keyframes br-radar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* A ring of light leaving the stage that is currently running. */
+@keyframes br-halo {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+.br-sweep      { animation: br-sweep 4s ease-in-out infinite; }
+.br-scanline   { animation: br-scanline 3.6s linear infinite; }
+.br-caret      { animation: br-caret 1.05s steps(1, end) infinite; }
+.br-march-1    { animation: br-march 1.35s ease-in-out infinite; }
+.br-march-2    { animation: br-march 1.35s ease-in-out 0.18s infinite; }
+.br-march-3    { animation: br-march 1.35s ease-in-out 0.36s infinite; }
+.br-radar      { animation: br-radar 2.6s linear infinite; }
+.br-halo       { animation: br-halo 1.8s ease-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -437,6 +524,25 @@
   .br-tick-1,
   .br-tick-2,
   .br-tick-3 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Same reason on the live scan: the sweep, the scanline and the halo all end
+     translated off the panel or at opacity 0, so the blanket rule above would
+     leave them invisible rather than still. The sweep and the scanline are pure
+     decoration and are simply removed; the rest hold their first frame. */
+  .br-sweep,
+  .br-scanline,
+  .br-halo {
+    display: none !important;
+  }
+  .br-caret,
+  .br-march-1,
+  .br-march-2,
+  .br-march-3,
+  .br-radar {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
