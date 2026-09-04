@@ -19,7 +19,7 @@ type TabId = (typeof TABS)[number]['id'];
  * blinks only while the field is empty; the button says what happens and the
  * error, if there is one, says what went wrong and what to do next.
  */
-export function HeroScanCard({ compact = false }: { compact?: boolean }) {
+export function HeroScanCard({ compact = false, className = '' }: { compact?: boolean; className?: string }) {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>('url');
   const [value, setValue] = useState('');
@@ -64,7 +64,7 @@ export function HeroScanCard({ compact = false }: { compact?: boolean }) {
       id="check"
       onSubmit={submit}
       noValidate
-      className={cx('edge mx-auto rounded-[16px] bg-white p-2 text-left shadow-hard-5', compact ? 'max-w-[580px]' : 'max-w-[640px]')}
+      className={cx('edge mx-auto rounded-[16px] bg-white p-2 text-left shadow-hard-5', compact ? 'max-w-[580px]' : 'max-w-[640px]', className)}
     >
       <div className="flex gap-1 px-1 pb-[10px] pt-1" role="tablist" aria-label="What to check">
         {TABS.map((t) => (

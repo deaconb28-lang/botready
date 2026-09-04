@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
+import { BotScene } from '@/components/bot/BotScene';
 import { Card, Container, PageTitle, cx } from '@/components/ui';
 import { CRAWLER_EMAIL, LIMITS, ROBOTS_TOKEN, USER_AGENT } from '@/lib/site';
 
@@ -36,11 +37,29 @@ export default function CrawlerPage() {
     <div className="min-h-dvh bg-canvas">
       <SiteHeader />
       <Container as="main" id="main" width={820} className="pb-24 pt-14">
+        {/* The title spans the full measure: "BotreadyBot/1.0" cannot wrap, and
+            in a 1fr track beside the graphic it overflows its own column. */}
         <PageTitle eyebrow="Our crawler" size="xl">
           BotreadyBot/1.0
         </PageTitle>
-        <p className="mb-[14px] mt-[18px] text-[17.5px] leading-[1.6] text-muted">You are probably here because you found this in your access logs:</p>
-        <pre className="overflow-auto rounded-[16px] bg-ink p-5 font-mono text-[13px] text-on-ink">{USER_AGENT}</pre>
+        <div className="mt-[18px] grid grid-cols-1 items-center gap-[30px] md:grid-cols-[minmax(0,1fr)_284px]">
+          <div className="min-w-0">
+            <p className="mb-[14px] text-[17.5px] leading-[1.6] text-muted">
+              You are probably here because you found this in your access logs:
+            </p>
+            <pre
+              // Scrolls sideways on a phone, so it has to be reachable from a
+              // keyboard rather than only by dragging it.
+              tabIndex={0}
+              role="group"
+              aria-label="Our user agent string"
+              className="overflow-auto rounded-[16px] bg-ink p-5 font-mono text-[13px] text-on-ink"
+            >
+              {USER_AGENT}
+            </pre>
+          </div>
+          <BotScene variant="reading" shadow="shadow-hard-4" className="hidden md:block" />
+        </div>
 
         <H2>How to block us</H2>
         <P>
@@ -56,6 +75,7 @@ export default function CrawlerPage() {
 
         <H2>What we request</H2>
         <P className="mb-[18px]">A scan is one visit. In the worst case it is what follows, over about thirty seconds, sequentially, one second apart.</P>
+        <div className="grid grid-cols-1 items-start gap-[30px] md:grid-cols-[minmax(0,1fr)_260px]">
         <Card radius="panel" shadow={0} className="overflow-hidden">
           <ol className="m-0 list-none p-0">
             {REQUESTS.map((text, i) => (
@@ -66,6 +86,8 @@ export default function CrawlerPage() {
             ))}
           </ol>
         </Card>
+          <BotScene variant="waiting" shadow="shadow-hard-4" className="hidden md:block" />
+        </div>
         <P className="mt-5">
           Never more than {LIMITS.maxPagesPerScan} distinct pages, never concurrently, and never more than one scan of a domain in{' '}
           {LIMITS.cacheHours} hours: a second request for a domain inside that window is served the first scan&rsquo;s result, so a link to
@@ -73,10 +95,13 @@ export default function CrawlerPage() {
         </P>
 
         <H2>What we do not do</H2>
-        <div className="grid gap-[14px]">
-          {NOT_DO.map((text) => (
-            <P key={text}>{text}</P>
-          ))}
+        <div className="grid grid-cols-1 items-start gap-[30px] md:grid-cols-[minmax(0,1fr)_260px]">
+          <div className="grid min-w-0 gap-[14px]">
+            {NOT_DO.map((text) => (
+              <P key={text}>{text}</P>
+            ))}
+          </div>
+          <BotScene variant="refused" shadow="shadow-hard-4" className="hidden md:block" />
         </div>
 
         <H2>Reaching us</H2>

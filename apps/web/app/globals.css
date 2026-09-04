@@ -303,6 +303,106 @@
 
 /* Required, not optional: the marquee, the race and the cursors are all
    continuous. */
+
+/* ------------------------------------------------------------------ the bot */
+
+/* The mascot's five keyframe sets, from the handoff. Every node that rotates
+   or scales needs `transform-box: fill-box` — without it an SVG child's
+   `transform-origin: center` resolves against the viewport rather than the
+   element, and the bot swings in a wide arc off screen instead of bobbing in
+   place. `.br-fx` is that fix, applied to every animated node. */
+
+.br-fx {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* The waves are pure translateX and want no origin fix; the -200px matches the
+   scallop's period, so the loop has no seam. */
+@keyframes br-wave {
+  to {
+    transform: translateX(-200px);
+  }
+}
+
+@keyframes br-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+
+@keyframes br-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-11px) rotate(4deg);
+  }
+}
+
+@keyframes br-ping {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes br-spray {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-26px, -22px);
+  }
+}
+
+/* The cadence dots on the crawler page: one second apart, in sequence. */
+@keyframes br-tick {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The durations are deliberately uneven so the scene never resets in sync. */
+.br-wave-front { animation: br-wave 3.4s linear infinite; }
+.br-wave-back  { animation: br-wave 5.6s linear infinite; }
+.br-bob        { animation: br-bob 3.1s ease-in-out infinite; }
+/* Standing scenes breathe rather than ride, so the same curve, slower and shallower. */
+.br-bob-soft   { animation: br-bob 4.8s ease-in-out infinite; }
+.br-float-1    { animation: br-float 5.2s ease-in-out infinite; }
+.br-float-2    { animation: br-float 4.1s ease-in-out 0.7s infinite; }
+.br-float-3    { animation: br-float 4.6s ease-in-out 1.4s infinite; }
+.br-ping-1     { animation: br-ping 1.9s ease-out infinite; }
+.br-ping-2     { animation: br-ping 1.9s ease-out 0.35s infinite; }
+.br-spray-1    { animation: br-spray 1.6s ease-out infinite; }
+.br-spray-2    { animation: br-spray 1.6s ease-out 0.5s infinite; }
+.br-tick-1     { animation: br-tick 3s ease-in-out infinite; }
+.br-tick-2     { animation: br-tick 3s ease-in-out 1s infinite; }
+.br-tick-3     { animation: br-tick 3s ease-in-out 2s infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -316,6 +416,28 @@
   .anim-rise-fast,
   .anim-pip,
   .anim-pop {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* The bot has to be legible frozen. Left to the blanket rule above it would
+     settle on each keyframe set's end state, which for the ping and the spray
+     is opacity 0 — the antenna signal and the spray would simply vanish. */
+  .br-wave-front,
+  .br-wave-back,
+  .br-bob,
+  .br-bob-soft,
+  .br-float-1,
+  .br-float-2,
+  .br-float-3,
+  .br-ping-1,
+  .br-ping-2,
+  .br-spray-1,
+  .br-spray-2,
+  .br-tick-1,
+  .br-tick-2,
+  .br-tick-3 {
+    animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }

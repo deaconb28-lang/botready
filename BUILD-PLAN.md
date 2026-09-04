@@ -450,3 +450,44 @@ measured against whether a site gets cited.
 `SCORING-PLAN.md` is the rest of it: continuous scoring in place of the
 threshold cliffs, retrievability as a ceiling rather than a slice, cohort
 context, and calibration against the prompt-watch data once it accumulates.
+
+### The bot, in four scenes
+
+A hand-drawn mascot from a later handoff: a robot surfing a two-layer wave
+while status stickers drift past. The path data is carried over verbatim, since
+the coordinates and stroke weights *are* the drawing; the wrapper card, the
+type face and the animation declarations are house style. `BotScene` takes a
+variant, and the body — antenna, torso, chest light, head, eyes — is shared,
+so a new pose is arms, legs and a prop rather than a new drawing.
+
+The handoff's palette is a generation newer than the one this site ships: its
+lime is `#D6F94A` against our `#C6F53C`, its ink `#16151C` against `#111318`.
+Two limes side by side on the same page read as a mistake rather than a
+decision, so the graphic uses the live tokens. `PALETTE` in `BotScene.tsx` is
+the one place to change that back if the rest of the site ever moves.
+
+Three variations carry the crawler page, each answering the section it sits
+beside: the bot reading robots.txt, because that is the first request of every
+scan; three dots pulsing in sequence for the one-second cadence; and the bot
+stopped at a dashed boundary with a 403 on it, hand short of the line, for the
+section that says we do not work around a refusal. That last one is the page's
+argument drawn rather than asserted.
+
+Two things the prototype warns about and both were real. Every rotating or
+scaling node needs `transform-box: fill-box`, or an SVG child's
+`transform-origin: center` resolves against the viewport and the bot swings off
+screen instead of bobbing. And the blanket reduced-motion rule is not enough
+here: left to `animation-duration: .001ms` the scene settles on each keyframe
+set's *end* state, which for the antenna ping and the spray is `opacity: 0` —
+they would simply vanish. Those classes are reset to `animation: none`
+explicitly, and the frozen scene was checked rather than assumed.
+
+Two layout bugs came out of putting the graphic in a grid, both found by
+measuring rather than looking. A grid item defaults to `min-width: auto`, so
+the scan card's non-wrapping input row pushed the hero track past a phone's
+viewport; and the crawler page's `BotreadyBot/1.0` title, which cannot wrap,
+overflowed its own column beside the graphic, invisible at 1280 because the
+container is centred with room to spare. The agent race had a third, older
+version of the same thing: an implicit grid column is sized to max-content, so
+its rows spilled out of the panel that clips them. All three are measured at
+six widths now and all are zero.

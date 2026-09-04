@@ -39,7 +39,7 @@ export function AgentRace() {
           GET /<br />×5
         </div>
         <DashConnector />
-        <ul className="m-0 grid min-w-[260px] flex-1 list-none gap-[9px] p-0">
+        <ul className="m-0 grid min-w-0 flex-1 list-none grid-cols-[minmax(0,1fr)] gap-[9px] p-0">
           {RACE.map((r, i) => {
             const arrived = step > i;
             return (

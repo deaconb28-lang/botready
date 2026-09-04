@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { AgentRace } from '@/components/home/AgentRace';
+import { BotScene } from '@/components/bot/BotScene';
 import { ChatProof } from '@/components/home/ChatProof';
 import { HeroScanCard } from '@/components/home/HeroScanCard';
 import { Copy, CopyItem } from '@/components/ModeText';
@@ -38,19 +39,34 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <Container as="section" width={1000} className="pt-[72px] text-center">
+    <Container as="section" width={1120} className="pt-[72px]">
+      {/* Hoisted out of the grid on purpose: inside a 1fr track the badge wraps
+          within its own pill shape. */}
       <div className="edge inline-flex max-w-full items-center gap-[10px] whitespace-nowrap rounded-full bg-white py-[5px] pl-[5px] pr-[14px] text-[13.5px] text-muted">
         <span className="rounded-full bg-ink px-[9px] py-[3px] font-mono text-[11px] font-medium tracking-[0.06em] text-white">NEW</span>
         <span className="overflow-hidden text-ellipsis">
           <Copy k="badge" />
         </span>
       </div>
-      <h1 className="display-tight mt-6 text-[clamp(46px,7vw,86px)]">Are you BotReady?</h1>
-      <p className="mx-auto mt-5 max-w-[50ch] text-[18.5px] leading-[1.55] text-muted">
-        <Copy k="heroSub" />
-      </p>
-      <div className="mt-9">
-        <HeroScanCard />
+
+      <div className="mt-7 grid grid-cols-1 items-center gap-[30px] lg:grid-cols-[minmax(0,1fr)_384px]">
+        {/* min-w-0: a grid item defaults to min-width:auto, and the scan card's
+            input-plus-nowrap-button row has a min-content wider than a phone,
+            which pushes the whole track past the viewport. */}
+        <div className="min-w-0">
+          <h1 className="display-tight text-[clamp(42px,6vw,72px)]">Are you BotReady?</h1>
+          <p className="mt-5 max-w-[50ch] text-[18.5px] leading-[1.55] text-muted">
+            <Copy k="heroSub" />
+          </p>
+          <div className="mt-8">
+            <HeroScanCard className="ml-0" />
+          </div>
+        </div>
+
+        {/* Decorative, and the first thing to go: below the two-column
+            breakpoint the input matters more than the mascot, and the graphic
+            carries no information to lose. */}
+        <BotScene variant="surfing" className="hidden lg:block" />
       </div>
     </Container>
   );
