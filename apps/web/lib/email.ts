@@ -41,10 +41,10 @@ export async function sendFixpackReady(opts: {
     text: [
       `Thanks. The fix pack for ${opts.domain ?? 'your scan'} is generated and waiting.`,
       '',
-      'Sign in with this address to download it:',
+      'Sign in with Google, using this address, to download it:',
       link,
       '',
-      'The link sends you a one-time sign-in email. There is no password.',
+      'There is no password. If this address is not a Google account, reply to this email and we will send you the files directly.',
       '',
       `Everything in the pack was built from the scan itself. Re-run the check after each change rather than after all of them: the only proof a client can read your site is that it did.`,
       '',

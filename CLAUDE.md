@@ -31,7 +31,7 @@ Pinned. Do not substitute without asking.
 | Queue | Upstash QStash, HTTP push to the worker |
 | Cache / rate limit | Upstash Redis |
 | Database | Supabase Postgres, accessed with `postgres` (postgres.js) from the worker and `@supabase/supabase-js` from the web app |
-| Auth | Supabase Auth, magic link only |
+| Auth | Supabase Auth, Google only |
 | Payments | Stripe Checkout, webhook grants entitlements |
 | Email | Resend |
 | Package manager | pnpm workspaces |

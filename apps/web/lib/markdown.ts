@@ -203,8 +203,9 @@ function docs(): string {
 function signIn(): string {
   return [
     ...heading('/sign-in'),
-    'One magic link to your email address, or Google. There is no password, and an account is only needed to claim a',
-    'domain, keep a scan history, or buy anything. Running a scan and reading the result needs no account at all.',
+    'Continue with Google. We ask for your email address and nothing else. There is no password, and an account is only',
+    'needed to claim a domain, keep a scan history, or buy anything. Running a scan and reading the result needs no',
+    'account at all.',
     '',
   ].join('\n');
 }

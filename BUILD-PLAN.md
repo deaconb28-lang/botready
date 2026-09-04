@@ -643,3 +643,25 @@ overwrite an answer from someone who actually knows.
 That change makes the cohort unbounded, so the nightly cron is now capped and
 rotates: it reads `index_rows` rather than `sites`, takes the 200 stalest first,
 and every site comes round.
+
+## Google only
+
+Magic-link sending is gone: the route, the form, and every sentence that
+promised it. Google is the only way in.
+
+The interesting part is what that does to a failure. The provider probe added
+last commit hid the Google button when Supabase had the provider switched off,
+on the grounds that a button leading to a raw JSON 400 is worse than no button
+— and with a magic-link field underneath, no button was survivable. It is not
+survivable now: hiding the only control leaves a heading over an empty panel.
+So the false branch says what is happening in a sentence and gives an address,
+which is the honest thing to show someone who cannot get in and did nothing
+wrong.
+
+Two consequences worth being clear about rather than discovering later. Anyone
+who bought a fix pack with an address that is not a Google account can no longer
+reach it, so the purchase email now says to reply and we will send the files
+directly — a person, not a dead end. And existing magic-link accounts survive
+only where the Google address matches the one they signed up with; Supabase
+links identities on a verified email, and a mismatch is a new account with none
+of the old one's domains.

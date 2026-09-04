@@ -85,7 +85,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   {
     path: '/sign-in',
     title: 'Sign in',
-    description: 'One magic link, or Google. There is no password to lose and no trial to cancel.',
+    description: 'Continue with Google. There is no password to lose and no trial to cancel.',
     updated: '2026-08-26',
     sources: ['apps/web/app/sign-in'],
     changeFrequency: 'yearly',

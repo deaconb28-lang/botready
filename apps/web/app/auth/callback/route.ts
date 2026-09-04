@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET /auth/callback?code=…&next=/scan/…
  *
- * The link in the magic-link email lands here. The code is exchanged for a
+ * Where Supabase returns the browser after Google. The code is exchanged for a
  * session cookie and the person continues to wherever they were going, which is
  * almost always a result page with a download button on it.
  */

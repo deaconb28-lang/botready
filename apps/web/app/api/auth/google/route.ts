@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/auth/google?next=/account -> 303 to Google, via Supabase Auth.
  *
  * Supabase runs the OAuth exchange and sends the browser back to
- * /auth/callback with a code, the same path the magic link uses. The Google
+ * /auth/callback with a code. The Google
  * provider has to be enabled in the Supabase project for this to work; when it
  * is not, Supabase answers with the reason and it is shown on the sign-in page.
  */

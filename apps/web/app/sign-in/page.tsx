@@ -7,8 +7,7 @@ import { redirect } from 'next/navigation';
 import { Cursor, Mark, PillEyebrow } from '@/components/ui';
 import { currentUser, safeNext } from '@/lib/auth';
 import { authProviders } from '@/lib/auth-providers';
-import { PLAN_LIMITS } from '@/lib/site';
-import { SignInForm } from './SignInForm';
+import { CRAWLER_EMAIL, PLAN_LIMITS } from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/sign-in', { robots: { index: false, follow: false } });
 
@@ -33,7 +32,7 @@ const PERKS: Array<{ title: string; chip: string; body: string }> = [
 ];
 
 /**
- * The split screen. Left: Google, or a magic link. Right: what is waiting
+ * The split screen. Left: Google, which is the only way in. Right: what is waiting
  * inside. There is no password anywhere in this product. Someone who is
  * already signed in has no business here and goes straight to their account.
  */
@@ -66,24 +65,35 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
                 Google's mark, and it may not be recoloured or set on a colour
                 of ours — the lime hover this used to have put it on lime. */}
             {providers.google ? (
-              <>
-                <a
-                  href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-                  className="edge lift flex w-full cursor-pointer items-center justify-center gap-3 rounded-[12px] bg-white p-[15px] font-body text-[15.5px] font-bold text-ink no-underline shadow-hard-4 transition-all duration-150"
-                >
-                  <GoogleMark />
-                  Continue with Google
-                </a>
+              <a
+                href={`/api/auth/google?next=${encodeURIComponent(next)}`}
+                className="edge lift flex w-full cursor-pointer items-center justify-center gap-3 rounded-[12px] bg-white p-[15px] font-body text-[15.5px] font-bold text-ink no-underline shadow-hard-4 transition-all duration-150"
+              >
+                <GoogleMark />
+                Continue with Google
+              </a>
+            ) : (
+              // Google is the only way in now, so when the provider is off there
+              // is no second option to fall back to. Say that, rather than
+              // leaving a panel with a heading and nothing under it.
+              <p role="status" className="edge rounded-[12px] bg-amber-tint px-[15px] py-[14px] text-[15px] leading-[1.5] text-ink">
+                Sign-in is unavailable right now. Nothing is wrong with your account and nothing needs doing — try again
+                shortly, or write to <a href={`mailto:${CRAWLER_EMAIL}`}>{CRAWLER_EMAIL}</a> if it persists.
+              </p>
+            )}
 
-                <div className="my-[22px] flex items-center gap-3" aria-hidden="true">
-                  <span className="h-[2px] flex-1 bg-divider" />
-                  <span className="font-mono text-[12px] text-subtle">or</span>
-                  <span className="h-[2px] flex-1 bg-divider" />
-                </div>
-              </>
+            {error ? (
+              <p role="alert" className="mt-4 font-mono text-[12.5px] font-medium leading-[1.5] text-coral-text">
+                {error === 'missing-code'
+                  ? 'That sign-in link was missing its code. Start again above.'
+                  : error}
+              </p>
             ) : null}
 
-            <SignInForm next={next} initialError={error ?? null} />
+            <p className="mt-[18px] text-[14px] leading-[1.55] text-subtle-2">
+              We ask Google for your email address and nothing else. There is no password anywhere in this product, and
+              running a scan needs no account at all.
+            </p>
           </div>
         </div>
 

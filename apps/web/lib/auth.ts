@@ -1,5 +1,5 @@
 /**
- * Supabase Auth, magic link only. There is no password anywhere in this product.
+ * Supabase Auth, Google only. There is no password anywhere in this product.
  *
  * Reading the current user is best effort: the whole diagnosis is public, so a
  * signed-out reader loses nothing but a higher rate limit and the fix-pack

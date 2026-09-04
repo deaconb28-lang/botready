@@ -14,6 +14,11 @@ import { serverEnv } from './env';
  * That is a dead end on someone else's domain, with no header, no way back and
  * nothing they can act on. A button that cannot work should not be on the page.
  *
+ * Since Google is now the only way in, the answer also decides whether there is
+ * a sign-in page at all — so a false positive costs someone that JSON page, and
+ * a false negative costs them a sentence saying to come back shortly. Both are
+ * better than the JSON.
+ *
  * `/auth/v1/settings` is a public endpoint of the project and needs only the
  * publishable key, which is the key designed to be shipped to browsers.
  */
@@ -50,8 +55,7 @@ export async function authProviders(): Promise<AuthProviders> {
     return { google: body.external?.google === true };
   } catch {
     // A network failure is not evidence that Google is available, and showing a
-    // button that might 400 is worse than showing only the magic link, which
-    // always works.
+    // button that might 400 is worse than a sentence saying to come back.
     return NONE;
   }
 }

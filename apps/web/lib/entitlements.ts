@@ -13,7 +13,7 @@
  *
  * The buyer need not have an account. Stripe Checkout collected their email;
  * this finds or creates the Supabase auth user for it, grants the entitlement,
- * and the magic link email is what turns the purchase into a session.
+ * and signing in with the same address is what turns the purchase into a session.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -93,7 +93,7 @@ export function supabaseStore(client: SupabaseClient): EntitlementStore {
       const { data, error } = await client.auth.admin.createUser({
         email,
         // Confirmed, because Stripe already delivered a receipt to it and the
-        // magic link is the proof of control that matters.
+        // signing in as that address is the proof of control that matters.
         email_confirm: true,
       });
       if (error || !data.user) throw error ?? new Error('createUser returned no user');
