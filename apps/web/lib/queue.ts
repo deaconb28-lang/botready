@@ -39,7 +39,8 @@ export async function enqueueScan(job: QueuedScan, options: QueueOptions = {}): 
 
   if (token) {
     const { Client } = await import('@upstash/qstash');
-    const qstash = new Client({ token });
+    const baseUrl = serverEnv.qstashUrl();
+    const qstash = new Client({ token, ...(baseUrl ? { baseUrl } : {}) });
     const message = await qstash.publishJSON({
       url: target,
       body: job,

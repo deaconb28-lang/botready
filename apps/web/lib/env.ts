@@ -47,6 +47,12 @@ export const serverEnv = {
   redisToken: () => want('UPSTASH_REDIS_REST_TOKEN'),
 
   qstashToken: () => want('QSTASH_TOKEN'),
+  /**
+   * QStash tokens are regional. The console exports QSTASH_URL alongside the
+   * token, and a token for qstash-us-east-1 answers 404 at the default
+   * qstash.upstash.io, so the URL has to travel with it.
+   */
+  qstashUrl: () => want('QSTASH_URL'),
 
   scannerUrl: () => need('SCANNER_URL'),
   scannerSharedSecret: () => need('SCANNER_SHARED_SECRET'),

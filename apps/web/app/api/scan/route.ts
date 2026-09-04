@@ -80,6 +80,9 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     // The row exists and nothing will pick it up. Say so, and drop the cache
     // entry so the next attempt crawls rather than being handed this failure.
+    // Logged as well as recorded on the row, so the platform logs name the
+    // cause without a trip to the database.
+    console.error('scan could not be queued', { scanId, err: err instanceof Error ? err.message : String(err) });
     const { forgetCachedScan } = await import('@/lib/redis');
     await forgetCachedScan(domain, kv);
     await markScanErrored(
