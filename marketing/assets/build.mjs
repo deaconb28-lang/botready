@@ -978,6 +978,95 @@ emit(
   ),
 );
 
+/**
+ * The render gap, at 16:9. The same idea as the Instagram carousel's opener,
+ * but the square version cannot show both panes and the ratio, and this post is
+ * about the relationship between them.
+ */
+emit(
+  'x-post-render',
+  1600,
+  900,
+  (() => {
+    const barY = 720;
+    const barX = 88;
+    const barW = 1424;
+    return [
+      ground(1600, 900),
+      wordmark({ x: 88, y: 100, size: 28 }),
+      display({ x: 88, y: 210, lines: ['Your pricing page, twice.'], size: fit(['Your pricing page, twice.'], 1424, 66) }),
+
+      card({ x: 88, y: 260, w: 690, h: 380, r: 18, shadow: 5 }),
+      text({ x: 120, y: 306, s: 'what you see', size: 24, family: MONO, fill: C.subtle }),
+      ...Array.from({ length: 7 }, (_, i) =>
+        `<rect x="120" y="${336 + i * 40}" width="${i % 3 === 0 ? 600 : 470}" height="18" rx="6" fill="${C.ink}" opacity="${0.16 + (i % 3) * 0.05}"/>`,
+      ),
+
+      card({ x: 822, y: 260, w: 690, h: 380, r: 18, fill: C.surface, shadow: 5 }),
+      text({ x: 854, y: 306, s: 'what a client without a browser sees', size: 24, family: MONO, fill: C.subtle }),
+      text({ x: 854, y: 372, s: 'Example — Pricing', size: 30, family: MONO, fill: C.ink }),
+      text({ x: 854, y: 420, s: 'Loading…', size: 30, family: MONO, fill: C.coral }),
+
+      // The ratio the scan actually records, as the band it falls in.
+      card({ x: barX, y: barY, w: barW, h: 72, r: 12, fill: C.white, shadow: 4 }),
+      `<rect x="${barX + 6}" y="${barY + 6}" width="${(barW - 12) * 0.4}" height="60" rx="8" fill="${C.lime}"/>`,
+      `<rect x="${barX + 6 + (barW - 12) * 0.4}" y="${barY + 6}" width="${(barW - 12) * 0.3}" height="60" fill="${C.amber}"/>`,
+      `<rect x="${barX + 6 + (barW - 12) * 0.7}" y="${barY + 6}" width="${(barW - 12) * 0.3 - 6}" height="60" rx="8" fill="${C.coral}"/>`,
+      text({ x: barX + barW * 0.2, y: barY + 48, s: 'fine', size: 30, family: DISPLAY, weight: 700, anchor: 'middle' }),
+      text({ x: barX + barW * 0.55, y: barY + 48, s: 'thin', size: 30, family: DISPLAY, weight: 700, anchor: 'middle' }),
+      text({ x: barX + barW * 0.85, y: barY + 48, s: 'empty', size: 30, family: DISPLAY, weight: 700, anchor: 'middle' }),
+      text({ x: barX, y: barY - 18, s: 'raw characters ÷ rendered characters', size: 24, family: MONO, fill: C.muted }),
+      text({ x: barX + barW * 0.4, y: barY + 112, s: '0.4', size: 24, family: MONO, fill: C.subtle, anchor: 'middle' }),
+      text({ x: barX + barW * 0.7, y: barY + 112, s: '0.7', size: 24, family: MONO, fill: C.subtle, anchor: 'middle' }),
+    ].join('');
+  })(),
+);
+
+/**
+ * Our own first scan. Every number on it is real and came off the API — 57, a
+ * C, and the seven checks by name. The point of the post is that it is our
+ * scanner pointed at us, so a drawn approximation would defeat it.
+ */
+emit(
+  'x-post-ourscore',
+  1600,
+  900,
+  (() => {
+    const failed = [
+      ['llms_txt_present', 'no llms.txt'],
+      ['agent_manifest', 'no agent manifest'],
+      ['markdown_alternate', 'no markdown alternate'],
+      ['jsonld_present', 'no structured data'],
+      ['api_docs_reachable', 'no reachable API docs'],
+      ['cache_headers', 'no Last-Modified'],
+      ['sitemap_lastmod_real', 'sitemap dates were the deploy time'],
+    ];
+    return [
+      ground(1600, 900),
+      wordmark({ x: 88, y: 100, size: 28 }),
+      eyebrow({ x: 88, y: 168, s: 'our own scanner, pointed at our own site', size: 22 }),
+
+      card({ x: 88, y: 200, w: 620, h: 300, r: 22, shadow: 6 }),
+      card({ x: 124, y: 236, w: 150, h: 150, r: 18, fill: C.coral, shadow: 0 }),
+      text({ x: 199, y: 350, s: 'C', size: 120, family: DISPLAY, weight: 700, anchor: 'middle' }),
+      display({ x: 306, y: 320, lines: ['57 / 100'], size: 72 }),
+      text({ x: 306, y: 366, s: 'botready.dev · scoring v1.2', size: 22, family: MONO, fill: C.subtle }),
+      text({ x: 124, y: 448, s: '7 failed · 4 warned · 1 skipped', size: 26, family: MONO, weight: 500 }),
+
+      card({ x: 752, y: 200, w: 760, h: 620, r: 22, fill: C.ink, shadow: 6, shadowColor: C.violet, stroke: C.ink }),
+      ...failed.map(([key, what], i) =>
+        [
+          text({ x: 786, y: 264 + i * 76, s: key, size: 26, family: MONO, weight: 500, fill: C.coral }),
+          text({ x: 786, y: 298 + i * 76, s: what, size: 24, family: BODY, fill: C.onInkMuted }),
+        ].join(''),
+      ),
+
+      card({ x: 88, y: 540, w: 620, h: 232, r: 20, fill: C.lime, shadow: 5 }),
+      display({ x: 124, y: 606, lines: ['Fixed the same day.', 'Wrote up what', 'was wrong.'], size: 46 }),
+    ].join('');
+  })(),
+);
+
 mkdirSync(OUT, { recursive: true });
 for (const file of files) writeFileSync(join(OUT, `${file.name}.svg`), file.markup);
 
