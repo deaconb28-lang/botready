@@ -8,7 +8,9 @@
 import { serverEnv } from './env';
 import { absoluteUrl, SITE } from './site';
 
-const FROM = `botready.dev <hello@botready.dev>`;
+const FROM = `botready.dev <team@botready.dev>`;
+
+const REPLY_TO = 'team@botready.dev';
 
 async function send(message: { to: string; subject: string; text: string }): Promise<void> {
   const key = serverEnv.resendApiKey();
@@ -18,7 +20,13 @@ async function send(message: { to: string; subject: string; text: string }): Pro
   }
   const { Resend } = await import('resend');
   const resend = new Resend(key);
-  await resend.emails.send({ from: FROM, to: message.to, subject: message.subject, text: message.text });
+  await resend.emails.send({
+    from: FROM,
+    replyTo: REPLY_TO,
+    to: message.to,
+    subject: message.subject,
+    text: message.text,
+  });
 }
 
 export async function sendFixpackReady(opts: {
