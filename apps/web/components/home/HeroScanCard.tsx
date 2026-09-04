@@ -90,24 +90,48 @@ export function HeroScanCard({ compact = false, className = '' }: { compact?: bo
         ))}
       </div>
       <div className="flex items-center rounded-[14px] border border-hairline-3 bg-surface-alt py-[6px] pl-4 pr-[6px]">
-        <input
-          id="scan-url"
-          name="url"
-          inputMode="url"
-          autoComplete="url"
-          autoCapitalize="off"
-          spellCheck={false}
-          value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder={active.placeholder}
-          aria-label="Site to check"
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? 'scan-error' : 'scan-limits'}
-          className="min-w-0 flex-1 border-0 bg-transparent py-3 pr-2 font-mono text-[15.5px] text-ink outline-none placeholder:text-placeholder"
-        />
+        {/* The caret sits after the placeholder rather than before it, so the
+            field reads as a prompt waiting to be typed into instead of as a bar
+            parked in the interface. The real caret takes over the moment you
+            focus, which is what `peer-focus` is doing — two carets in one field
+            was the flaw in every earlier version of this.
+
+            The native placeholder stays, transparent: it keeps the input's own
+            semantics and autofill behaviour, and the span below is what is
+            actually read. */}
+        <div className="relative min-w-0 flex-1">
+          <input
+            id="scan-url"
+            name="url"
+            inputMode="url"
+            autoComplete="url"
+            autoCapitalize="off"
+            spellCheck={false}
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              if (error) setError(null);
+            }}
+            placeholder={active.placeholder}
+            aria-label="Site to check"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'scan-error' : 'scan-limits'}
+            className="peer w-full border-0 bg-transparent py-3 pr-2 font-mono text-[15.5px] text-ink outline-none placeholder:text-transparent"
+          />
+          {!value ? (
+            <span
+              aria-hidden="true"
+              // The variant hangs off the span, not the caret: `peer-focus`
+              // compiles to a sibling selector and the caret is a grandchild of
+              // the input. Reaching into it keeps the placeholder visible on
+              // focus and takes only the caret away.
+              className="pointer-events-none absolute inset-y-0 left-0 flex items-center font-mono text-[15.5px] text-placeholder peer-focus:[&>i]:opacity-0"
+            >
+              {active.placeholder}
+              <i className="anim-cursor ml-[3px] block h-[17px] w-[8px] rounded-[1px] bg-violet" />
+            </span>
+          ) : null}
+        </div>
         <button
           type="submit"
           disabled={busy}
