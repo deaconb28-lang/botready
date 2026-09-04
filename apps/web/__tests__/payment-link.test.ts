@@ -67,3 +67,35 @@ describe('the host check', () => {
     });
   }
 });
+
+describe('the Stripe secret key', () => {
+  // Stripe's dashboard says "secret key" and its docs say "API key". Somebody
+  // setting this up reads one page, not both.
+  const NAMES = ['STRIPE_SECRET_KEY', 'STRIPE_API_KEY'] as const;
+
+  for (const name of NAMES) {
+    it(`is read from ${name}`, async () => {
+      const before = { ...process.env };
+      for (const n of NAMES) delete process.env[n];
+      process.env[name] = 'sk_test_from_' + name;
+
+      const { serverEnv } = await import(`../lib/env?key=${name}`);
+      expect(serverEnv.stripeSecretKey()).toBe('sk_test_from_' + name);
+
+      process.env = before;
+    });
+  }
+
+  it('says both names when neither is set', async () => {
+    const before = { ...process.env };
+    for (const n of NAMES) delete process.env[n];
+
+    // The query string gives each case its own module instance, since the
+    // variables are read once at import. Built rather than literal so the
+    // compiler does not try to resolve it as a real path.
+    const { serverEnv } = await import(`../lib/env?key=${'none'}`);
+    expect(() => serverEnv.stripeSecretKey()).toThrow(/STRIPE_SECRET_KEY.*STRIPE_API_KEY/);
+
+    process.env = before;
+  });
+});

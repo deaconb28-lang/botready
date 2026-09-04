@@ -57,7 +57,12 @@ export const serverEnv = {
   scannerUrl: () => need('SCANNER_URL'),
   scannerSharedSecret: () => need('SCANNER_SHARED_SECRET'),
 
-  stripeSecretKey: () => need('STRIPE_SECRET_KEY'),
+  /**
+   * Stripe's dashboard calls this the secret key and its own docs sometimes
+   * call it the API key, so both spellings are accepted rather than making
+   * someone rename a variable they pasted from one page or the other.
+   */
+  stripeSecretKey: () => needEither('STRIPE_SECRET_KEY', 'STRIPE_API_KEY'),
   stripeWebhookSecret: () => need('STRIPE_WEBHOOK_SECRET'),
   stripePriceFixpack: () => need('STRIPE_PRICE_FIXPACK'),
   stripePriceMonitor: () => need('STRIPE_PRICE_MONITOR'),
