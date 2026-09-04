@@ -14,13 +14,24 @@ import type { ScanView } from './scan-data';
 import { zip } from './zip';
 import { SITE } from './site';
 
+export interface PackEntry {
+  name: string;
+  content: string;
+}
+
 export interface AssembledPack {
   domain: string;
   filename: string;
   /** The zip, as bytes. */
   archive: Uint8Array;
+  /** Every file on its own, so an email can attach them individually. */
+  entries: PackEntry[];
   /** What is inside it, for an email that wants to list the contents. */
   names: string[];
+  /** The coding-agent prompt, so a reader can act on it without unzipping. */
+  agentPrompt: string;
+  /** The punch list, for the body of the confirmation email. */
+  punchList: string;
 }
 
 export function assembleFixPack(view: ScanView, scanId: string): AssembledPack | null {
@@ -61,6 +72,9 @@ export function assembleFixPack(view: ScanView, scanId: string): AssembledPack |
     domain: pack.domain,
     filename: `botready-fixpack-${pack.domain}.zip`,
     archive: zip(entries),
+    entries: entries.map(({ name, content }) => ({ name, content })),
     names: entries.map((e) => e.name),
+    agentPrompt: pack.agentPrompt,
+    punchList: punchListMarkdown(pack.domain, pack.punchList),
   };
 }

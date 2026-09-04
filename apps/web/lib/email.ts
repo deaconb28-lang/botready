@@ -6,6 +6,7 @@
  */
 
 import { serverEnv } from './env';
+import type { AssembledPack } from './fixpack';
 import { CONTACT_EMAIL, absoluteUrl, SITE } from './site';
 
 /** From lib/site.ts, so the address people are told to write to is the address
@@ -16,7 +17,7 @@ const REPLY_TO = CONTACT_EMAIL;
 
 interface Attachment {
   filename: string;
-  content: Uint8Array;
+  content: Uint8Array | string;
 }
 
 async function send(message: {
@@ -39,58 +40,88 @@ async function send(message: {
     subject: message.subject,
     text: message.text,
     ...(message.attachments?.length
-      ? { attachments: message.attachments.map((a) => ({ filename: a.filename, content: Buffer.from(a.content) })) }
+      ? {
+          attachments: message.attachments.map((a) => ({
+            filename: a.filename,
+            content: Buffer.from(typeof a.content === 'string' ? Buffer.from(a.content, 'utf8') : a.content),
+          })),
+        }
       : {}),
   });
 }
 
 /**
- * The purchase email, with the files attached.
+ * The purchase confirmation, and the whole fix pack with it.
  *
- * It used to send a link and nothing else, and the link needs a session — which
- * since sign-in became Google-only means a buyer whose Stripe address is not a
- * Google account could pay us and never reach what they bought. Attaching the
- * pack removes the account from the path entirely: the thing they paid for is
- * in the message.
+ * Three things go out, and each is here for a different reason.
  *
- * The link stays, because a zip in an inbox is easy to lose and the result page
- * is where re-running the check lives. It is the second way in now rather than
- * the only one.
+ * The punch list is in the body, so the email is useful before anything is
+ * opened — on a phone, in a queue, wherever the receipt gets read.
  *
- * The attachment is best effort in one direction only: if the pack cannot be
- * built we still send the email, because a purchase confirmation that never
- * arrives is worse than one without its files.
+ * Every file is attached individually, not only zipped. A .md in an inbox can
+ * be read on the spot; the same .md inside a zip cannot be read on a phone at
+ * all, and the coding-agent prompt is the piece a buyer most wants to get
+ * straight into an editor.
+ *
+ * The zip goes too, because someone at a desk wants one file and a folder.
+ *
+ * It used to be a link and nothing else, and the link needs a session — which
+ * since sign-in became Google-only meant a buyer whose Stripe address is not a
+ * Google account could pay and never reach what they bought. Nothing here needs
+ * an account.
  */
 export async function sendFixpackReady(opts: {
   to: string;
   scanId: string;
   domain: string | null;
-  pack?: { filename: string; archive: Uint8Array; names: string[] } | null;
+  pack?: AssembledPack | null;
 }): Promise<void> {
   const link = absoluteUrl(`/scan/${opts.scanId}`);
   const site = opts.domain ?? 'your site';
   const pack = opts.pack ?? null;
 
+  const attachments: Attachment[] = pack
+    ? [
+        ...pack.entries.map((e) => ({ filename: e.name, content: e.content })),
+        { filename: pack.filename, content: pack.archive },
+      ]
+    : [];
+
   await send({
     to: opts.to,
-    subject: `Your fix pack for ${site} is ready`,
-    attachments: pack ? [{ filename: pack.filename, content: pack.archive }] : [],
+    subject: `Your fix pack for ${site} — ${pack ? `${pack.entries.length} files attached` : 'ready'}`,
+    attachments,
     text: [
-      `Thanks. The fix pack for ${site} is attached to this email.`,
+      `Thanks. Your fix pack for ${site} is attached to this email — every file on its`,
+      `own, and ${pack ? pack.filename : 'a zip'} if you would rather have one download.`,
       '',
       ...(pack
-        ? [`${pack.filename} contains:`, '', ...pack.names.map((n) => `  ${n}`), '']
+        ? [
+            'Start with botready-fixes.md. It is a prompt: paste it into Claude Code or',
+            'Cursor in the repository that serves the site, and it applies the rest one',
+            'commit at a time.',
+            '',
+            'ATTACHED',
+            ...pack.entries.map((e) => `  ${e.name}`),
+            '',
+            '─────────────────────────────────────────────',
+            '',
+            pack.punchList.trim(),
+            '',
+            '─────────────────────────────────────────────',
+            '',
+          ]
         : [
             'The files did not generate on our side, which is our problem and not yours.',
             'Reply to this email and we will send them within the day.',
             '',
           ]),
-      'The result it came from, where you can re-run the check after each change:',
+      'The result they came from, where you can re-run the check after each change:',
       link,
       '',
-      'Everything in the pack was built from the scan itself. Re-run the check after',
-      'each change rather than after all of them: the only proof a client can read',
-      'your site is that it did.',
+      'Everything here was built from the scan itself. Re-run the check after each',
+      'change rather than after all of them: the only proof a client can read your',
+      'site is that it did.',
       '',
       `— ${SITE.name}`,
     ].join('\n'),

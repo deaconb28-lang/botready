@@ -57,6 +57,17 @@ describe('the fix pack a buyer receives', () => {
     expect(Buffer.from(pack.archive.slice(0, 4))).toEqual(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
   });
 
+  it('exposes every file on its own, so the email can attach them unzipped', () => {
+    // A .md inside a zip cannot be read on a phone. The prompt is the piece a
+    // buyer most wants straight into an editor, so it travels as a file.
+    const pack = assembleFixPack(view(), 'scan-1')!;
+    expect(pack.entries.length).toBe(pack.names.length);
+    expect(pack.entries.map((e) => e.name)).toContain('botready-fixes.md');
+    expect(pack.entries.every((e) => e.content.length > 0)).toBe(true);
+    expect(pack.agentPrompt.length).toBeGreaterThan(400);
+    expect(pack.punchList).toContain('#');
+  });
+
   it('declines rather than sending an empty archive for an unscored scan', () => {
     const unscored = { ...view(), score: null };
     expect(assembleFixPack(unscored, 'scan-1')).toBeNull();
