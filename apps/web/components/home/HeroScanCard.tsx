@@ -15,9 +15,9 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id'];
 
 /**
- * The scan card. Three tabs change the placeholder; the caret blinks only while
- * the field is empty; the button says what happens and the error, if there is
- * one, says what went wrong and what to do next.
+ * The scan card. Three tabs change the placeholder; the button says what
+ * happens and the error, if there is one, says what went wrong and what to do
+ * next.
  *
  * There is no `https://` printed beside the field. It was decoration: the
  * scheme is added for you when you leave it off, and printing it made the field
@@ -89,8 +89,7 @@ export function HeroScanCard({ compact = false, className = '' }: { compact?: bo
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-2 rounded-[14px] border border-hairline-3 bg-surface-alt py-[6px] pl-4 pr-[6px]">
-        {!value ? <span aria-hidden="true" className="anim-input-caret h-[19px] w-[2px] flex-none bg-ink" /> : null}
+      <div className="flex items-center rounded-[14px] border border-hairline-3 bg-surface-alt py-[6px] pl-4 pr-[6px]">
         <input
           id="scan-url"
           name="url"
@@ -107,7 +106,7 @@ export function HeroScanCard({ compact = false, className = '' }: { compact?: bo
           aria-label="Site to check"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? 'scan-error' : 'scan-limits'}
-          className="min-w-0 flex-1 border-0 bg-transparent py-3 font-mono text-[15.5px] text-ink outline-none placeholder:text-placeholder"
+          className="min-w-0 flex-1 border-0 bg-transparent py-3 pr-2 font-mono text-[15.5px] text-ink outline-none placeholder:text-placeholder"
         />
         <button
           type="submit"

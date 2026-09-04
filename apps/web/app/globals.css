@@ -286,9 +286,6 @@
 .anim-cursor {
   animation: blinkStep 1.1s step-end infinite;
 }
-.anim-input-caret {
-  animation: blinkStep 1.05s step-end infinite;
-}
 .anim-marquee {
   animation: marquee 26s linear infinite;
 }
