@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  body { margin:0; background:#EDEBFB; color:#111318; font-family:'Public Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased; text-wrap:pretty; }
+  * { box-sizing:border-box; }
+  a { color:#4B44F5; text-decoration-color:#B7B4F8; text-underline-offset:3px; }
+  a:hover { color:#111318; }
+  ::selection { background:#C6F53C; }
+  @keyframes riseIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes dashFlow { to{background-position:22px 0} }
+  @keyframes blink { 0%,100%{opacity:.35} 50%{opacity:1} }
+  @media (prefers-reduced-motion: reduce) { *{animation-duration:.001ms !important; animation-iteration-count:1 !important} }
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#EDEBFB">
+
+<header style="background:#FFFFFF;border-bottom:2px solid #111318;position:sticky;top:0;z-index:50">
+  <div style="padding:12px 22px;display:flex;align-items:center;gap:14px">
+    <div style="display:flex;align-items:center;gap:10px;font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.02em;white-space:nowrap">
+      <span style="width:30px;height:30px;border-radius:9px;background:#4B44F5;border:2px solid #111318;display:flex;align-items:center;justify-content:center;color:#C6F53C;font:700 15px 'JetBrains Mono',monospace">b</span>
+      BotReady
+    </div>
+    <div style="display:flex;gap:8px;margin-left:8px">
+      <sc-for list="{{ surfaces }}" as="sf" hint-placeholder-count="3">
+        <button onClick="{{ sf.select }}" style="{{ sf.style }}">{{ sf.label }}</button>
+      </sc-for>
+    </div>
+    <div style="margin-left:auto;font:400 13px 'JetBrains Mono',monospace;color:#6C7280;white-space:nowrap">signed in · shiplog.dev</div>
+  </div>
+</header>
+
+<div style="flex:1;display:flex;align-items:stretch">
+
+  <aside style="width:272px;flex:none;background:#FFFFFF;border-right:2px solid #111318;padding:22px 18px;display:flex;flex-direction:column;gap:22px">
+    <div>
+      <div style="font:400 12px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#8B90A0;margin-bottom:10px">PROPERTY</div>
+      <div style="background:#FFFFFF;border:2px solid #111318;border-radius:12px;box-shadow:3px 3px 0 #111318;padding:14px">
+        <div style="font:700 16px 'Public Sans',sans-serif">shiplog.dev</div>
+        <div style="display:flex;align-items:center;gap:9px;margin-top:9px">
+          <span style="background:#FF6B5A;border:2px solid #111318;border-radius:7px;padding:1px 8px;font:700 12.5px 'JetBrains Mono',monospace;color:#111318">C−</span>
+          <span style="font:400 13px 'JetBrains Mono',monospace;color:#6C7280">57/100 · run 04</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font:400 12px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#8B90A0;margin-bottom:10px">DIAGNOSE</div>
+      <div style="display:grid;gap:9px">
+        <sc-for list="{{ diagnoseNav }}" as="n" hint-placeholder-count="4">
+          <button onClick="{{ n.select }}" style="{{ n.style }}">
+            <span>{{ n.label }}</span><span style="{{ n.metaStyle }}">{{ n.meta }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <div style="font:400 12px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#8B90A0;margin-bottom:10px">FIX &amp; WATCH</div>
+      <div style="display:grid;gap:9px">
+        <sc-for list="{{ fixNav }}" as="n" hint-placeholder-count="4">
+          <button onClick="{{ n.select }}" style="{{ n.style }}">
+            <span>{{ n.label }}</span><span style="{{ n.metaStyle }}">{{ n.meta }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="margin-top:auto;background:#4B44F5;border:2px solid #111318;border-radius:14px;box-shadow:3px 3px 0 #111318;padding:18px;color:#FFFFFF">
+      <div style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:17px;line-height:1.2;letter-spacing:-.02em">Two file drops get you to an A</div>
+      <p style="font:400 13px/1.5 'JetBrains Mono',monospace;color:#D7D5FD;margin:9px 0 14px">11 generated files. Diagnosis stays free.</p>
+      <button onClick="{{ openPack }}" style="width:100%;cursor:pointer;background:#C6F53C;color:#111318;border:2px solid #111318;border-radius:10px;padding:11px;font:700 14px 'Public Sans',sans-serif;box-shadow:2px 2px 0 #111318" style-hover="background:#FFFFFF">Get the pack — $17</button>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;padding:28px 30px 56px">
+
+    <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:1;min-width:300px">
+          <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:clamp(28px,3.6vw,42px);line-height:1.05;letter-spacing:-.035em;margin:0">Chrome gets the tour. The bots get bounced.</h1>
+          <p style="font-size:16px;line-height:1.55;color:#3F4450;max-width:60ch;margin:12px 0 0">We fetched shiplog.dev five times with five different user agents, 2 minutes ago. Only two requests reached your HTML, and one of those got an empty body.</p>
+        </div>
+        <button onClick="{{ rerun }}" style="{{ rerunStyle }}">{{ rerunLabel }}</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:24px;align-items:start">
+        <div style="max-width:340px;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #111318;overflow:hidden;background:#FFFFFF">
+          <div style="background:#FF6B5A;border-bottom:2px solid #111318;padding:30px 22px 20px;text-align:center">
+            <div style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:88px;line-height:.86;letter-spacing:-.05em;color:#FFFFFF">C−</div>
+            <div style="font:700 14px 'JetBrains Mono',monospace;color:#111318;margin-top:14px">{{ scoreLine }}</div>
+          </div>
+          <div style="padding:18px 20px;display:grid;gap:9px;font:400 13.5px 'JetBrains Mono',monospace;color:#3F4450">
+            <div>HTTP/2 200</div>
+            <div>grade: C−</div>
+            <div>blocked: <span style="background:#FF6B5A;border:1.5px solid #111318;border-radius:5px;padding:0 7px;color:#111318">3 of 4</span></div>
+            <div>fixes: 11</div>
+            <div style="color:#8B90A0">prev: D+ (41)</div>
+          </div>
+        </div>
+
+        <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #111318;padding:20px">
+          <div style="font:400 12.5px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#8B90A0">ONE REQUEST, FIVE AGENTS</div>
+          <div style="display:flex;gap:14px;align-items:center;margin-top:14px">
+            <div style="flex:none;background:#4B44F5;color:#FFFFFF;border:2px solid #111318;border-radius:11px;box-shadow:2px 2px 0 #111318;padding:13px 11px;text-align:center;font:500 12.5px 'JetBrains Mono',monospace;line-height:1.5">GET /<br />×5</div>
+            <div style="flex:none;width:26px;height:3px;background:repeating-linear-gradient(90deg,#111318 0 8px,transparent 8px 16px);background-size:22px 3px;animation:dashFlow .8s linear infinite"></div>
+            <div style="flex:1;min-width:0;display:grid;gap:9px">
+              <sc-for list="{{ agents }}" as="a" hint-placeholder-count="5">
+                <div style="{{ a.rowStyle }}">
+                  <span style="{{ a.statusStyle }}">{{ a.status }}</span>
+                  <span style="font:500 14px 'JetBrains Mono',monospace;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</span>
+                  <span style="{{ a.noteStyle }}">{{ a.note }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin-top:18px">
+        <sc-for list="{{ cards }}" as="cd" hint-placeholder-count="6">
+          <div style="{{ cd.cardStyle }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+              <span style="font:700 16px 'Public Sans',sans-serif">{{ cd.title }}</span>
+              <span style="{{ cd.valueStyle }}">{{ cd.value }}</span>
+            </div>
+            <div style="{{ cd.trackStyle }}"><div style="{{ cd.barStyle }}"></div></div>
+            <div style="{{ cd.noteStyle }}">{{ cd.note }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:18px;background:#4B44F5;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #111318;padding:26px 28px;display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap">
+        <p style="font:600 16.5px/1.5 'Public Sans',sans-serif;color:#FFFFFF;margin:0;max-width:58ch">Diagnosis is free. Eleven generated files — robots rules, WAF rule, llms.txt, schema blocks — are ready to download.</p>
+        <button onClick="{{ openPack }}" style="cursor:pointer;background:#C6F53C;color:#111318;border:2px solid #111318;border-radius:11px;box-shadow:3px 3px 0 #111318;padding:14px 24px;font:700 15.5px 'Public Sans',sans-serif;white-space:nowrap" style-hover="background:#FFFFFF">Get the pack — $17</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isIssues }}">
+    <div>
+      <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:36px;letter-spacing:-.035em;margin:0">All issues</h1>
+      <p style="font-size:16px;line-height:1.55;color:#3F4450;margin:10px 0 22px">Six findings, ordered by effort. Together they are worth the 43 points you are missing.</p>
+      <div style="display:grid;gap:14px">
+        <sc-for list="{{ issues }}" as="i" hint-placeholder-count="6">
+          <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:3px 3px 0 #111318;padding:20px 22px">
+            <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+              <div style="display:flex;gap:11px;align-items:center;min-width:0">
+                <span style="{{ i.dotStyle }}"></span>
+                <h3 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.02em;margin:0">{{ i.title }}</h3>
+              </div>
+              <span style="font:500 12.5px 'JetBrains Mono',monospace;color:#8B90A0">{{ i.points }}</span>
+            </div>
+            <p style="font-size:15px;line-height:1.55;color:#3F4450;margin:10px 0 0;padding-left:24px">{{ i.body }}</p>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:14px;padding-left:24px;flex-wrap:wrap">
+              <span style="background:#C6F53C;border:2px solid #111318;border-radius:8px;padding:3px 10px;font:500 12.5px 'JetBrains Mono',monospace">{{ i.fix }}</span>
+              <button onClick="{{ i.toggle }}" style="border:0;background:none;color:#4B44F5;cursor:pointer;font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;text-underline-offset:3px">{{ i.label }}</button>
+            </div>
+            <sc-if value="{{ i.open }}">
+              <pre style="margin:14px 0 0 24px;background:#111318;color:#D7D5FD;border-radius:12px;padding:18px;font:400 12.5px/1.75 'JetBrains Mono',monospace;overflow:auto;animation:riseIn .3s ease both">{{ i.detail }}</pre>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isPage }}">
+    <div>
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+        <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:36px;letter-spacing:-.035em;margin:0">Page detail</h1>
+        <span style="font:500 14.5px 'JetBrains Mono',monospace;color:#6C7280">shiplog.dev/pricing</span>
+      </div>
+      <p style="font-size:16px;line-height:1.55;color:#3F4450;margin:10px 0 22px">Your worst-scoring page, and the one agents get asked about most.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+        <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:3px 3px 0 #111318;overflow:hidden">
+          <div style="padding:12px 18px;border-bottom:2px solid #111318;background:#FF6B5A;font:700 12.5px 'JetBrains Mono',monospace;letter-spacing:.06em">WHAT ARRIVED IN THE RAW RESPONSE</div>
+          <pre style="margin:0;padding:20px;font:400 12.5px/1.8 'JetBrains Mono',monospace;color:#3F4450;overflow:auto"><span>&lt;div id="root"&gt;&lt;/div&gt;
+&lt;script src="/assets/app.9f2c.js"&gt;&lt;/script&gt;
+
+readable characters: 118</span></pre>
+        </div>
+        <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:3px 3px 0 #111318;overflow:hidden">
+          <div style="padding:12px 18px;border-bottom:2px solid #111318;background:#C6F53C;font:700 12.5px 'JetBrains Mono',monospace;letter-spacing:.06em">WHAT A BROWSER ENDS UP WITH</div>
+          <pre style="margin:0;padding:20px;font:400 12.5px/1.8 'JetBrains Mono',monospace;color:#3F4450;overflow:auto"><span>&lt;h1&gt;Pricing&lt;/h1&gt;
+&lt;table&gt; Free · $8 · $14 &lt;/table&gt;
+
+readable characters: 4,910</span></pre>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:3px 3px 0 #111318;margin-top:16px;overflow:hidden">
+        <sc-for list="{{ pageRows }}" as="pr" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:2px solid #EFEEFA">
+            <span style="flex:1;min-width:0;font:600 15px 'Public Sans',sans-serif">{{ pr.label }}</span>
+            <span style="font:400 13px 'JetBrains Mono',monospace;color:#6C7280">{{ pr.value }}</span>
+            <span style="{{ pr.chipStyle }}">{{ pr.chip }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isCompetitors }}">
+    <div>
+      <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:36px;letter-spacing:-.035em;margin:0">Competitors</h1>
+      <p style="font-size:16px;line-height:1.55;color:#3F4450;margin:10px 0 22px">The four sites that come up when an assistant is asked about your category.</p>
+      <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #111318;overflow:hidden">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 90px 110px 130px;gap:12px;padding:13px 20px;border-bottom:2px solid #111318;background:#EDEBFB;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:#3F4450">
+          <span>DOMAIN</span><span style="text-align:right">SCORE</span><span style="text-align:right">AGENTS OK</span><span style="text-align:right">CITED IN</span>
+        </div>
+        <sc-for list="{{ competitors }}" as="cp" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 90px 110px 130px;gap:12px;padding:15px 20px;border-bottom:2px solid #EFEEFA;align-items:center" style-hover="background:#FAFAFF">
+            <span style="font:600 15.5px 'Public Sans',sans-serif">{{ cp.domain }}</span>
+            <span style="{{ cp.scoreStyle }}">{{ cp.score }}</span>
+            <span style="text-align:right;font:400 13px 'JetBrains Mono',monospace;color:#6C7280">{{ cp.agents }}</span>
+            <span style="text-align:right;font:400 13px 'JetBrains Mono',monospace;color:#3F4450">{{ cp.cited }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isEditor }}">
+    <div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:36px;letter-spacing:-.035em;margin:0">Editor</h1>
+        <span style="background:#C6F53C;border:2px solid #111318;border-radius:8px;padding:3px 10px;font:700 13px 'JetBrains Mono',monospace">A after these</span>
+      </div>
+      <p style="font-size:16px;line-height:1.55;color:#3F4450;margin:10px 0 22px">Eleven files generated from your own pages. Download them, or copy each one straight out of here.</p>
+      <div style="display:grid;grid-template-columns:230px minmax(0,1fr);gap:16px;align-items:start">
+        <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:3px 3px 0 #111318;overflow:hidden">
+          <sc-for list="{{ files }}" as="fl" hint-placeholder-count="4">
+            <button onClick="{{ fl.select }}" style="{{ fl.style }}">{{ fl.name }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#111318;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #4B44F5;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:2px solid #2A2D38">
+            <span style="font:500 13px 'JetBrains Mono',monospace;color:#C6F53C">{{ activeFileName }}</span>
+            <span style="font:400 12px 'JetBrains Mono',monospace;color:#8B90A0">generated from run 04</span>
+          </div>
+          <pre style="margin:0;padding:22px;font:400 12.5px/1.85 'JetBrains Mono',monospace;color:#D7D5FD;overflow:auto;min-height:300px">{{ activeFileBody }}</pre>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isWatch }}">
+    <div>
+      <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:36px;letter-spacing:-.035em;margin:0">Prompt watch</h1>
+      <p style="font-size:16px;line-height:1.55;color:#3F4450;margin:10px 0 22px">Twelve questions we ask each week, and whether the answer mentions you.</p>
+      <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #111318;overflow:hidden">
+        <sc-for list="{{ prompts }}" as="pm" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:2px solid #EFEEFA">
+            <span style="flex:1;min-width:0;font-size:15px">{{ pm.text }}</span>
+            <span style="font:400 12px 'JetBrains Mono',monospace;color:#8B90A0;white-space:nowrap">{{ pm.when }}</span>
+            <span style="{{ pm.chipStyle }}">{{ pm.chip }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isSettings }}">
+    <div>
+      <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:36px;letter-spacing:-.035em;margin:0">Settings</h1>
+      <p style="font-size:16px;line-height:1.55;color:#3F4450;margin:10px 0 22px">Scanning shiplog.dev on the monitoring plan.</p>
+      <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #111318;overflow:hidden;max-width:680px">
+        <sc-for list="{{ settings }}" as="st" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:16px;padding:18px 20px;border-bottom:2px solid #EFEEFA">
+            <div style="flex:1;min-width:0">
+              <div style="font:600 15px 'Public Sans',sans-serif">{{ st.label }}</div>
+              <div style="font-size:13.5px;line-height:1.45;color:#6C7280;margin-top:3px">{{ st.help }}</div>
+            </div>
+            <button onClick="{{ st.toggle }}" style="{{ st.switchStyle }}"><span style="{{ st.knobStyle }}"></span></button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isNewScan }}">
+    <div style="max-width:580px">
+      <h1 style="font-family:'Familjen Grotesk',sans-serif;font-weight:700;font-size:36px;letter-spacing:-.035em;margin:0">New scan</h1>
+      <p style="font-size:16px;line-height:1.55;color:#3F4450;margin:10px 0 22px">One visit, six pages at most, about thirty seconds.</p>
+      <div style="background:#FFFFFF;border:2px solid #111318;border-radius:14px;box-shadow:4px 4px 0 #111318;padding:8px">
+        <div style="display:flex;align-items:center;gap:8px;background:#F6F5FE;border:2px solid #111318;border-radius:11px;padding:5px 5px 5px 15px">
+          <span style="font:400 15px 'JetBrains Mono',monospace;color:#8B90A0">https://</span>
+          <input value="{{ url }}" onChange="{{ onUrl }}" placeholder="yoursite.com" style="flex:1;min-width:0;border:0;outline:none;background:none;font:400 15.5px 'JetBrains Mono',monospace;color:#111318;padding:12px 0" />
+          <button onClick="{{ rerun }}" style="cursor:pointer;background:#C6F53C;color:#111318;border:2px solid #111318;border-radius:9px;box-shadow:2px 2px 0 #111318;padding:11px 18px;font:700 14.5px 'Public Sans',sans-serif;white-space:nowrap" style-hover="background:#4B44F5;color:#FFFFFF">Run the check</button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const FILES = {
+  "llms.txt": "# shiplog.dev\n\n> Deployment log and release notes for small teams.\n\n## Pages\n- /pricing: Free, $8 per seat, $14 business\n- /docs: install, webhooks, API keys\n- /changelog: weekly, dated\n\n## Contact\nsupport@shiplog.dev",
+  "robots.txt": "User-agent: ClaudeBot\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nSitemap: https://shiplog.dev/sitemap.xml",
+  "waf-rule.txt": "# Cloudflare expression\n# Skip the managed challenge for declared AI agents\n(http.user_agent contains \"ClaudeBot\")\nor (http.user_agent contains \"GPTBot\")\nor (http.user_agent contains \"PerplexityBot\")\n\naction: skip — managed challenge",
+  "pricing.jsonld": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Product\",\n  \"name\": \"Shiplog\",\n  \"offers\": [\n    { \"@type\": \"Offer\", \"name\": \"Free\", \"price\": \"0\" },\n    { \"@type\": \"Offer\", \"name\": \"Team\", \"price\": \"8\" },\n    { \"@type\": \"Offer\", \"name\": \"Business\", \"price\": \"14\" }\n  ]\n}"
+};
+
+class Component extends DCLogic {
+  state = { view: "overview", surface: "App", file: "llms.txt", url: "", openIssue: -1, scanning: false, toggles: { weekly: true, alerts: true, index: false, digest: true } };
+
+  componentWillUnmount() { clearTimeout(this.scanTimer); }
+
+  go(view) { this.setState({ view }); if (typeof window !== "undefined") window.scrollTo(0, 0); }
+
+  rerun() {
+    clearTimeout(this.scanTimer);
+    this.setState({ scanning: true, view: "overview" });
+    this.scanTimer = setTimeout(() => this.setState({ scanning: false }), 1800);
+  }
+
+  navItem(view, label, meta, tone) {
+    const active = this.state.view === view;
+    return {
+      label, meta,
+      select: () => this.go(view),
+      style: `display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;cursor:pointer;border:2px solid #111318;border-radius:11px;padding:11px 13px;font:${active ? "700" : "500"} 14.5px 'Public Sans',sans-serif;color:#111318;${active ? "background:#C6F53C;box-shadow:2px 2px 0 #111318" : "background:#FFFFFF"}`,
+      metaStyle: `font:500 12.5px 'JetBrains Mono',monospace;color:${tone === "bad" ? "#B23C1F" : "#8B90A0"}`
+    };
+  }
+
+  renderVals() {
+    const s = this.state, v = s.view;
+    const chip = (tone) => `border:2px solid #111318;border-radius:7px;padding:2px 9px;font:700 12px 'JetBrains Mono',monospace;color:#111318;white-space:nowrap;background:${tone === "ok" ? "#C6F53C" : tone === "warn" ? "#FFCF5C" : "#FF6B5A"}`;
+
+    return {
+      isOverview: v === "overview",
+      isIssues: v === "issues",
+      isPage: v === "page",
+      isCompetitors: v === "competitors",
+      isEditor: v === "editor",
+      isWatch: v === "watch",
+      isSettings: v === "settings",
+      isNewScan: v === "newscan",
+      url: s.url,
+      onUrl: (e) => this.setState({ url: e.target.value }),
+      rerun: () => this.rerun(),
+      rerunLabel: s.scanning ? "Scanning…" : "Re-run scan",
+      rerunStyle: `cursor:pointer;border:2px solid #111318;border-radius:99px;padding:12px 22px;font:700 14.5px 'Public Sans',sans-serif;white-space:nowrap;box-shadow:3px 3px 0 #111318;${s.scanning ? "background:#EDEBFB;color:#8B90A0" : "background:#FFFFFF;color:#111318"}`,
+      scoreLine: s.scanning ? "re-reading as 5 agents…" : "57 / 100",
+      openPack: () => this.go("editor"),
+      surfaces: ["App", "Landing page", "Mobile"].map((label) => ({
+        label,
+        select: () => this.setState({ surface: label }),
+        style: `cursor:pointer;border:2px solid #111318;border-radius:99px;padding:7px 16px;font:${s.surface === label ? "700" : "500"} 13.5px 'Public Sans',sans-serif;white-space:nowrap;color:#111318;background:${s.surface === label ? "#C6F53C" : "#FFFFFF"}`
+      })),
+      diagnoseNav: [
+        this.navItem("overview", "Overview", "C−", "bad"),
+        this.navItem("issues", "All issues", "6"),
+        this.navItem("page", "Page detail", "/pricing"),
+        this.navItem("competitors", "Competitors", "4")
+      ],
+      fixNav: [
+        this.navItem("editor", "Editor", "A"),
+        this.navItem("watch", "Prompt watch", "12"),
+        this.navItem("settings", "Settings", ""),
+        this.navItem("newscan", "New scan", "")
+      ],
+      agents: [
+        { name: "Chrome 128", status: "200", tone: "ok", note: "412 KB · 89 ms" },
+        { name: "ClaudeBot/1.0", status: "403", tone: "bad", note: "cf-mitigated: challenge" },
+        { name: "GPTBot/1.2", status: "403", tone: "bad", note: "cf-mitigated: challenge" },
+        { name: "PerplexityBot", status: "403", tone: "bad", note: "cf-mitigated: challenge" },
+        { name: "Google-Extended", status: "200", tone: "warn", note: "body is client-side" }
+      ].map((a) => ({
+        name: a.name, status: a.status, note: a.note,
+        rowStyle: "display:flex;align-items:center;gap:12px;border:2px solid #111318;border-radius:11px;padding:9px 13px;background:#FFFFFF",
+        statusStyle: chip(a.tone),
+        noteStyle: `font:400 12.5px 'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${a.tone === "ok" ? "#6C7280" : a.tone === "warn" ? "#8A6D1F" : "#B23C1F"}`
+      })),
+      cards: [
+        { title: "Bot access", value: "12/25", pct: 48, tone: "bad", note: "3 of 4 crawlers get a 403", solid: false },
+        { title: "Server-rendered", value: "12/20", pct: 60, tone: "warn", note: "/pricing body is client-side", solid: false },
+        { title: "Structured data", value: "11/15", pct: 73, tone: "blue", note: "Product schema valid, FAQ missing", solid: false },
+        { title: "llms.txt", value: "404", pct: 100, tone: "bad", note: "nothing at /llms.txt", solid: true },
+        { title: "Content structure", value: "14/15", pct: 93, tone: "ok", note: "headings clean on 38 pages", solid: false },
+        { title: "Freshness", value: "8/10", pct: 80, tone: "ok", note: "40 pages have no lastmod", solid: false }
+      ].map((cd) => {
+        const barColor = cd.tone === "bad" ? "#FF6B5A" : cd.tone === "warn" ? "#FFCF5C" : cd.tone === "blue" ? "#4B44F5" : "#C6F53C";
+        return {
+          title: cd.title, value: cd.value, note: cd.note,
+          cardStyle: `border:2px solid #111318;border-radius:14px;box-shadow:3px 3px 0 #111318;padding:18px 20px;background:${cd.solid ? "#FF6B5A" : "#FFFFFF"}`,
+          valueStyle: `font:500 13.5px 'JetBrains Mono',monospace;color:${cd.solid ? "#111318" : cd.tone === "bad" ? "#B23C1F" : "#3F4450"}`,
+          trackStyle: `height:10px;border:2px solid #111318;border-radius:99px;overflow:hidden;margin:13px 0 11px;background:${cd.solid ? "#FFFFFF" : "#EDEBFB"}`,
+          barStyle: `height:100%;width:${cd.pct}%;background:${barColor};transition:width .8s ease`,
+          noteStyle: `font:400 13px 'JetBrains Mono',monospace;color:${cd.solid ? "#111318" : "#3F4450"}`
+        };
+      }),
+      issues: [
+        { title: "Three crawlers are being challenged", body: "Cloudflare answers ClaudeBot, GPTBot and PerplexityBot with a managed challenge, so none of them ever reach your HTML.", points: "18 pts", fix: "one WAF rule", bad: true,
+          detail: "GET / HTTP/1.1\nUser-Agent: ClaudeBot/1.0\n\nHTTP/1.1 403 Forbidden\ncf-mitigated: challenge\n\ncheck: agent_status_parity" },
+        { title: "/pricing renders entirely in the browser", body: "The raw response carries 118 readable characters. A browser ends up with 4,910. Agents read the first number.", points: "11 pts", fix: "pre-render", bad: true,
+          detail: "raw HTML readable characters:      118\nrendered DOM readable characters:  4,910\njs_dependency_ratio:               0.98\n\ncheck: js_dependency_ratio" },
+        { title: "No llms.txt", body: "Nothing resolves at /llms.txt or /llms-full.txt. We generate both from the pages that returned 200.", points: "6 pts", fix: "generated file", bad: true,
+          detail: "GET /llms.txt      → 404\nGET /llms-full.txt → 404\nGET /sitemap.xml   → 200\n\ncheck: agent_manifest_present" },
+        { title: "Pricing has no Offer schema", body: "Your prices sit in a table an agent can see but not quote as data.", points: "3 pts", fix: "JSON-LD block", bad: false,
+          detail: "GET /pricing → 200\nld+json blocks found: 0\nOffer / PriceSpecification: absent\n\ncheck: structured_offer" },
+        { title: "FAQ answers hide behind JavaScript", body: "Eleven questions on /docs only exist once an accordion opens.", points: "3 pts", fix: "render open", bad: false,
+          detail: "details/summary blocks: 11\nvisible in raw HTML:     0\n\ncheck: faq_extractable" },
+        { title: "40 pages carry no lastmod", body: "Freshness signals are missing from your sitemap, so agents cannot tell what changed.", points: "2 pts", fix: "sitemap field", bad: false,
+          detail: "sitemap entries:        62\nentries with lastmod:   22\n\ncheck: freshness_signal" }
+      ].map((i, idx) => ({
+        title: i.title, body: i.body, points: i.points, fix: i.fix, detail: i.detail,
+        open: s.openIssue === idx,
+        toggle: () => this.setState({ openIssue: s.openIssue === idx ? -1 : idx }),
+        label: s.openIssue === idx ? "Hide details" : "Show details",
+        dotStyle: `width:12px;height:12px;border:2px solid #111318;border-radius:50%;flex:none;background:${i.bad ? "#FF6B5A" : "#FFCF5C"}`
+      })),
+      pageRows: [
+        { label: "Status to ClaudeBot", value: "same URL, same second", chip: "403", ok: false },
+        { label: "Readable text without JavaScript", value: "118 of 4,910 characters", chip: "2%", ok: false },
+        { label: "Offer schema", value: "no ld+json block found", chip: "missing", ok: false },
+        { label: "Headings", value: "h1 → h2 → h3, no skips", chip: "clean", ok: true }
+      ].map((r) => ({ ...r, chipStyle: chip(r.ok ? "ok" : "bad") })),
+      competitors: [
+        { domain: "linear.app", score: 88, agents: "5 of 5", cited: "9 of 12 prompts" },
+        { domain: "height.app", score: 81, agents: "5 of 5", cited: "7 of 12 prompts" },
+        { domain: "shortcut.com", score: 74, agents: "4 of 5", cited: "5 of 12 prompts" },
+        { domain: "shiplog.dev", score: 57, agents: "2 of 5", cited: "0 of 12 prompts" }
+      ].map((c) => ({
+        domain: c.domain, score: String(c.score), agents: c.agents, cited: c.cited,
+        scoreStyle: `text-align:right;font:700 15px 'JetBrains Mono',monospace;color:${c.score >= 80 ? "#2E9B5E" : c.score >= 65 ? "#111318" : "#B23C1F"}`
+      })),
+      files: Object.keys(FILES).map((name) => ({
+        name,
+        select: () => this.setState({ file: name }),
+        style: `display:block;width:100%;text-align:left;cursor:pointer;border:0;border-bottom:2px solid #EFEEFA;padding:13px 16px;font:${s.file === name ? "700" : "500"} 13.5px 'JetBrains Mono',monospace;color:#111318;background:${s.file === name ? "#C6F53C" : "#FFFFFF"}`
+      })),
+      activeFileName: s.file,
+      activeFileBody: FILES[s.file],
+      prompts: [
+        { text: "best issue tracker for a small team", when: "2d ago", ok: false },
+        { text: "lightweight alternative to Jira", when: "2d ago", ok: false },
+        { text: "deployment log tool for solo founders", when: "2d ago", ok: true },
+        { text: "what does shiplog.dev do", when: "2d ago", ok: false },
+        { text: "cheapest release notes tool", when: "9d ago", ok: true }
+      ].map((p) => ({ text: p.text, when: p.when, chip: p.ok ? "cited" : "not cited", chipStyle: chip(p.ok ? "ok" : "bad") })),
+      settings: [
+        { key: "weekly", label: "Weekly re-scan", help: "Every Monday, 6am in your timezone." },
+        { key: "alerts", label: "Alert me on any drop", help: "A new refusal, or any category losing points." },
+        { key: "index", label: "Show my score in the public index", help: "Your result page is public either way; this only affects the ranking list." },
+        { key: "digest", label: "Monthly digest email", help: "One summary of every domain you watch." }
+      ].map((st) => {
+        const on = !!s.toggles[st.key];
+        return {
+          label: st.label, help: st.help,
+          toggle: () => this.setState({ toggles: { ...s.toggles, [st.key]: !on } }),
+          switchStyle: `flex:none;width:56px;height:32px;border:2px solid #111318;border-radius:99px;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:${on ? "flex-end" : "flex-start"};background:${on ? "#C6F53C" : "#EDEBFB"};transition:background .2s ease`,
+          knobStyle: "width:24px;height:24px;border:2px solid #111318;border-radius:50%;background:#FFFFFF;display:block"
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

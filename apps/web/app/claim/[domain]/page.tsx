@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { normaliseDomain } from '@botready/core';
 
-import { ButtonLink, Footer, Measure, Nav, SectionHeading, Shell, buttonClass } from '@/components/primitives';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { Button, Container, Eyebrow, PageTitle } from '@/components/ui';
 import { currentUser } from '@/lib/auth';
 import { instructions } from '@/lib/claims';
 import { PRICING } from '@/lib/site';
@@ -43,84 +46,112 @@ export default async function ClaimPage({
   const mine = Boolean(user && site?.claimed_by === user.id);
 
   return (
-    <Shell>
-      <Nav />
-      <Measure as="main" className="max-w-[780px] pb-14 pt-10">
-        <p id="main" className="label text-ink-60">
-          Claim
-        </p>
-        <h1 className="display-hero mt-3 break-all text-[36px] sm:text-[52px]">{domain}</h1>
+    <div className="min-h-dvh bg-canvas">
+      <SiteHeader />
+      <main id="main">
+        <Container width={780} className="pb-24 pt-14">
+          <PageTitle eyebrow="Claim" size="md" className="[&_h1]:break-all">
+            {domain}
+          </PageTitle>
 
-        {subscribed ? (
-          <p role="status" className="wire-line mt-6 border-l-[3px] border-pass pl-4 text-ink">
-            Monitoring is on. We re-check {domain} weekly and email you the day a category drops or a
-            client that could read the site cannot.
-          </p>
-        ) : null}
-
-        <div className="mt-10">
-          {!site ? (
-            <>
-              <SectionHeading kicker="Not scanned yet">Run a check first</SectionHeading>
-              <p className="mt-3 text-[15px] text-ink-60">
-                A claim is only possible for a site we have already measured, because the claim proof
-                is read from the site itself.
+          {subscribed ? (
+            <div role="status" className="edge mt-8 rounded-[14px] bg-green-tint px-[22px] py-[18px] shadow-hard-3">
+              <Eyebrow as="p" tone="ink">
+                Monitoring is on
+              </Eyebrow>
+              <p className="mt-2 text-[15px] leading-[1.6] text-body">
+                We re-check {domain} weekly and email you the day a category drops or a client that could read the site
+                cannot.
               </p>
-              <ButtonLink href="/" className="mt-5">
-                Check {domain}
-              </ButtonLink>
-            </>
-          ) : !user ? (
-            <>
-              <SectionHeading kicker="Sign in first">A claim belongs to a person</SectionHeading>
-              <p className="mt-3 text-[15px] text-ink-60">Sign in with a one-time link and come back here.</p>
-              <ButtonLink href={`/sign-in?next=${encodeURIComponent(`/claim/${domain}`)}`} className="mt-5">
-                Sign in
-              </ButtonLink>
-            </>
-          ) : mine ? (
-            <>
-              <SectionHeading kicker="Claimed">You have proven control of {domain}</SectionHeading>
-              <p className="mt-3 text-[15px] text-ink-60">It shows as claimed on the index.</p>
-              {!subscribed ? (
-                <div className="mt-10">
-                  <SectionHeading kicker={`Monitoring · ${PRICING.monitor.label} ${PRICING.monitor.cadence}`}>
-                    Know the day a WAF rule changes under you
-                  </SectionHeading>
-                  <p className="mt-3 max-w-[60ch] text-[15px] text-ink-60">
-                    Weekly re-checks, an alert on any category drop or a new 403 to any client, and the
-                    fix pack regenerated on every scan.
-                  </p>
-                  <a href={`/api/checkout/monitor/${site.id}`} className={buttonClass('solid', 'md', 'mt-5')}>
-                    Start monitoring
-                  </a>
+            </div>
+          ) : null}
+
+          <div className="mt-10">
+            {!site ? (
+              <>
+                <Section kicker="Not scanned yet">Run a check first</Section>
+                <Lede>
+                  A claim is only possible for a site we have already measured, because the claim proof is read from the
+                  site itself.
+                </Lede>
+                <Button href="/" tone="ink" shadow={3} className="mt-6">
+                  Check {domain}
+                </Button>
+              </>
+            ) : !user ? (
+              <>
+                <Section kicker="Sign in first">A claim belongs to a person</Section>
+                <Lede>Sign in with a one-time link and come back here.</Lede>
+                <Button href={`/sign-in?next=${encodeURIComponent(`/claim/${domain}`)}`} tone="ink" shadow={3} className="mt-6">
+                  Sign in
+                </Button>
+              </>
+            ) : mine ? (
+              <>
+                <div className="edge rounded-[14px] bg-green-tint px-[22px] py-[18px] shadow-hard-3">
+                  <Eyebrow as="p" tone="ink">
+                    Claimed
+                  </Eyebrow>
+                  <h2 className="display mt-2 text-[24px]">You have proven control of {domain}</h2>
+                  <p className="mt-2 text-[15px] leading-[1.6] text-body">It shows as claimed on the index.</p>
                 </div>
-              ) : null}
-            </>
-          ) : site.is_claimed ? (
-            <>
-              <SectionHeading kicker="Already claimed">Somebody has proven control of {domain}</SectionHeading>
-              <p className="mt-3 text-[15px] text-ink-60">
-                If that should be you, sign in with the address you used then, or prove it again below
-                and the claim moves.
-              </p>
-              <ClaimForm domain={domain} instructions={instructions(user.id, domain)} />
-            </>
-          ) : (
-            <>
-              <SectionHeading kicker="Prove control">Publish the token where we say</SectionHeading>
-              <ClaimForm domain={domain} instructions={instructions(user.id, domain)} />
-            </>
-          )}
-        </div>
+                {!subscribed ? (
+                  <div className="mt-10">
+                    <Section kicker={`Monitoring · ${PRICING.monitor.label} ${PRICING.monitor.cadence}`}>
+                      Know the day a WAF rule changes under you
+                    </Section>
+                    <Lede>
+                      Weekly re-checks, an alert on any category drop or a new 403 to any client, and the fix pack
+                      regenerated on every scan.
+                    </Lede>
+                    {/* A plain anchor: the checkout route redirects to Stripe, which a client-side navigation cannot follow. */}
+                    <a
+                      href={`/api/checkout/monitor/${site.id}`}
+                      className="edge mt-6 inline-flex items-center justify-center rounded-[10px] bg-ink px-4 py-[10px] font-body text-[14px] font-semibold text-white no-underline shadow-hard-3 transition-colors duration-150 hover:bg-violet hover:text-white"
+                    >
+                      Start monitoring — {PRICING.monitor.label} {PRICING.monitor.cadence}
+                    </a>
+                  </div>
+                ) : null}
+              </>
+            ) : site.is_claimed ? (
+              <>
+                <Section kicker="Already claimed">Somebody has proven control of {domain}</Section>
+                <Lede>
+                  If that should be you, sign in with the address you used then, or prove it again below and the claim
+                  moves.
+                </Lede>
+                <ClaimForm domain={domain} instructions={instructions(user.id, domain)} />
+              </>
+            ) : (
+              <>
+                <Section kicker="Prove control">Publish the token where we say</Section>
+                <ClaimForm domain={domain} instructions={instructions(user.id, domain)} />
+              </>
+            )}
+          </div>
 
-        <p className="mt-10 text-[14px] text-ink-60">
-          <Link href="/index/saas" className="underline">
-            Back to the index
-          </Link>
-        </p>
-      </Measure>
-      <Footer />
-    </Shell>
+          <p className="mt-12 text-[14.5px] text-muted">
+            <Link href="/index/saas">Back to the index</Link>
+          </p>
+        </Container>
+      </main>
+      <SiteFooter />
+    </div>
   );
+}
+
+function Section({ kicker, children }: { kicker: string; children: ReactNode }) {
+  return (
+    <div>
+      <Eyebrow as="p" tone="subtle">
+        {kicker}
+      </Eyebrow>
+      <h2 className="display mt-2 text-[26px] sm:text-[30px]">{children}</h2>
+    </div>
+  );
+}
+
+function Lede({ children }: { children: ReactNode }) {
+  return <p className="mt-3 max-w-[60ch] text-[15.5px] leading-[1.6] text-muted">{children}</p>;
 }

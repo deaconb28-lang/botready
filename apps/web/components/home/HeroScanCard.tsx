@@ -1,0 +1,142 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+import { cx } from '@/components/ui';
+
+const TABS = [
+  { id: 'url', label: 'URL', prefix: 'https://', placeholder: 'yoursite.com' },
+  { id: 'sitemap', label: 'Sitemap', prefix: 'https://', placeholder: 'yoursite.com/sitemap.xml' },
+  { id: 'domain', label: 'Domain', prefix: '@', placeholder: 'yoursite.com' },
+] as const;
+
+type TabId = (typeof TABS)[number]['id'];
+
+/**
+ * The scan card. Three tabs change the prefix and the placeholder; the caret
+ * blinks only while the field is empty; the button says what happens and the
+ * error, if there is one, says what went wrong and what to do next.
+ */
+export function HeroScanCard({ compact = false }: { compact?: boolean }) {
+  const router = useRouter();
+  const [tab, setTab] = useState<TabId>('url');
+  const [value, setValue] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const active = TABS.find((t) => t.id === tab) ?? TABS[0];
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setError(null);
+    const trimmed = value.trim();
+    if (!trimmed) {
+      setError('Enter a site to check.');
+      return;
+    }
+    setBusy(true);
+    // A sitemap URL scans the site it belongs to; a domain scans its root.
+    const url = tab === 'sitemap' ? originOf(trimmed) : trimmed.replace(/^@/, '');
+    try {
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const body = (await res.json()) as { scanId?: string; error?: string };
+      if (!res.ok || !body.scanId) {
+        setError(body.error ?? `The scan could not be started (HTTP ${res.status}). Try again in a minute.`);
+        setBusy(false);
+        return;
+      }
+      router.push(`/scan/${body.scanId}`);
+    } catch {
+      setError('The request did not reach us. Check your connection and run the check again.');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form
+      id="check"
+      onSubmit={submit}
+      noValidate
+      className={cx('edge mx-auto rounded-[16px] bg-white p-2 text-left shadow-hard-5', compact ? 'max-w-[580px]' : 'max-w-[640px]')}
+    >
+      <div className="flex gap-1 px-1 pb-[10px] pt-1" role="tablist" aria-label="What to check">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={cx(
+              'cursor-pointer rounded-[9px] border-0 px-[13px] py-[7px] font-body text-[13px] font-medium',
+              tab === t.id ? 'bg-chip-bg text-ink' : 'bg-transparent text-subtle-2 hover:text-ink',
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 rounded-[14px] border border-hairline-3 bg-surface-alt py-[6px] pl-4 pr-[6px]">
+        <span aria-hidden="true" className="font-mono text-[15px] text-placeholder">
+          {active.prefix}
+        </span>
+        {!value ? <span aria-hidden="true" className="anim-input-caret h-[19px] w-[2px] flex-none bg-ink" /> : null}
+        <input
+          id="scan-url"
+          name="url"
+          inputMode="url"
+          autoComplete="url"
+          autoCapitalize="off"
+          spellCheck={false}
+          value={value}
+          onChange={(e) => {
+            setValue(e.target.value);
+            if (error) setError(null);
+          }}
+          placeholder={active.placeholder}
+          aria-label="Site to check"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? 'scan-error' : 'scan-limits'}
+          className="min-w-0 flex-1 border-0 bg-transparent py-3 font-mono text-[15.5px] text-ink outline-none placeholder:text-placeholder"
+        />
+        <button
+          type="submit"
+          disabled={busy}
+          className="edge cursor-pointer whitespace-nowrap rounded-[10px] bg-ink px-5 py-3 font-body text-[14.5px] font-bold text-white shadow-hard-2 transition-colors hover:bg-violet disabled:cursor-progress disabled:opacity-70"
+        >
+          {busy ? 'Starting the check' : 'Run the check'}
+        </button>
+      </div>
+      <div className="flex flex-wrap justify-between gap-3 px-2 pb-[6px] pt-3 font-mono text-[12.5px] text-subtle-2">
+        {error ? (
+          <span id="scan-error" role="alert" className="font-medium text-coral-text">
+            {error}
+          </span>
+        ) : (
+          <span id="scan-limits" className="whitespace-nowrap">
+            free · no account · ~30 seconds
+          </span>
+        )}
+        <Link href="/preview/waf-blocked-spa" className="whitespace-nowrap font-mono text-[12.5px] text-violet underline underline-offset-[3px]">
+          see an example result
+        </Link>
+      </div>
+    </form>
+  );
+}
+
+function originOf(input: string): string {
+  try {
+    const u = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`);
+    return u.origin;
+  } catch {
+    return input;
+  }
+}

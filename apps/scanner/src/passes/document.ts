@@ -179,6 +179,11 @@ function jsDependencyCheck(input: DocumentCheckInput): CheckResult {
     ratio: comparison.ratio,
     raw_extraction_failed: comparison.raw.extractionFailed,
     rendered_extraction_failed: comparison.rendered.extractionFailed,
+    // The first few hundred characters of what each side read, so the page
+    // detail view can show the two texts beside the two counts. An excerpt
+    // is a fact about the response; it is not kept beyond this length.
+    raw_excerpt: excerpt(comparison.raw.text),
+    rendered_excerpt: excerpt(comparison.rendered.text),
   };
 
   // Without a render there is nothing to compare against, and reporting 0
@@ -579,4 +584,12 @@ export async function probeContentNegotiation(targetUrl: string): Promise<FetchO
   } catch {
     return null;
   }
+}
+
+/** The opening of a readable text, whitespace-collapsed, cut on a word. */
+function excerpt(text: string, max = 320): string {
+  const collapsed = text.replace(/\s+/g, ' ').trim();
+  if (collapsed.length <= max) return collapsed;
+  const cut = collapsed.slice(0, max);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), max - 40)).trimEnd()}…`;
 }

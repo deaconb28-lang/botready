@@ -102,7 +102,7 @@ export interface EvidenceRow {
 }
 
 export type ScanStatus = 'queued' | 'running' | 'complete' | 'blocked' | 'error';
-export type ScanTrigger = 'manual' | 'cron' | 'monitor' | 'index';
+export type ScanTrigger = 'manual' | 'cron' | 'monitor' | 'index' | 'competitor';
 
 export interface ScanRow {
   id: string;
@@ -167,6 +167,9 @@ export interface JsDependencyObserved {
   raw_chars: number;
   rendered_chars: number;
   ratio: number;
+  /** The opening of the readable text on each side, from scanner 1.1.0 on. */
+  raw_excerpt?: string;
+  rendered_excerpt?: string;
 }
 
 export interface RobotsAgentRulesObserved {

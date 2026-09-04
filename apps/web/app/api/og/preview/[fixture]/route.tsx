@@ -22,6 +22,20 @@ export async function GET(_request: Request, context: { params: Promise<{ fixtur
   const { fixture } = await context.params;
   if (!/^[a-z0-9-]+$/.test(fixture)) return new Response('Bad fixture name.', { status: 400 });
 
+  // A blocked scan has no results to score and no fixture to read; it renders
+  // the card with no grade, the same shape /api/og/[id] produces for one.
+  if (fixture === 'blocked') {
+    return renderShareCard({
+      domain: 'linear.app',
+      checkedAt: formatCardDate('2026-09-02T14:02:00Z'),
+      grade: null,
+      total: null,
+      scoringVersion: null,
+      headline: 'This site refuses our scanner.',
+      secondary: 'BotreadyBot/1.0 got a 403 from the first request.',
+    });
+  }
+
   let results: CheckResult[];
   try {
     const path = join(process.cwd(), '..', '..', 'packages', 'core', '__fixtures__', `${fixture}.json`);

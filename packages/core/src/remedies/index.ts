@@ -20,6 +20,8 @@ import { buildLlmsTxt } from './llms-txt';
 import { buildRobotsBlock } from './robots-txt';
 import { buildMarkdownAlternates } from './markdown-alternate';
 import { buildJsonLd } from './jsonld';
+import { buildWafRule } from './waf-rule';
+import { buildAgentPrompt } from './agent-prompt';
 import { buildPunchList, type PunchItem } from './punchlist';
 
 export { punchListMarkdown, type Effort, type PunchItem } from './punchlist';
@@ -45,6 +47,11 @@ export interface FixPack {
   domain: string;
   files: FixFile[];
   punchList: PunchItem[];
+  /**
+   * botready-fixes.md: the full prompt for a coding agent, built from the
+   * files and the punch list. Shipped in the zip beside them.
+   */
+  agentPrompt: string;
 }
 
 /**
@@ -57,12 +64,17 @@ export function buildFixPack(domain: string, results: CheckResult[]): FixPack {
   const files: FixFile[] = [
     buildLlmsTxt(domain, facts),
     buildRobotsBlock(domain, facts),
+    buildWafRule(domain, facts),
     buildMarkdownAlternates(domain, facts),
     buildJsonLd(domain, facts),
   ];
 
-  return { domain, files, punchList: buildPunchList(results) };
+  const pack: FixPack = { domain, files, punchList: buildPunchList(results), agentPrompt: '' };
+  pack.agentPrompt = buildAgentPrompt(pack);
+  return pack;
 }
+
+export { buildAgentPrompt } from './agent-prompt';
 
 /**
  * Everything the generators read, pulled out of `observed` once and typed, so

@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { ButtonLink, Footer, Measure, Nav, SectionHeading, Shell, buttonClass } from '@/components/primitives';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { Button, Card, Container, TerminalLine } from '@/components/ui';
 import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
 import { loadScanView } from '@/lib/scan-data';
 
@@ -28,54 +30,41 @@ export default async function PurchasedPage({ params }: { params: Promise<{ id: 
   const domain = view.site.domain;
 
   return (
-    <Shell>
-      <Nav />
-      <Measure as="main" className="max-w-[760px] pb-14 pt-10">
-        <p id="main" className="label text-pass">
-          HTTP/1.1 200 OK · paid
+    <div className="min-h-dvh bg-canvas">
+      <SiteHeader />
+      <Container as="main" id="main" width={760} className="pb-24 pt-14">
+        <span className="eyebrow text-subtle-2">Fix pack</span>
+        <h1 className="display-tight mt-3 text-[clamp(34px,5vw,56px)]">{entitled ? 'Your files are ready.' : 'Thanks. One more step.'}</h1>
+        <p className="mt-4 max-w-[56ch] text-[17px] leading-[1.6] text-muted">
+          {entitled
+            ? `Every value in the pack for ${domain} came out of this scan. Download it, drop the files in, and re-run the check.`
+            : `The receipt went to the address you gave Stripe. Sign in with that address and the download unlocks; if the email has not arrived yet, give it a minute and reload.`}
         </p>
-        <h1 className="display-section mt-3 text-[30px] sm:text-[36px]">
-          Thanks. The fix pack for {domain} is generated.
-        </h1>
-
-        <div className="mt-8">
-          {entitled ? (
-            <>
-              <SectionHeading kicker="Download">Four files and a punch list</SectionHeading>
-              <p className="mt-3 text-[15px] text-ink-60">Built from this scan. The result page keeps the download button too.</p>
-              <a href={`/api/fixpack/${id}`} download={`botready-fixpack-${domain}.zip`} className={buttonClass('solid', 'md', 'mt-5')}>
+        <Card surface="ink" radius="panel" shadow="violet-5" className="mt-8 p-6">
+          <TerminalLine className="border-0 bg-transparent px-0 py-0">$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
+          <p className="mt-3 text-[14.5px] leading-[1.55] text-on-ink-soft">
+            The pack includes botready-fixes.md, a full prompt for your coding agent. Paste it into Claude Code or Cursor and your site fixes itself.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {entitled ? (
+              <a href={`/api/fixpack/${id}`} className="edge inline-flex items-center rounded-[12px] bg-lime px-[22px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 hover:bg-white">
                 Download the fix pack
               </a>
-            </>
-          ) : user ? (
-            <>
-              <SectionHeading kicker="Almost there">The payment is being recorded</SectionHeading>
-              <p className="mt-3 text-[15px] text-ink-60">
-                You are signed in as <span className="mono">{user.email}</span>. Reload this page in a few
-                seconds. If the receipt went to a different address, sign in with that one instead.
-              </p>
-            </>
-          ) : (
-            <>
-              <SectionHeading kicker="One more step">Open the link we emailed you</SectionHeading>
-              <p className="mt-3 text-[15px] text-ink-60">
-                We have emailed a sign-in link to the address you gave Stripe. Open it and the download
-                is on the result page. There is no password to set.
-              </p>
-              <ButtonLink href={`/sign-in?next=${encodeURIComponent(`/scan/${id}`)}`} className="mt-5">
-                Send the link again
-              </ButtonLink>
-            </>
-          )}
-        </div>
-
-        <p className="mt-8 text-[14px] text-ink-60">
-          <Link href={`/scan/${id}`} className="underline">
-            Back to the result for {domain}
-          </Link>
+            ) : (
+              <Button href={`/sign-in?next=${encodeURIComponent(`/scan/${id}/purchased`)}`} tone="lime" size="lg" shadow={3} weight={700}>
+                Sign in to download
+              </Button>
+            )}
+            <Button href={`/scan/${id}`} tone="outline-white" size="lg">
+              Back to the result
+            </Button>
+          </div>
+        </Card>
+        <p className="mt-6 text-[14px] leading-[1.6] text-muted">
+          Something not right? Write to <Link href="mailto:crawler@botready.dev">crawler@botready.dev</Link> with the domain and we will sort it out.
         </p>
-      </Measure>
-      <Footer />
-    </Shell>
+      </Container>
+      <SiteFooter />
+    </div>
   );
 }

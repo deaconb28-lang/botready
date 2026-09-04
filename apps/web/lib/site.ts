@@ -8,7 +8,7 @@ export const SITE = {
   name: 'botready.dev',
   /** Used for absolute URLs in OG tags and share cards. */
   origin: process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://botready.dev',
-  tagline: 'Measure how legible your site is to AI agents.',
+  tagline: 'Are you BotReady?',
 } as const;
 
 /**
@@ -28,9 +28,24 @@ export const LIMITS = {
 } as const;
 
 export const PRICING = {
-  fixpack: { amount: 99, currency: 'usd', label: '$99', cadence: 'one time' },
-  monitor: { amount: 29, currency: 'usd', label: '$29', cadence: 'per month' },
+  fixpack: { amount: 17, currency: 'usd', label: '$17', cadence: 'one time' },
+  monitor: { amount: 7, currency: 'usd', label: '$7', cadence: 'per month' },
 } as const;
+
+/**
+ * What each plan allows. The account area prints these as "2 of 3", and the
+ * monitor cron and the claim flow enforce them.
+ */
+export const PLAN_LIMITS = {
+  free: { domains: 1, scansPerMonth: 10 },
+  monitor: { domains: 3, scansPerMonth: 30 },
+} as const;
+
+/** The address on the crawler page and in the footer. */
+export const CRAWLER_EMAIL = 'crawler@botready.dev';
+
+/** The credit line in the footer. */
+export const CREDIT = { text: 'designed with love by Deacon Brantley @ itsdeacon.com', href: 'https://itsdeacon.com' };
 
 export const SEGMENTS = [
   { key: 'saas', label: 'SaaS' },

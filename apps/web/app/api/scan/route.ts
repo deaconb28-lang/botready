@@ -29,6 +29,11 @@ export async function POST(request: NextRequest) {
 
   const raw = (body as { url?: unknown } | null)?.url;
   if (typeof raw !== 'string') return problem(400, 'Send a JSON body with a url in it.');
+  // `force` asks for a fresh crawl inside the 24-hour window. Honoured only for
+  // the person who has claimed the domain: the window exists so a link to a
+  // result page cannot be turned into traffic against a site, and the owner is
+  // the one person that protection is not for.
+  const wantsFresh = (body as { force?: unknown }).force === true;
 
   let url: string;
   try {
@@ -42,6 +47,11 @@ export async function POST(request: NextRequest) {
   const user = await currentUser();
   const limit = user ? LIMITS.signedInScansPerHour : LIMITS.anonymousScansPerHour;
   const kv = defaultKV();
+  const force = wantsFresh && user ? await ownsDomain(user.id, domain) : false;
+  if (force) {
+    const { forgetCachedScan } = await import('@/lib/redis');
+    await forgetCachedScan(domain, kv);
+  }
 
   const admission = await admitScan({
     domain,
@@ -50,6 +60,7 @@ export async function POST(request: NextRequest) {
     cacheHours: LIMITS.cacheHours,
     kv,
     findRecent: async (d) => {
+      if (force) return null;
       const recent = await latestScanForDomain(d);
       return recent ? { id: recent.id, finishedAt: recent.finished_at ?? recent.created_at } : null;
     },
@@ -123,4 +134,10 @@ function problem(status: number, error: string, headers: Record<string, string> 
     { error },
     { status, headers: { ...headers, 'cache-control': 'no-store' } },
   );
+}
+
+async function ownsDomain(userId: string, domain: string): Promise<boolean> {
+  const { serviceClient } = await import('@/lib/supabase');
+  const { data } = await serviceClient().from('sites').select('claimed_by').eq('domain', domain).maybeSingle();
+  return (data as { claimed_by: string | null } | null)?.claimed_by === userId;
 }

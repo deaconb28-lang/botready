@@ -41,16 +41,33 @@ Pinned. Do not substitute without asking.
 ```
 apps/
   web/                  Next.js app, all UI and API routes
+    app/                routes: marketing, /scan, /r, /account, /app
+    components/         ui.tsx primitives, then site/ home/ results/ account/ app/
+    lib/                data access, copy dictionaries, mode, theme
   scanner/              Railway worker, Playwright, no UI
 packages/
   core/                 Shared and framework-free
     checks.json         The check catalog
     scoring.ts          Pure scoring function
     types.ts            CheckResult, Evidence, ScanScore contracts
-    remedies/           Fix-file generators (llms.txt, robots.txt, JSON-LD)
+    remedies/           Fix-file generators (llms.txt, robots.txt, WAF rule,
+                        JSON-LD, and the coding-agent prompt)
 db/
-  schema.sql            Source of truth for the schema
+  schema.sql            Source of truth for a fresh database
+  migrations/           Deltas for a database that already exists
+docs/design/            The design handoff this UI was built from
 ```
+
+## Surfaces
+
+Three, and they share one component system:
+
+| Surface | Routes | Who it is for |
+|---|---|---|
+| Marketing | `/`, `/what-we-check`, `/pricing`, `/bot`, `/index/[segment]` | Anyone |
+| Result | `/scan/[id]`, `/r/[domain]`, `/scan/live`, `/preview/[fixture]` | Anyone, always public |
+| Account | `/sign-in`, `/account`, `/account/billing`, `/account/settings` | A signed-in person |
+| App | `/app/[domain]` and its seven views | A person's claimed property |
 
 `packages/core` must not import anything from Next.js, Playwright, or the database. It is pure TypeScript so both sides and the tests can use it.
 
@@ -87,11 +104,47 @@ Live in `checks.json`. Current v1.2 weights: retrievability 25, discovery 20, re
 
 ## Design tokens
 
-In `app/tokens.css`, imported by Tailwind v4 via `@theme`. Colour maps to HTTP status classes and that mapping is load-bearing: green is 2xx, amber is 3xx, red is 4xx, plum is 5xx. Do not introduce a colour that does not mean something.
+In `app/tokens.css`, imported by Tailwind v4 via `@theme`. The system is
+hard-edged and there are no soft shadows anywhere:
 
-Type: Archivo (variable width) for display only, Instrument Sans for prose, JetBrains Mono for all data. URLs, status codes, user agents and header blocks are always mono.
+- Every card, chip, button, input and toggle carries `border: 2px solid #111318`.
+- Elevation is a hard offset shadow with no blur: 3px for small cards, 4px for
+  standard cards, 5 to 7px for hero panels. Three panels shift the shadow to
+  violet for emphasis (the check panel, the weights chart, the code viewer).
+- Radii: 9 to 12px on chips and buttons, 14 to 16px on cards, 18 to 20px on
+  large panels, 99px on pills. Hover on a lifted card moves it `translate(-2px,-2px)`
+  and grows the shadow by 2px.
 
-No percentage donuts anywhere. The score renders as an HTTP response header block with an oversized grade letter and a 20-segment meter. Reference mockups are in `botready-ui-mockups.html`.
+Colour is semantic. Lime `#C6F53C` is pass and the active nav; coral `#FF6B5A`
+is fail and a failing grade; amber `#FFCF5C` is warn; violet `#4B44F5` is the
+brand and the feature panel; green `#1F7A47` is a healthy grade. Each category
+has its own colour. Text on coral, lime, amber, teal and pink is always ink;
+text on violet and green is always white, and `apps/web/__tests__/contrast.test.ts`
+measures every pair that carries words. Several greys and both greens are a
+shade darker than the design handoff's values because the handoff's own numbers
+did not clear WCAG AA; the hue is unchanged and BUILD-PLAN.md records each one.
+
+Type: Familjen Grotesk for every heading, grade and big number, always tight;
+Public Sans for body copy, buttons and labels; JetBrains Mono for every eyebrow,
+status chip, metric, file name, terminal block and metadata line. Eyebrows are
+uppercase mono at 10.5 to 12px with 0.12em tracking. Loaded through `next/font`,
+never an `@import` of a font CDN.
+
+Motion is declared once in `app/globals.css` so the `prefers-reduced-motion`
+block cannot miss an animation. That block is required, not optional: the
+marquee, the agent race and the cursors are all continuous.
+
+The primitives live in `apps/web/components/ui.tsx` and every surface is built
+from them. Reference designs are in `docs/design/`.
+
+## Language: plain and technical
+
+The header carries a two-state switch that swaps about forty strings across the
+site. It is not a translation layer: plain speaks to a solo founder, technical
+speaks to an engineer, and the two registers say different things. The copy
+lives in two parallel dictionaries in `apps/web/lib/copy.ts` and
+`apps/web/lib/finding-copy.ts`; neither side is derived from the other. The mode
+is one value in `apps/web/lib/mode.tsx`, persisted to localStorage.
 
 ## Voice
 
@@ -104,7 +157,9 @@ pnpm dev                 web on :3000
 pnpm --filter scanner dev    worker on :8080
 pnpm test                vitest, packages/core has the meaningful coverage
 pnpm typecheck
-pnpm db:push             applies db/schema.sql to the linked Supabase project
+pnpm db:push             applies db/schema.sql to an empty Supabase project
+pnpm db:migrate          applies db/migrations/*.sql, once each, to an existing one
+pnpm audit:ui            Playwright + axe over the running app
 ```
 
 ## Environment
@@ -117,7 +172,9 @@ SCANNER_URL                  https URL of the Railway worker
 SCANNER_SHARED_SECRET        worker rejects any request without this header
 STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_FIXPACK, STRIPE_PRICE_MONITOR
 RESEND_API_KEY
-ANTHROPIC_API_KEY            report prose only, never anything factual
+ANTHROPIC_API_KEY            prompt watch only. Never a fact about a site: the
+                             answer is stored as the model's words, labelled as
+                             such, and no score or generated file reads it.
 ```
 
 ## Things that will bite

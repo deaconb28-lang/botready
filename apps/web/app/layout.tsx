@@ -1,29 +1,27 @@
 import type { Metadata, Viewport } from 'next';
-import { Archivo, Instrument_Sans, JetBrains_Mono } from 'next/font/google';
+import { Familjen_Grotesk, JetBrains_Mono, Public_Sans } from 'next/font/google';
 
+import { ModeProvider } from '@/lib/mode';
 import { SITE } from '@/lib/site';
 import './globals.css';
 
 /**
- * Archivo carries the width axis, which is how emphasis is expressed in this
- * design instead of italics or colour. Loading the axis is the point, so it is
- * declared rather than left to the default instance.
+ * Three faces. Familjen Grotesk for every heading, grade and big number;
+ * Public Sans for body copy, buttons and labels; JetBrains Mono for every
+ * eyebrow, status chip, metric, file name and terminal block. Self-hosted
+ * through next/font so the first paint does not wait on a third party.
  */
-const archivo = Archivo({
+const familjen = Familjen_Grotesk({
   subsets: ['latin'],
-  // No `weight`: naming one pins the font to a static instance and next/font
-  // then refuses the axes list. Leaving it out loads the variable font with
-  // both wght and wdth live, which is what the design needs — the width axis
-  // carries emphasis here instead of italics or colour.
-  axes: ['wdth'],
-  variable: '--font-archivo',
+  weight: ['500', '600', '700'],
+  variable: '--font-familjen',
   display: 'swap',
 });
 
-const instrumentSans = Instrument_Sans({
+const publicSans = Public_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-instrument-sans',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-public-sans',
   display: 'swap',
 });
 
@@ -51,25 +49,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#16181C',
+  themeColor: '#EDEBFB',
   width: 'device-width',
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${archivo.variable} ${instrumentSans.variable} ${jetbrainsMono.variable}`}
-    >
+    <html lang="en" className={`${familjen.variable} ${publicSans.variable} ${jetbrainsMono.variable}`}>
       <body>
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-[3px] focus:border focus:border-ink focus:bg-paper focus:px-3 focus:py-2 focus:font-data focus:text-micro"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-[9px] focus:border-2 focus:border-ink focus:bg-lime focus:px-3 focus:py-2 focus:font-mono focus:text-[12px] focus:text-ink"
         >
-          Skip to the results
+          Skip to content
         </a>
-        {children}
+        <ModeProvider>{children}</ModeProvider>
       </body>
     </html>
   );

@@ -4,7 +4,7 @@
  * you find out which scans to distrust. Bump it when the observations change
  * shape or meaning, not when a comment changes.
  */
-export const SCANNER_VERSION = '1.0.0';
+export const SCANNER_VERSION = '1.1.0';
 
 /**
  * One user agent, one place. It names the product and links to a page that

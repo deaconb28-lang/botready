@@ -332,3 +332,81 @@ Two configuration facts worth keeping: Supabase's direct connection host is
 IPv6 only and Railway cannot reach it, so the worker must use the session
 pooler; and Supabase's newer `sb_publishable_` / `sb_secret_` keys are
 accepted under their own names.
+
+### The redesign
+
+A complete overhaul, from a three-file design handoff (vendored into
+`docs/design/`). The old ink-and-paper system is gone; the new one is
+hard-edged and lavender, with a 2px ink border on everything, hard offset
+shadows and no blur anywhere. Three surfaces now share one component system:
+the marketing site, the public result, and a signed-in account and app.
+
+What was added rather than restyled:
+
+- **The Plain / Technical switch.** Two copy dictionaries, not a translation
+  layer: `lib/copy.ts` for the marketing strings and `lib/finding-copy.ts` for
+  the findings, which reads the same observed facts and says different things
+  to a founder and to an engineer.
+- **The account area**: sign-in as a split screen with Google OAuth beside the
+  magic link, domains, plan and billing through the Stripe customer portal,
+  and the four settings toggles.
+- **The app**: a sidebar shell over one claimed property with eight views.
+  Overview, all issues, page detail, competitors, editor, prompt watch,
+  settings and new scan.
+- **Competitors and prompt watch**, which needed schema: `competitors`,
+  `prompts` and `prompt_runs` in `db/migrations/0002_redesign.sql`, plus
+  `user_settings`, whose `show_in_index` the public index now honours.
+- **Two more generated files**: `waf-rule.txt`, written only for the agents the
+  scan actually saw refused, and `botready-fixes.md`, the coding-agent prompt
+  the pricing page sells. Both are built from evidence like every other file.
+- **Page detail** needed something the scanner did not record, so
+  `js_dependency_ratio` now carries a 320-character excerpt of each side and
+  the scanner is 1.1.0. A scan from 1.0.0 shows its counts and says why the
+  text is missing.
+
+Prompt watch is the one place a model call touches the product, and it is
+fenced: it asks an answer engine a buyer's question and stores the answer as
+the model's words, labelled as such, with the domains it cited. No score, no
+finding and no generated file reads it, and without `ANTHROPIC_API_KEY` the
+feature says it is not configured rather than inventing an answer.
+
+### Notes back to the human
+
+**The handoff's palette does not clear WCAG AA in six places, so six values
+moved.** Each one was measured, the hue is unchanged, and
+`apps/web/__tests__/contrast.test.ts` now measures 69 pairs so they cannot
+drift back:
+
+| Token | Handoff | Now | Why |
+|---|---|---|---|
+| `green` | `#2E9B5E` | `#1F7A47` | white on it was 3.52:1 |
+| `green-text` | `#3F8F1E` | `#357A19` | 4.07:1 on white |
+| `subtle` | `#8B90A0` | `#666B7A` | 3.30:1, and it carries words |
+| `subtle-2` | `#8A929B` | `#646978` | same |
+| `placeholder` | `#A0A7AE` | `#646978` | 2.43:1, used for table headers |
+| `on-violet` | `#D7D5FD` | `#E4E2FE` | 4.30:1 on violet |
+
+**The prototype's own grade card breaks its own rule.** It draws the 88px
+`C−` in white on coral, which is 2.80:1 and fails even the large-text floor;
+the README says text on coral is always ink. The app follows the written rule.
+
+**Placeholder data is gone, not reproduced.** The handoff's screens are full of
+`shiplog.dev`, four competitors, twelve prompts and an invoice history. Every
+one of those is now read from the database, and each screen has an empty state
+that says what to do instead. The prototype's `C−`/`B+` grades became `A` to
+`F`, because that is what the scorer emits.
+
+**Three things in the handoff were deliberately not built.** The header's
+"Landing page" and "Mobile" pills were a known gap in the prototype and are
+removed rather than faked. The app's "$17" and "11 files" are computed from
+`PRICING` and the real pack. The "Cancel plan" button opens the Stripe customer
+portal rather than cancelling directly, because the portal is what Stripe
+expects to own that decision.
+
+**The old prices in the plan were wrong.** The handoff sells the fix pack at
+$17 and monitoring at $7; `lib/site.ts` said $99 and $29. The handoff wins,
+and the Stripe price IDs in the environment must match.
+
+**The scanner needs a redeploy and the database needs the migration.** Page
+detail is empty until a scan runs on 1.1.0, and the account and app pages
+404 or error until `pnpm db:migrate` has run against Supabase.

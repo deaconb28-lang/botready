@@ -14,6 +14,7 @@
     "typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
     "lint": "pnpm --filter @botready/web lint",
     "db:push": "node scripts/db-push.mjs",
+    "db:migrate": "node scripts/db-migrate.mjs",
     "seed:index": "node scripts/seed-index.mjs",
     "audit:ui": "pnpm --filter @botready/tools audit:ui"
   },

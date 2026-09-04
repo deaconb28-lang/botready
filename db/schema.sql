@@ -24,7 +24,7 @@ create index sites_segment_idx on sites (segment) where segment is not null;
 -- ---------------------------------------------------------------- scans
 
 create type scan_status  as enum ('queued','running','complete','blocked','error');
-create type scan_trigger as enum ('manual','cron','monitor','index');
+create type scan_trigger as enum ('manual','cron','monitor','index','competitor');
 
 create table scans (
   id              uuid primary key default gen_random_uuid(),
@@ -136,6 +136,65 @@ create table reports (
   generated_at timestamptz not null default now()
 );
 
+-- ---------------------------------------------------------------- settings
+
+create table user_settings (
+  user_id        uuid primary key references auth.users(id) on delete cascade,
+  weekly_rescan  boolean not null default true,
+  alert_on_drop  boolean not null default true,
+  monthly_digest boolean not null default false,
+  show_in_index  boolean not null default true,
+  updated_at     timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------- competitors
+
+-- A competitor is another site, scanned through the same pipeline, that the
+-- owner of a claimed site wants ranked beside their own.
+
+create table competitors (
+  id                 uuid primary key default gen_random_uuid(),
+  site_id            uuid not null references sites(id) on delete cascade,
+  competitor_site_id uuid not null references sites(id) on delete cascade,
+  added_by           uuid not null references auth.users(id) on delete cascade,
+  created_at         timestamptz not null default now(),
+  unique (site_id, competitor_site_id),
+  check (site_id <> competitor_site_id)
+);
+
+create index competitors_site_idx on competitors (site_id);
+
+-- ---------------------------------------------------------------- prompt watch
+
+-- A prompt is a question an owner wants asked of an answer engine each week.
+-- A run records what came back: which domains the answer cited, and an
+-- excerpt of the answer. The excerpt is the model's words, stored as such;
+-- nothing in a run is presented as a fact about the site.
+
+create table prompts (
+  id         uuid primary key default gen_random_uuid(),
+  site_id    uuid not null references sites(id) on delete cascade,
+  text       text not null,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  is_active  boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (site_id, text)
+);
+
+create index prompts_site_idx on prompts (site_id) where is_active;
+
+create table prompt_runs (
+  id             uuid primary key default gen_random_uuid(),
+  prompt_id      uuid not null references prompts(id) on delete cascade,
+  ran_at         timestamptz not null default now(),
+  model          text not null,
+  answer_excerpt text not null default '',
+  cited_domains  jsonb not null default '[]'::jsonb,   -- ["linear.app", "height.app"]
+  error          text
+);
+
+create index prompt_runs_prompt_idx on prompt_runs (prompt_id, ran_at desc);
+
 -- ---------------------------------------------------------------- the index
 
 -- One row per indexed site: its most recent finished scan and that scan's
@@ -180,7 +239,11 @@ left join lateral (
 ) sc on true
 left join evidence parity on parity.scan_id = s.id and parity.check_key = 'agent_status_parity'
 left join evidence ratio  on ratio.scan_id  = s.id and ratio.check_key  = 'js_dependency_ratio'
-where si.segment is not null;
+-- An owner who switches off "show my score in the public index" drops out of
+-- the list. The result page stays public either way.
+left join user_settings us on us.user_id = si.claimed_by
+where si.segment is not null
+  and coalesce(us.show_in_index, true);
 
 -- ---------------------------------------------------------------- claims
 
@@ -212,6 +275,10 @@ alter table entitlements enable row level security;
 alter table monitors     enable row level security;
 alter table alerts       enable row level security;
 alter table reports      enable row level security;
+alter table user_settings enable row level security;
+alter table competitors  enable row level security;
+alter table prompts      enable row level security;
+alter table prompt_runs  enable row level security;
 
 -- Scan results are public by design. That is the distribution model.
 create policy "scans are world readable"    on scans    for select using (true);
@@ -225,6 +292,19 @@ create policy "own monitors"     on monitors     for all    using (auth.uid() = 
 create policy "own reports"      on reports      for select using (auth.uid() = user_id);
 create policy "own alerts"       on alerts       for select using (
   exists (select 1 from monitors m where m.id = alerts.monitor_id and m.user_id = auth.uid())
+);
+create policy "own settings"     on user_settings for all using (auth.uid() = user_id);
+create policy "own competitors"  on competitors  for select using (
+  exists (select 1 from sites s where s.id = competitors.site_id and s.claimed_by = auth.uid())
+);
+create policy "own prompts"      on prompts      for select using (
+  exists (select 1 from sites s where s.id = prompts.site_id and s.claimed_by = auth.uid())
+);
+create policy "own prompt runs"  on prompt_runs  for select using (
+  exists (
+    select 1 from prompts p join sites s on s.id = p.site_id
+     where p.id = prompt_runs.prompt_id and s.claimed_by = auth.uid()
+  )
 );
 
 -- Writes happen through the service role from the worker only. No insert or

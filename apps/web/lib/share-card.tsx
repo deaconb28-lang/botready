@@ -16,6 +16,10 @@ import type { CheckStatus, Finding, Grade } from '@botready/core';
  * preview at /api/og/preview/[fixture] produces the identical image. A share
  * card is the hardest thing in the product to look at — it only exists inside
  * somebody else's link unfurler — so being able to open one directly matters.
+ *
+ * The look is the site's: lavender canvas, a white panel with a 2px ink border
+ * and a hard offset shadow, the grade in a coral or green tile. Satori draws
+ * box-shadow badly, so the shadow is a second rectangle behind the panel.
  */
 
 /** What every card reader wants. */
@@ -34,20 +38,58 @@ export interface CardData {
   secondary: string;
 }
 
+/* The same values as app/tokens.css. next/og cannot read CSS variables, so the
+   handful the card uses are repeated here. */
+const C = {
+  canvas: '#EDEBFB',
+  surface: '#FFFFFF',
+  ink: '#111318',
+  muted: '#5A646F',
+  subtle: '#8B90A0',
+  violet: '#4B44F5',
+  lime: '#C6F53C',
+  coral: '#FF6B5A',
+  green: '#2E9B5E',
+} as const;
+
+const PANEL = { inset: 44, shadow: 8, border: 2, pad: 44 } as const;
+
 export async function renderShareCard(data: CardData): Promise<ImageResponse> {
-  const [display, mono] = await Promise.all([
-    loadFont('Archivo-ExtraBold.ttf'),
+  const [display, body, mono] = await Promise.all([
+    loadFont('FamiljenGrotesk-Bold.ttf'),
+    loadFont('PublicSans-Regular.ttf'),
     loadFont('JetBrainsMono-Regular.ttf'),
   ]);
 
   const fonts = [
     ...(display
-      ? [{ name: 'Archivo', data: display, weight: 800 as const, style: 'normal' as const }]
+      ? [{ name: 'FamiljenGrotesk', data: display, weight: 700 as const, style: 'normal' as const }]
       : []),
+    ...(body ? [{ name: 'PublicSans', data: body, weight: 400 as const, style: 'normal' as const }] : []),
     ...(mono
       ? [{ name: 'JetBrainsMono', data: mono, weight: 400 as const, style: 'normal' as const }]
       : []),
   ];
+
+  const displayFace = 'FamiljenGrotesk, sans-serif';
+  const bodyFace = 'PublicSans, sans-serif';
+  const monoFace = 'JetBrainsMono, monospace';
+
+  const healthy = data.grade === 'A' || data.grade === 'B';
+  const tile = tileLabel(data);
+  const tileBg = healthy ? C.green : C.coral;
+  const tileFg = healthy ? C.surface : C.ink;
+
+  const panelWidth = CARD_SIZE.width - PANEL.inset * 2 - PANEL.shadow;
+  const panelHeight = CARD_SIZE.height - PANEL.inset * 2 - PANEL.shadow;
+
+  const meta = [
+    data.scoringVersion ? `scoring v${data.scoringVersion}` : null,
+    `checked ${data.checkedAt}`,
+    'botready.dev',
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return new ImageResponse(
     (
@@ -56,71 +98,191 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: '#16181C',
-          color: '#E4E6E1',
-          padding: '48px 54px',
-          fontFamily: 'JetBrainsMono, monospace',
+          position: 'relative',
+          background: C.canvas,
+          color: C.ink,
+          fontFamily: bodyFace,
         }}
       >
-        <div style={{ display: 'flex', fontSize: 15, fontWeight: 700 }}>
-          <span>botready</span>
-          <span style={{ color: '#F0705C' }}>.dev</span>
-        </div>
+        {/* The hard shadow: the same rectangle, offset, in ink. */}
+        <div
+          style={{
+            position: 'absolute',
+            left: PANEL.inset + PANEL.shadow,
+            top: PANEL.inset + PANEL.shadow,
+            width: panelWidth,
+            height: panelHeight,
+            background: C.ink,
+            borderRadius: 20,
+          }}
+        />
 
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 15, color: '#8E948C' }}>
-            {data.domain} · agent readability
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 28, marginTop: 6 }}>
-            {data.grade ? (
-              <div
-                style={{
-                  fontFamily: 'Archivo, sans-serif',
-                  fontWeight: 800,
-                  fontSize: 120,
-                  lineHeight: 0.85,
-                  letterSpacing: '-0.03em',
-                  // The letter's descender-free bowl sits lower than the
-                  // headline's baseline at this size, so it is nudged up to
-                  // meet it rather than left to align on the box.
-                  paddingBottom: 16,
-                  color: gradeColour(data.grade),
-                }}
-              >
-                {data.grade}
-              </div>
-            ) : null}
-
+        {/* The panel. */}
+        <div
+          style={{
+            position: 'absolute',
+            left: PANEL.inset,
+            top: PANEL.inset,
+            width: panelWidth,
+            height: panelHeight,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            background: C.surface,
+            border: `${PANEL.border}px solid ${C.ink}`,
+            borderRadius: 20,
+            padding: PANEL.pad,
+          }}
+        >
+          {/* Top row: the domain, and the mark. */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div
               style={{
                 display: 'flex',
-                fontFamily: 'Archivo, sans-serif',
-                fontWeight: 800,
-                fontSize: data.headline.length > 34 ? 44 : 56,
-                lineHeight: 1.02,
-                letterSpacing: '-0.03em',
-                paddingBottom: 10,
-                maxWidth: data.grade ? 780 : 1060,
+                fontFamily: monoFace,
+                fontSize: 22,
+                color: C.ink,
+                maxWidth: 880,
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
               }}
             >
-              {data.headline}
+              {data.domain}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 40,
+                  height: 40,
+                  background: C.violet,
+                  border: `2px solid ${C.ink}`,
+                  borderRadius: 11,
+                  fontFamily: monoFace,
+                  fontSize: 22,
+                  color: C.lime,
+                  // Mono has no bold instance on the card; the lime on violet
+                  // carries the mark at this size.
+                  lineHeight: 1,
+                  paddingBottom: 2,
+                }}
+              >
+                b
+              </div>
+              <div style={{ display: 'flex', fontFamily: displayFace, fontSize: 24, letterSpacing: '-0.02em' }}>
+                BotReady
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={{ display: 'flex', fontSize: 15, color: '#8E948C' }}>
-          {[
-            data.secondary,
-            data.total !== null && data.scoringVersion
-              ? `${data.total}/100 · scoring v${data.scoringVersion}`
-              : null,
-            `checked ${data.checkedAt}`,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
+          {/* Middle: the grade tile and the fact. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                width: 220,
+                height: 220,
+                background: tileBg,
+                color: tileFg,
+                border: `2px solid ${C.ink}`,
+                borderRadius: 24,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  fontFamily: displayFace,
+                  fontSize: tile.length > 2 ? 84 : 132,
+                  lineHeight: 1,
+                  letterSpacing: '-0.035em',
+                }}
+              >
+                {tile}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  marginTop: 10,
+                  fontFamily: monoFace,
+                  fontSize: 15,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  opacity: 0.9,
+                }}
+              >
+                {data.grade ? 'Grade' : 'Not read'}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minWidth: 0 }}>
+              {data.total !== null ? (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 14 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      fontFamily: displayFace,
+                      fontSize: 64,
+                      lineHeight: 1,
+                      letterSpacing: '-0.035em',
+                    }}
+                  >
+                    {data.total}
+                  </div>
+                  <div style={{ display: 'flex', fontFamily: monoFace, fontSize: 22, color: C.subtle }}>/ 100</div>
+                </div>
+              ) : null}
+              <div
+                style={{
+                  display: 'flex',
+                  fontFamily: bodyFace,
+                  fontSize: data.headline.length > 48 ? 34 : 40,
+                  lineHeight: 1.25,
+                  color: C.ink,
+                  maxWidth: 800,
+                }}
+              >
+                {data.headline}
+              </div>
+              {data.secondary ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    marginTop: 14,
+                    fontFamily: bodyFace,
+                    fontSize: 22,
+                    lineHeight: 1.35,
+                    color: C.muted,
+                    maxWidth: 800,
+                  }}
+                >
+                  {data.secondary}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Bottom: the metadata line. */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontFamily: monoFace,
+              fontSize: 17,
+              color: C.subtle,
+            }}
+          >
+            <div style={{ display: 'flex' }}>{meta}</div>
+            <div style={{ display: 'flex', letterSpacing: '0.12em', textTransform: 'uppercase', fontSize: 14 }}>
+              Agent readability
+            </div>
+          </div>
         </div>
       </div>
     ),
@@ -133,6 +295,18 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
       },
     },
   );
+}
+
+/**
+ * What the tile says. The grade when there is one; the status code that
+ * refused us when the headline names one; a dash when the scan simply could
+ * not finish.
+ */
+function tileLabel(data: CardData): string {
+  if (data.grade) return data.grade;
+  const code = /\b(4\d\d|5\d\d)\b/.exec(data.headline)?.[1];
+  if (code) return code;
+  return /refuses|blocked|403/i.test(data.headline) ? '403' : '—';
 }
 
 /**
@@ -169,14 +343,6 @@ function sentence(text: string): string {
   return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
-function gradeColour(grade: Grade): string {
-  // The same three bands as everywhere else. Paper for a pass, because the pass
-  // green is too dark to read at 120px on the ink surface.
-  if (grade === 'A' || grade === 'B') return '#E4E6E1';
-  if (grade === 'C') return '#D69A5C';
-  return '#F0705C';
-}
-
 export function formatCardDate(timestamp: string): string {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) return 'recently';
@@ -189,7 +355,7 @@ export function formatCardDate(timestamp: string): string {
 }
 
 /**
- * The two faces, read from disk once per cold start and held.
+ * The three faces, read from disk once per cold start and held.
  *
  * Fetching them from a font CDN was the first version of this, and it broke
  * when Google bumped the family's version path. The card is the unit that

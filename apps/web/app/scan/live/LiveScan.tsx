@@ -5,36 +5,32 @@ import { useRouter } from 'next/navigation';
 
 import { catalog, checkDef, type CheckStatus } from '@botready/core';
 
-import { Measure } from '@/components/primitives';
+import { Container, cx } from '@/components/ui';
 
 /**
  * The wait is the demo.
  *
- * Watching real requests come back with real status codes is more persuasive
- * than a spinner, and the 403 lines land before the score does. Everything in
- * the log is a check the worker actually finished, read off the same polling
- * endpoint the result page uses. Nothing is faked and nothing is simulated on a
- * timer: a line appears when the evidence row exists.
- *
- * The log is an ink panel — the same material as the grade band it turns into.
+ * Every line in the log is a check the worker actually finished, read off the
+ * same polling endpoint the result page uses. Nothing is simulated on a
+ * timer: a line appears when the evidence row exists. When the scan settles
+ * the page moves to the result, where the score counts up.
  */
 
 interface Poll {
   status: 'queued' | 'running' | 'complete' | 'blocked' | 'error';
   settled: boolean;
   domain: string;
+  url: string;
   pagesCrawled: number;
   errorMessage: string | null;
-  startedAt: string | null;
   progress: Array<{ key: string; status: CheckStatus }>;
   score: { total: number; grade: string } | null;
 }
 
 const POLL_MS = 1200;
-/** A scan that has not settled in three minutes is not going to. */
 const GIVE_UP_MS = 180_000;
 
-export function LiveScan({ scanId }: { scanId: string }) {
+export function LiveScan({ scanId, next }: { scanId: string; next: string | null }) {
   const router = useRouter();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -63,14 +59,12 @@ export function LiveScan({ scanId }: { scanId: string }) {
 
         if (body.settled) {
           settled.current = true;
-          setTimeout(() => router.replace(`/scan/${scanId}`), 700);
+          setTimeout(() => router.replace(next ?? `/scan/${scanId}`), 600);
           return;
         }
         if (Date.now() - startedAt.current > GIVE_UP_MS) {
           settled.current = true;
-          setError(
-            'The scan has been running for three minutes, which is longer than any scan should take. It may still finish; the result page will show it when it does.',
-          );
+          setError('The scan has been running for three minutes, which is longer than any scan should take. The result page will show it when it finishes.');
         }
       } catch {
         if (!cancelled) setError('We lost the connection to the status endpoint. The scan is probably still running.');
@@ -85,28 +79,48 @@ export function LiveScan({ scanId }: { scanId: string }) {
       clearInterval(poller);
       clearInterval(clock);
     };
-  }, [scanId, router]);
+  }, [scanId, router, next]);
 
   const done = poll?.progress.length ?? 0;
   const total = catalog.checks.length;
   const percent = Math.min(96, Math.round((done / total) * 100));
 
   return (
-    <Measure className="pb-16 pt-8">
-      <p className="label text-ink-60">Running the check</p>
-      <h1 className="display-section mt-2 text-[26px] sm:text-[32px]">Reading {poll?.domain ?? 'your site'} the way agents do</h1>
-      <p className="mono mt-2 text-[13px] text-ink-60">
-        6 pages · {catalog.agents.length} clients · started {elapsed} {elapsed === 1 ? 'second' : 'seconds'} ago
-      </p>
+    <Container width={1120} className="pb-24 pt-11">
+      <div className="font-mono text-[12.5px] text-subtle-2">
+        <span className="text-ink">{poll?.domain ?? 'your site'}</span> · reading as {catalog.agents.length} clients… · {elapsed}s
+      </div>
 
-      <div
-        className="on-ink mt-7 rounded-[6px] bg-ink px-5 py-5 text-paper sm:px-7"
-        role="log"
-        aria-live="polite"
-        aria-relevant="additions"
-        aria-label="Scan progress"
-      >
-        <div className="wire-line">
+      <div className="edge mt-[18px] overflow-hidden rounded-[24px] bg-white">
+        <div className="flex flex-wrap items-center gap-8 border-b border-hairline px-6 py-[30px] sm:px-8">
+          <div className="flex items-baseline gap-3">
+            <span className="display-tight text-[64px] leading-none tracking-[-0.04em] text-placeholder">··</span>
+            <span className="font-mono text-[14px] text-subtle-2">/ 100</span>
+          </div>
+          <div className="min-w-[200px] flex-1">
+            <div className="flex items-center gap-[10px]">
+              <span aria-hidden="true" className="anim-pulse-dot inline-block h-[10px] w-[10px] rounded-full bg-violet" />
+              <span className="font-mono text-[12.5px] text-subtle-2">{poll ? nextLabel(done, poll.status) : 'Queueing the scan'}</span>
+            </div>
+            <p className="mt-[10px] max-w-[46ch] text-[15.5px] leading-[1.5] text-muted">
+              We are requesting the page as {catalog.agents.length} clients, one second apart, then rendering it once in a headless browser.
+            </p>
+          </div>
+        </div>
+        <div
+          className="h-[6px] bg-hairline"
+          role="progressbar"
+          aria-valuenow={percent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Checks completed"
+        >
+          <div className="h-full bg-violet transition-[width] duration-500 ease-out" style={{ width: `${Math.max(3, percent)}%` }} />
+        </div>
+      </div>
+
+      <div className="on-dark mt-6 rounded-[20px] bg-ink px-5 py-5 text-on-ink sm:px-7" role="log" aria-live="polite" aria-relevant="additions" aria-label="Scan progress">
+        <div className="font-mono text-[12.5px] leading-[1.7]">
           {poll ? (
             <>
               {poll.progress.map((entry, i) => (
@@ -118,34 +132,18 @@ export function LiveScan({ scanId }: { scanId: string }) {
             <RunningLine label="Queueing the scan" />
           )}
         </div>
-
-        <div
-          className="mt-5 h-[5px] overflow-hidden rounded-[3px] bg-ink-seg"
-          role="progressbar"
-          aria-valuenow={percent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Checks completed"
-        >
-          <i
-            className="block h-full bg-paper transition-[width] duration-500 ease-out motion-reduce:transition-none"
-            style={{ width: `${Math.max(4, percent)}%` }}
-          />
-        </div>
       </div>
 
       {error ? (
-        <p role="alert" className="mono mt-4 text-[12.5px] font-medium text-fail">
+        <p role="alert" className="mt-4 font-mono text-[12.5px] font-medium text-coral-text">
           {error}
         </p>
       ) : (
-        <p className="mono mt-4 text-[12.5px] text-ink-60">
-          We identify ourselves as BotreadyBot/1.0 and obey your robots.txt.
-        </p>
+        <p className="mt-4 font-mono text-[12.5px] text-subtle-2">We identify ourselves as BotreadyBot/1.0 and obey your robots.txt.</p>
       )}
 
       <noscript>
-        <p className="mono mt-6 text-[12.5px] text-ink-60">
+        <p className="mt-6 font-mono text-[12.5px] text-subtle-2">
           This page updates with JavaScript. The scan is running either way —{' '}
           <a href={`/scan/${scanId}`} className="underline">
             open the result page
@@ -153,16 +151,16 @@ export function LiveScan({ scanId }: { scanId: string }) {
           and reload it in half a minute.
         </p>
       </noscript>
-    </Measure>
+    </Container>
   );
 }
 
 const STATUS_COLOUR: Record<CheckStatus, string> = {
-  pass: 'text-paper',
-  warn: 'text-[#D69A5C]',
-  fail: 'text-fail-dark',
+  pass: 'text-lime',
+  warn: 'text-amber',
+  fail: 'text-coral-dark',
   error: 'text-[#B48CD6]',
-  skip: 'text-ink-key',
+  skip: 'text-on-ink-muted',
 };
 
 const STATUS_WORD: Record<CheckStatus, string> = {
@@ -176,20 +174,19 @@ const STATUS_WORD: Record<CheckStatus, string> = {
 function LogLine({ entry, index }: { entry: { key: string; status: CheckStatus }; index: number }) {
   const def = checkDef(entry.key);
   return (
-    <div className="br-slide-in flex items-baseline gap-4 py-[3px]">
-      <span className="w-[32px] shrink-0 text-ink-key">{String(index + 1).padStart(2, '0')}</span>
+    <div className="anim-rise-fast flex items-baseline gap-4 py-[3px]">
+      <span className="w-[32px] shrink-0 text-on-ink-muted">{String(index + 1).padStart(2, '0')}</span>
       <span className="min-w-0 flex-1">{def?.label ?? entry.key}</span>
-      <span className={`shrink-0 font-bold ${STATUS_COLOUR[entry.status]}`}>{STATUS_WORD[entry.status]}</span>
+      <span className={cx('shrink-0 font-bold', STATUS_COLOUR[entry.status])}>{STATUS_WORD[entry.status]}</span>
     </div>
   );
 }
 
-/** The words hold still; a small square does the moving. */
 function RunningLine({ label }: { label: string }) {
   return (
-    <div className="flex items-baseline gap-4 py-[3px] text-ink-key">
+    <div className="flex items-baseline gap-4 py-[3px] text-on-ink-muted">
       <span className="flex w-[32px] shrink-0 items-center" aria-hidden="true">
-        <i className="br-pulse-dot block h-[7px] w-[7px] rounded-[1px] bg-paper" />
+        <i className="anim-pulse-dot block h-[7px] w-[7px] rounded-[1px] bg-lime" />
       </span>
       <span className="min-w-0 flex-1">{label}</span>
       <span className="shrink-0 font-bold">running</span>
@@ -197,11 +194,6 @@ function RunningLine({ label }: { label: string }) {
   );
 }
 
-/**
- * What the worker is doing next, inferred from how far it has got. The order
- * matches the scan's own order, so this is a description of the pipeline
- * rather than a guess.
- */
 function nextLabel(done: number, status: Poll['status']): string {
   if (status === 'queued') return 'Waiting for a worker to pick this up';
   if (done === 0) return 'GET /robots.txt';

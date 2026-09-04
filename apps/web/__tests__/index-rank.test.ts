@@ -18,6 +18,7 @@ function row(over: Partial<Unranked> & { domain: string }): Unranked {
     categoryScores: null,
     refused: { count: 0, of: 5 },
     jsRatio: 0.2,
+    previousTotal: null,
     ...over,
   };
 }

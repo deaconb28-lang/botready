@@ -1,123 +1,284 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 
-import { ScanForm } from '@/components/ScanForm';
-import { Transcript } from '@/components/Transcript';
-import { ButtonLink, Eyebrow, Footer, Measure, Nav, SectionHeading, Shell } from '@/components/primitives';
-import { LIMITS } from '@/lib/site';
+import { AgentRace } from '@/components/home/AgentRace';
+import { ChatProof } from '@/components/home/ChatProof';
+import { HeroScanCard } from '@/components/home/HeroScanCard';
+import { Copy, CopyItem } from '@/components/ModeText';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { Button, Card, Container, Eyebrow, PillEyebrow, TerminalCard, cx } from '@/components/ui';
+import { FIX_FILES } from '@/lib/copy';
 
 export const metadata: Metadata = {
+  title: 'Are you BotReady?',
   description:
-    'Your site answers browsers. It might be hanging up on agents. We request your page as five different clients, compare what each one gets back, and hand you the files that fix the gaps.',
+    'We request your page as five different clients, compare what each one gets back, and hand you the exact files that fix the gaps.',
+  alternates: { canonical: '/' },
 };
 
-/**
- * The hero is the thesis: the same request twice, and the disagreement
- * between the two answers. It is a demonstration rather than a claim, which is
- * the difference between this page and every audit tool's gradient headline.
- */
-export default function LandingPage() {
+export default function HomePage() {
   return (
-    <Shell>
-      <Nav action={<ButtonLink href="/index/saas" tone="ghost" size="sm">The index</ButtonLink>} />
-
+    <div className="min-h-dvh overflow-x-hidden bg-canvas">
+      <SiteHeader />
       <main id="main">
-        <Measure as="section" wide className="pb-12 pt-10 sm:pt-16">
-          <Eyebrow>HTTP/1.1 200 OK for you · HTTP/1.1 403 Forbidden for them</Eyebrow>
-          <h1 className="display-hero mt-5 max-w-[15ch] text-[42px] sm:text-[64px] lg:text-[76px]">
-            Your site answers browsers. It might be <span className="text-fail">hanging up</span> on
-            agents.
-          </h1>
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_minmax(0,560px)] lg:items-end">
-            <p className="max-w-[46ch] text-[17px] leading-[1.5] text-ink-60 sm:text-[18px]">
-              We request your page as five different clients, compare what each one gets back, and
-              hand you the exact files that fix the gaps.
-            </p>
-            <ScanForm autoFocus />
-          </div>
-        </Measure>
-
-        <Measure wide>
-          <Transcript
-            animate
-            example
-            host="linear.app"
-            left={{
-              client: 'As a browser',
-              userAgent: 'Mozilla/5.0 (Macintosh) … Chrome/141.0',
-              status: 200,
-              headers: [
-                ['content-type', 'text/html; charset=utf-8'],
-                ['server', 'cloudflare'],
-              ],
-              body: [
-                'Linear is a purpose-built tool for planning and',
-                'building products. Streamline issues, projects,',
-                'and product roadmaps. Pricing: Free, Basic $8,',
-                'Business $14, Enterprise …',
-              ],
-              chars: 9240,
-            }}
-            right={{
-              client: 'As a reading agent',
-              userAgent: 'ClaudeBot/1.0',
-              status: 403,
-              headers: [
-                ['content-type', 'text/html'],
-                ['server', 'cloudflare'],
-                ['cf-mitigated', 'challenge'],
-              ],
-              body: [],
-              chars: 312,
-            }}
-          />
-        </Measure>
-
-        <Measure as="section" wide className="mt-16 sm:mt-24">
-          <SectionHeading kicker="Three passes, about thirty seconds">
-            What the check actually does
-          </SectionHeading>
-          <dl className="mt-6 grid gap-x-10 gap-y-8 md:grid-cols-3">
-            <Pass
-              request="GET / × 5 clients"
-              title="The same URL, five ways"
-              body="Once as Chrome and once as each of ClaudeBot, GPTBot, PerplexityBot and Google-Extended, recording the status, headers and byte count each got back. Same URL, same second."
-            />
-            <Pass
-              request="raw HTML vs rendered DOM"
-              title="Text with and without JavaScript"
-              body="The readable text is extracted from the plain response and from a headless render by the same algorithm. The ratio between them is how much of your page only exists once a script has run."
-            />
-            <Pass
-              request="GET /robots.txt, /llms.txt, /.well-known/…"
-              title="The paths agents look for first"
-              body="robots.txt, sitemap.xml, llms.txt, llms-full.txt and the agent manifests, checked for existence, parseability, and links that actually resolve."
-            />
-          </dl>
-          <p className="mono mt-10 max-w-[72ch] text-[12.5px] leading-[1.7] text-ink-60">
-            {LIMITS.maxPagesPerScan} pages at most, sequential, {LIMITS.pageDelayMs / 1000} second
-            apart. We identify as BotreadyBot/1.0 and obey your robots.txt. If your site refuses us,
-            we record it as refused and show it that way rather than working around it.{' '}
-            <Link href="/what-we-check" className="underline">
-              The weights are published.
-            </Link>
-          </p>
-        </Measure>
+        <Hero />
+        <Problem />
+        <Container className="pt-[76px]">
+          <AgentRace />
+        </Container>
+        <BrowserVsAgent />
+        <WhyAeo />
+        <TheCheck />
+        <ClosingCta />
       </main>
-
-      <Footer />
-    </Shell>
+      <SiteFooter />
+    </div>
   );
 }
 
-function Pass({ request, title, body }: { request: string; title: string; body: string }) {
+function Hero() {
   return (
-    <div>
-      <dt>
-        <p className="mono text-[12px] text-ink-60">{request}</p>
-        <p className="mt-1.5 text-[17px] font-semibold">{title}</p>
-      </dt>
-      <dd className="mt-2 text-[14.5px] leading-[1.55] text-ink-60">{body}</dd>
-    </div>
+    <Container as="section" width={1000} className="pt-[72px] text-center">
+      <div className="edge inline-flex max-w-full items-center gap-[10px] whitespace-nowrap rounded-full bg-white py-[5px] pl-[5px] pr-[14px] text-[13.5px] text-muted">
+        <span className="rounded-full bg-ink px-[9px] py-[3px] font-mono text-[11px] font-medium tracking-[0.06em] text-white">NEW</span>
+        <span className="overflow-hidden text-ellipsis">
+          <Copy k="badge" />
+        </span>
+      </div>
+      <h1 className="display-tight mt-6 text-[clamp(46px,7vw,86px)]">Are you BotReady?</h1>
+      <p className="mx-auto mt-5 max-w-[50ch] text-[18.5px] leading-[1.55] text-muted">
+        <Copy k="heroSub" />
+      </p>
+      <div className="mt-9">
+        <HeroScanCard />
+      </div>
+    </Container>
+  );
+}
+
+function Problem() {
+  return (
+    <Container as="section" width={1000} className="pt-14">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-6">
+        <ChatProof />
+        <div className="pt-2">
+          <Eyebrow>The problem [01]</Eyebrow>
+          <h2 className="display mt-3 text-[clamp(28px,3.4vw,40px)] leading-[1.08] tracking-[-0.03em]">
+            <Copy k="whyTitle" />
+          </h2>
+          <p className="mt-[14px] text-[16.5px] leading-[1.6] text-muted">
+            <Copy k="whyBody" />
+          </p>
+          <ul className="m-0 mt-5 grid list-none gap-[10px] p-0">
+            {([0, 1, 2] as const).map((i) => (
+              <li key={i} className="flex items-start gap-[11px] text-[15.5px] leading-[1.5] text-ink">
+                <span aria-hidden="true" className="mt-2 h-[6px] w-[6px] flex-none rounded-full bg-violet" />
+                <span>
+                  <CopyItem k="whyPoints" i={i} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Container>
+  );
+}
+
+function BrowserVsAgent() {
+  return (
+    <Container as="section" className="pt-[76px]">
+      <div className="mx-auto max-w-[620px] text-center">
+        <Eyebrow>The problem [02]</Eyebrow>
+        <h2 className="display mt-3 text-[clamp(30px,4vw,46px)] leading-[1.06] tracking-[-0.03em]">Same URL, same second, two different answers</h2>
+      </div>
+
+      <div className="mt-9 grid grid-cols-[repeat(auto-fit,minmax(340px,1fr))] gap-[22px]">
+        {/* A browser-chrome card rendering a plausible product page. An example. */}
+        <Card radius="card-lg" shadow={4} className="overflow-hidden">
+          <div className="flex items-center gap-2 border-b-2 border-ink bg-chip-bg px-[14px] py-[11px]">
+            <span aria-hidden="true" className="h-[10px] w-[10px] rounded-full bg-[#E0655A]" />
+            <span aria-hidden="true" className="h-[10px] w-[10px] rounded-full bg-[#E6B84F]" />
+            <span aria-hidden="true" className="h-[10px] w-[10px] rounded-full bg-[#69B98A]" />
+            <span className="edge ml-2 flex-1 rounded-[7px] bg-white px-[10px] py-1 font-mono text-[11.5px] text-subtle-2">yoursite.com</span>
+          </div>
+          <div className="px-5 pb-6 pt-[22px]">
+            <div className="mb-[18px] flex items-center justify-between">
+              <span className="display text-[15px]">Yoursite</span>
+              <span className="flex gap-3 text-[11.5px] text-subtle-2">
+                <span>Product</span>
+                <span>Pricing</span>
+                <span>Docs</span>
+              </span>
+            </div>
+            <div className="display text-[22px] leading-[1.15]">Plan the week, not the backlog</div>
+            <p className="mt-2 text-[12.5px] leading-[1.55] text-muted">
+              A tracker for teams of five who would rather ship than groom tickets. Free for your first five people.
+            </p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[
+                ['Free', '5 people'],
+                ['$8', 'per seat'],
+                ['$14', 'business'],
+              ].map(([price, unit]) => (
+                <div key={price} className="rounded-[10px] border border-hairline-3 p-[10px]">
+                  <div className="font-body text-[13px] font-semibold">{price}</div>
+                  <div className="mt-[2px] text-[10.5px] text-subtle-2">{unit}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-[10px] border-t border-hairline bg-paper px-[18px] py-3">
+            <span className="font-mono text-[11.5px] font-medium tracking-[0.06em] text-green-text">200 OK · 9,240 readable characters</span>
+            <span className="font-mono text-[11.5px] text-subtle-2">chrome</span>
+          </div>
+        </Card>
+
+        <TerminalCard
+          title="ClaudeBot/1.0 — response"
+          footer={
+            <>
+              <span className="font-mono text-[11.5px] font-medium tracking-[0.06em] text-coral-dark">403 · 312 readable characters</span>
+              <span className="font-mono text-[11.5px] text-on-ink-muted">claudebot</span>
+            </>
+          }
+        >
+          {/* The blank line before "(nothing readable)" lives inside a text node
+              that also carries visible text, so it is not collapsed. */}
+          <pre className="overflow-auto px-5 py-[22px] font-mono text-[12.5px] leading-[1.85]">
+            <span>{'GET / HTTP/1.1\nHost: yoursite.com\nUser-Agent: ClaudeBot/1.0\n'}</span>
+            <span>{'\nHTTP/1.1 '}</span>
+            <span className="text-coral-dark">403 Forbidden</span>
+            <span>{'\nserver: cloudflare\n'}</span>
+            <span className="text-coral-dark">cf-mitigated: challenge</span>
+            <span className="text-on-ink-muted">{'\n\n(nothing readable)'}</span>
+          </pre>
+        </TerminalCard>
+      </div>
+      <p className="mx-auto mt-[22px] max-w-[60ch] text-center text-[15.5px] text-muted">
+        <Copy k="agentNote" />
+      </p>
+    </Container>
+  );
+}
+
+function WhyAeo() {
+  return (
+    <Container as="section" id="aeo" className="pt-20">
+      <div className="mx-auto max-w-[640px] text-center">
+        <Eyebrow>Why AEO matters [03]</Eyebrow>
+        <h2 className="display mt-3 text-[clamp(30px,4vw,46px)] leading-[1.06] tracking-[-0.03em]">Answer engines are the new front door</h2>
+        <p className="mt-3 text-[16.5px] leading-[1.6] text-muted">Three things change for a startup the day buyers start asking instead of searching.</p>
+      </div>
+      <div className="mt-[34px] grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[18px]">
+        <Card radius="panel" shadow={5} lift className="p-6">
+          <div className="edge grid gap-[9px] rounded-[14px] bg-canvas p-4">
+            <div className="flex flex-wrap gap-2">
+              {['Linear', 'Height', 'Shortcut'].map((name) => (
+                <span key={name} className="edge rounded-full bg-lime px-[11px] py-[3px] font-mono text-[12px] font-bold">
+                  {name}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-[9px]">
+              <span className="rounded-full border-2 border-dashed border-coral bg-white px-[11px] py-[3px] font-mono text-[12px] font-bold text-coral-text line-through">
+                yoursite
+              </span>
+              <span className="anim-blink font-mono text-[11.5px] text-subtle-2">not retrieved</span>
+            </div>
+          </div>
+          <h3 className="display mb-2 mt-[18px] text-[19px]">The shortlist forms without you</h3>
+          <p className="text-[15px] leading-[1.55] text-muted">
+            Every prompt in your category ends with three names. BotReady gets you into that list by fixing the one thing keeping you out: whether the assistant can read you at all.
+          </p>
+        </Card>
+
+        <Card radius="panel" shadow={5} lift className="p-6">
+          <div className="edge flex items-center justify-center rounded-[14px] bg-coral px-4 py-[22px]">
+            <span className="-rotate-[7deg] rounded-[10px] border-[3px] border-ink bg-white px-4 py-2 font-mono text-[30px] font-bold text-ink shadow-hard-3">403</span>
+          </div>
+          <h3 className="display mb-2 mt-[18px] text-[19px]">Nobody chose the block</h3>
+          <p className="text-[15px] leading-[1.55] text-muted">
+            One default firewall rule shut out every AI client at once, and it has been costing you answers ever since. Thirty seconds tells you whether it is you.
+          </p>
+        </Card>
+
+        <Card radius="panel" shadow={5} lift className="p-6">
+          <div className="edge grid gap-2 rounded-[14px] bg-violet p-4">
+            {FIX_FILES.map((name, i) => (
+              <div key={name} className="anim-rise edge rounded-[9px] bg-white px-[11px] py-[6px] font-mono text-[12.5px] font-medium text-ink" style={{ ['--i' as string]: i }}>
+                {name}
+              </div>
+            ))}
+          </div>
+          <h3 className="display mb-2 mt-[18px] text-[19px]">The fix is four files</h3>
+          <p className="text-[15px] leading-[1.55] text-muted">No rebuild, no migration, no engineer for a week. Upload what we generate and re-run the check.</p>
+        </Card>
+      </div>
+    </Container>
+  );
+}
+
+const STEPS = [
+  { n: '01', title: 'Paste your URL' },
+  { n: '02', title: 'See what each one got' },
+  { n: '03', title: 'Ship the fix pack' },
+] as const;
+
+const STATS = [
+  { n: '5', label: 'AI clients requested per scan' },
+  { n: '21', label: 'checks, each with a published weight' },
+  { n: '30s', label: 'from URL to a shareable result page' },
+  { n: '0', label: 'code you have to write' },
+] as const;
+
+function TheCheck() {
+  return (
+    <Container as="section" className="pt-20">
+      <Card surface="ink" radius="panel-lg" shadow="violet-7" className="p-6 sm:p-11">
+        <div className="mx-auto max-w-[600px] text-center">
+          <PillEyebrow>The check [04]</PillEyebrow>
+          <h2 className="display mt-3 text-[clamp(28px,3.6vw,42px)] leading-[1.07] tracking-[-0.03em] text-on-ink-light">
+            <Copy k="stepsTitle" />
+          </h2>
+        </div>
+        <div className="mt-[34px] grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-[18px]">
+          {STEPS.map((step, i) => (
+            <Card key={step.n} radius="card-lg" shadow="lime-4" lift className="p-6">
+              <span className="edge inline-block rounded-[8px] bg-lime px-[9px] py-[2px] font-mono text-[12px] font-bold">{step.n}</span>
+              <h3 className="display mb-2 mt-[13px] text-[19px]">{step.title}</h3>
+              <p className="text-[14.5px] leading-[1.6] text-muted">
+                <CopyItem k="steps" i={i as 0 | 1 | 2} />
+              </p>
+            </Card>
+          ))}
+        </div>
+        <dl className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-[18px] border-t-2 border-ink-2 pt-7">
+          {STATS.map((s) => (
+            <div key={s.label}>
+              <dt className="sr-only">{s.label}</dt>
+              <dd className="display m-0 text-[36px] tracking-[-0.03em] text-lime">{s.n}</dd>
+              <dd className="m-0 mt-[5px] text-[13.5px] leading-[1.45] text-on-ink-label">{s.label}</dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
+    </Container>
+  );
+}
+
+function ClosingCta() {
+  return (
+    <Container as="section" className="pb-[100px] pt-20">
+      <div className={cx('edge rounded-[26px] bg-white px-6 py-[52px] text-center sm:px-10')}>
+        <h2 className="display text-[clamp(30px,4.2vw,50px)] leading-[1.05] tracking-[-0.03em]">So — are you BotReady?</h2>
+        <p className="mx-auto mt-[14px] max-w-[46ch] text-[16.5px] leading-[1.55] text-muted">
+          <Copy k="ctaBody" />
+        </p>
+        <Button href="/#check" tone="ink" size="lg" shadow={3} weight={700} className="mt-[26px] px-7 text-[16px]">
+          Run the free check
+        </Button>
+      </div>
+    </Container>
   );
 }

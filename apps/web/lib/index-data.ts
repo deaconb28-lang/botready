@@ -28,6 +28,8 @@ export interface IndexRow {
   /** How many of the agent clients were refused, and how many were asked. */
   refused: { count: number; of: number } | null;
   jsRatio: number | null;
+  /** The previous finished scan's total, for the change column. Null when there is only one. */
+  previousTotal: number | null;
   rank: number;
 }
 
@@ -50,7 +52,55 @@ export async function loadIndex(segment: SegmentKey): Promise<IndexView> {
   if (error) throw new Error(`Could not read the index: ${error.message}`);
 
   const rows = (data ?? []).map(toRow);
-  return rank(segment, rows);
+  const previous = await previousTotals(rows.map((r) => r.siteId), rows.map((r) => r.scanId));
+  return rank(
+    segment,
+    rows.map((r) => ({ ...r, previousTotal: previous.get(r.siteId) ?? null })),
+  );
+}
+
+/**
+ * The total of each site's second most recent complete scan, so the index can
+ * print the change since last time. Two queries for the whole segment rather
+ * than one per row.
+ */
+async function previousTotals(siteIds: string[], latestScanIds: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (siteIds.length === 0) return out;
+  const supabase = publicClient();
+  const latest = new Set(latestScanIds);
+
+  const { data: scans } = await supabase
+    .from('scans')
+    .select('id, site_id, finished_at')
+    .in('site_id', siteIds)
+    .eq('status', 'complete')
+    .order('finished_at', { ascending: false });
+
+  const previousBySite = new Map<string, string>();
+  for (const raw of scans ?? []) {
+    const row = raw as { id: string; site_id: string };
+    if (latest.has(row.id) || previousBySite.has(row.site_id)) continue;
+    previousBySite.set(row.site_id, row.id);
+  }
+  if (previousBySite.size === 0) return out;
+
+  const { data: scores } = await supabase
+    .from('scores')
+    .select('scan_id, total, created_at')
+    .in('scan_id', [...previousBySite.values()])
+    .order('created_at', { ascending: false });
+
+  const totalByScan = new Map<string, number>();
+  for (const raw of scores ?? []) {
+    const row = raw as { scan_id: string; total: number };
+    if (!totalByScan.has(row.scan_id)) totalByScan.set(row.scan_id, row.total);
+  }
+  for (const [siteId, scanId] of previousBySite) {
+    const total = totalByScan.get(scanId);
+    if (typeof total === 'number') out.set(siteId, total);
+  }
+  return out;
 }
 
 /** Pure, so the ordering rule is testable without a database. */
@@ -105,5 +155,6 @@ function toRow(raw: Record<string, unknown>): Omit<IndexRow, 'rank'> {
     categoryScores: (raw.category_scores as Record<CategoryKey, number> | null) ?? null,
     refused,
     jsRatio: raw.js_ratio === null || raw.js_ratio === undefined ? null : Number(raw.js_ratio),
+    previousTotal: null,
   };
 }

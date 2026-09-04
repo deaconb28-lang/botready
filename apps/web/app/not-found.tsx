@@ -1,30 +1,35 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { Footer, Measure, Nav, Shell } from '@/components/primitives';
-import { ScanForm } from '@/components/ScanForm';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { Button, Container } from '@/components/ui';
+
+export const metadata: Metadata = { title: 'Not found' };
 
 export default function NotFound() {
   return (
-    <Shell>
-      <Nav />
-      <Measure as="main" className="pb-14 pt-10">
-        <p id="main" className="label text-fail">
-          HTTP/1.1 404 Not Found
+    <div className="min-h-dvh bg-canvas">
+      <SiteHeader />
+      <Container as="main" id="main" width={760} className="pb-24 pt-14">
+        <span className="eyebrow text-subtle-2">HTTP 404</span>
+        <h1 className="display-tight mt-3 text-[clamp(38px,6vw,68px)]">Nothing at this address.</h1>
+        <p className="mt-4 max-w-[52ch] text-[17px] leading-[1.6] text-muted">
+          The page you asked for does not exist, or the scan it pointed at has gone. A result page keeps its address, so if you had a link to one, it was never here.
         </p>
-        <h1 className="display-hero mt-4 max-w-[18ch] text-[40px] sm:text-[60px]">There is nothing at this URL.</h1>
-        <p className="mt-5 max-w-[56ch] text-[16px] text-ink-60">
-          If you followed a link to a scan, the id was wrong or the scan was never created. Run a new
-          check, or start from{' '}
-          <Link href="/index/saas" className="underline">
-            the index
-          </Link>
-          .
-        </p>
-        <div className="max-w-[560px]">
-          <ScanForm />
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button href="/" tone="ink" size="lg" shadow={3}>
+            Run a check
+          </Button>
+          <Button href="/index/saas" tone="white" size="lg">
+            Browse the index
+          </Button>
         </div>
-      </Measure>
-      <Footer />
-    </Shell>
+        <p className="mt-6 font-mono text-[12.5px] text-subtle-2">
+          Looking for the crawler docs? <Link href="/bot">/bot</Link>.
+        </p>
+      </Container>
+      <SiteFooter />
+    </div>
   );
 }

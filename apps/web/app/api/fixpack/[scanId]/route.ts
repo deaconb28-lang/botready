@@ -61,6 +61,7 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
     '',
     ...pack.files.map((f) => `- \`${f.name}\` — ${f.purpose}${f.incomplete ? ' (incomplete: see the note inside)' : ''}`),
     '- `punch-list.md` — what to do, ordered by effort rather than by points.',
+    '- `botready-fixes.md` — a full prompt for your coding agent. Paste it into Claude Code or Cursor.',
     '',
     'Re-run the check after each change rather than after all of them.',
     `https://botready.dev/scan/${scanId}`,
@@ -75,6 +76,7 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
       content: punchListMarkdown(pack.domain, pack.punchList),
       modified: generatedAt,
     },
+    { name: 'botready-fixes.md', content: pack.agentPrompt, modified: generatedAt },
   ]);
 
   return new Response(Buffer.from(archive), {

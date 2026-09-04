@@ -1,100 +1,119 @@
 /* botready.dev design tokens.
    Imported once in apps/web/app/globals.css.
 
-   Colour maps to HTTP status classes and that mapping is load-bearing.
-   Do not add a colour that does not mean something.
+   The system is hard-edged: every card, chip, button, input and toggle carries
+   a 2px ink border, and elevation is a hard offset shadow with no blur. There
+   are no soft shadows anywhere. Colour is semantic and the semantics are
+   written next to each value; do not add a colour that does not mean
+   something.
 
-   The three faces are loaded through next/font in app/layout.tsx rather than an
-   @import of fonts.googleapis.com. Same faces, same width axis, but self-hosted
-   from our own origin, so the first paint does not wait on a third party and
-   .dev's HSTS preload has nothing to negotiate. --font-archivo and its two
-   siblings are the variables next/font defines. */
+   Text on coral, lime, amber, teal and pink is always ink. Text on violet and
+   green is always white. The contrast test in apps/web/__tests__ measures the
+   pairs the components actually use.
+
+   The three faces are loaded through next/font in app/layout.tsx rather than
+   an @import of fonts.googleapis.com, so the first paint does not wait on a
+   third party. --font-familjen and its two siblings are the variables
+   next/font defines. */
 
 @theme {
   /* surfaces */
-  --color-ink:        #16181C;
-  --color-ink-60:     #5C6069;   /* 5.01:1 on paper: the lightest readable text */
-  /* 2.10:1 on paper. Never text. Meter segments, hairline dividers and the
-     input prefix only, and rule 7 below says so. */
-  --color-ink-30:     #9AA0A6;
-  --color-paper:      #E4E6E1;   /* cool ash, deliberately not cream */
-  --color-card:       #F4F5F2;
-  --color-rule:       #C6C9C1;
-  --color-sheet:      #D6D9D2;   /* one step darker than paper, for page gutters */
+  --color-canvas:       #EDEBFB;   /* page background, lavender */
+  --color-surface:      #FFFFFF;   /* cards, panels, inputs */
+  --color-surface-alt:  #F6F5FE;   /* inset fields, muted panels */
+  --color-paper:        #FCFCFA;   /* card footers, hover rows */
+  --color-chip-bg:      #F1F1EC;   /* browser chrome, the active input tab */
+  --color-header:       #F7F7F4;   /* the sticky header, at 88% over canvas */
 
-  /* status classes.
+  /* ink */
+  --color-ink:          #111318;   /* text, every border, every hard shadow */
+  --color-ink-2:        #2A2D38;   /* rules inside dark panels */
+  --color-ink-3:        #1B2027;   /* terminal title bars */
+  --color-ink-4:        #262C34;   /* terminal rules */
+  --color-body:         #3F4450;   /* body copy on light surfaces */
+  --color-muted:        #5A646F;   /* secondary copy */
+  /* Three greys, all darkened from the handoff's values so that mono metadata
+     at 11.5-13px clears WCAG AA on every light surface it sits on. The hue is
+     unchanged; only lightness moved. apps/web/__tests__/contrast.test.ts
+     measures each pair, and BUILD-PLAN.md records why. */
+  --color-subtle:       #666B7A;   /* mono labels, metadata (was #8B90A0, 3.30:1) */
+  --color-subtle-2:     #646978;   /* mono labels on the marketing site (was #8A929B) */
+  --color-placeholder:  #646978;   /* input prefixes, table headers (was #A0A7AE, 2.43:1) */
+  --color-quiet:        #5F6474;   /* sidebar metadata */
 
-     Two of these are a shade darker than the values in the original palette,
-     and the reason is measured rather than aesthetic. Against --color-paper,
-     the surface almost every piece of text in this product sits on:
+  /* brand */
+  --color-violet:       #4B44F5;   /* primary, links, feature panels */
+  --color-violet-tint:  #EFEEFE;   /* violet chip backgrounds */
+  --color-violet-chip:  #E8E6FE;   /* the fix chip */
+  --color-violet-rule:  #6A64F7;   /* rules inside violet panels */
+  --color-on-violet:    #E4E2FE;   /* secondary text on violet (was #D7D5FD, 4.30:1) */
+  --color-on-violet-2:  #C9C6FB;   /* marquee text on violet */
 
-                     was     now    WCAG AA needs 4.5:1
-       --color-warn  3.16    4.62   #B4702A -> #8F5921
-       --color-fail  4.43    4.61   #C2321F -> #BD311E
-       --color-pass  4.79    4.79   unchanged, already passed
+  /* states. lime is pass and the active nav; coral is fail and the C- grade;
+     amber is warn. */
+  --color-lime:         #C6F53C;
+  --color-lime-tint:    #F6FDE6;
+  --color-coral:        #FF6B5A;
+  --color-coral-tint:   #FFE3DE;
+  --color-coral-text:   #B23C1F;   /* fail copy on light surfaces */
+  --color-coral-dark:   #FF8A6B;   /* fail copy on ink */
+  --color-amber:        #FFCF5C;
+  --color-amber-tint:   #FFF9EA;
+  --color-amber-text:   #8A6D1F;
+  --color-green:        #1F7A47;   /* the post-fix A, a healthy domain (was #2E9B5E: white on it measured 3.52:1) */
+  --color-green-tint:   #E9FBD2;
+  --color-green-text:   #357A19;   /* pass copy on light surfaces (was #3F8F1E, 4.07:1) */
 
-     Both were darkened by scaling toward black, which moves lightness and
-     leaves the hue where it was, so amber still reads as amber and the status
-     mapping is untouched. See the note in BUILD-PLAN.md. */
-  --color-pass:       #1F6F5C;   /* 2xx */
-  --color-warn:       #8F5921;   /* 3xx */
-  --color-fail:       #BD311E;   /* 4xx */
-  --color-server:     #5B3A7E;   /* 5xx */
-  --color-fail-dark:  #F0705C;   /* 4xx on the ink background only, 6.07:1 there */
-  --color-ink-key:    #8E948C;   /* header-block key names on the ink surface, 5.73:1 */
-  --color-ink-seg:    #3A3D42;   /* empty meter segments on the ink surface */
+  /* categories */
+  --color-teal:         #7ED9C3;   /* actionability */
+  --color-teal-tint:    #EFFAF7;
+  --color-pink:         #F2A0D8;   /* freshness */
+  --color-pink-tint:    #FDF0F9;
+  --color-coral-tint-2: #FFF1EF;   /* retrievability card */
+
+  /* rules and dividers */
+  --color-rule:         #EFEEFA;   /* row dividers inside bordered cards */
+  --color-hairline:     #EFEFEA;   /* 1px hairlines on the marketing site */
+  --color-hairline-2:   #F3F3EE;
+  --color-hairline-3:   #E9E9E3;
+  --color-hairline-4:   #E4E4DE;
+  --color-divider:      #D9D6F4;   /* the "or" divider on sign-in */
+  --color-dashed:       #A6A2E8;   /* the empty-slot card */
+
+  /* on ink */
+  --color-on-ink:       #C9D1DA;   /* terminal body text */
+  --color-on-ink-2:     #D9DEE5;
+  --color-on-ink-3:     #D7D5FD;   /* code viewer text */
+  --color-on-ink-muted: #7E8894;   /* metadata on the ink surface */
+  --color-on-ink-soft:  #A7B0BA;
+  --color-on-ink-label: #8A929B;
+  --color-on-ink-light: #F2F4F7;
 
   /* type */
-  --font-display:  var(--font-archivo), system-ui, sans-serif;
-  --font-body:     var(--font-instrument-sans), system-ui, sans-serif;
-  --font-data:     var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-display: var(--font-familjen), system-ui, sans-serif;
+  --font-body:    var(--font-public-sans), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains-mono), ui-monospace, monospace;
 
-  /* scale */
-  --text-hero:     3.25rem;   /* landing h2, wdth 108, weight 800 */
-  --text-grade:    4.875rem;  /* the grade letter, wdth 122, weight 800 */
-  --text-h2:       1.875rem;
-  --text-h3:       1.3125rem;
-  --text-body:     0.9375rem;
-  --text-data:     0.84375rem;
-  --text-micro:    0.78125rem;
+  /* shape */
+  --radius-chip:   9px;
+  --radius-btn:    10px;
+  --radius-card:   14px;
+  --radius-card-lg: 16px;
+  --radius-panel:  18px;
+  --radius-panel-lg: 20px;
+  --radius-pill:   99px;
 
-  --radius-card:   6px;
-  --radius-pill:   3px;
+  /* elevation: hard, offset, no blur */
+  --shadow-hard-2: 2px 2px 0 #111318;
+  --shadow-hard-3: 3px 3px 0 #111318;
+  --shadow-hard-4: 4px 4px 0 #111318;
+  --shadow-hard-5: 5px 5px 0 #111318;
+  --shadow-hard-6: 6px 6px 0 #111318;
+  --shadow-hard-7: 7px 7px 0 #111318;
+  --shadow-violet-4: 4px 4px 0 #4B44F5;
+  --shadow-violet-5: 5px 5px 0 #4B44F5;
+  --shadow-violet-7: 7px 7px 0 #4B44F5;
+  --shadow-lime-4: 4px 4px 0 #C6F53C;
+  --shadow-lime-6: 6px 6px 0 #C6F53C;
+  --shadow-none: none;
 }
-
-/* Rules the components must follow.
-
-   1. Display face is Archivo and appears only in: the landing headline, the
-      grade letter, the index heading, and the share card. Nowhere else.
-
-   2. Every URL, status code, user agent, header, byte count and character
-      count is set in --font-data. A status code in a proportional face reads
-      as a number rather than a status, which is wrong here.
-
-   3. Archivo's width axis carries emphasis instead of italics or colour:
-        wdth 106  hero at mobile
-        wdth 108  hero at desktop
-        wdth 112  section headings
-        wdth 118  index heading
-        wdth 122  grade letter on the result page
-        wdth 124  grade letter on the share card
-
-   4. No percentage donuts, rings or radial gauges. The score is a 20-segment
-      horizontal meter beneath the grade letter, and category subscores are
-      10-segment meters. Segments read as discrete measurements, which is what
-      a check list is.
-
-   5. The grade block is always the ink background with paper text, styled as
-      an HTTP response. It is the only inverted surface on the result page, so
-      it needs no border or shadow to stand out.
-
-   6. Findings carry a 3px left border in the status colour. Severity is never
-      communicated by background fill, because a wall of tinted cards makes the
-      worst finding indistinguishable from the third worst.
-
-   7. --color-ink-30 and --color-rule are never used for text. They measure
-      2.10:1 and 1.33:1 against paper, which is fine for a meter segment and
-      unreadable for a word. The lightest text colour is --color-ink-60. On the
-      inverted grade block the readable pair is --color-ink-key at 5.73:1.
-      apps/web/__tests__/contrast.test.ts asserts all of this.
-*/

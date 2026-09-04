@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
-import { CompleteResult, UnscoredResult, formatUtc } from '@/components/ScanResult';
-import { ButtonLink, Footer, Nav, Shell } from '@/components/primitives';
+import { ResultsView, UnscoredView } from '@/components/results/ResultsView';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { SiteHeader } from '@/components/site/SiteHeader';
 import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
 import { loadScanView } from '@/lib/scan-data';
 import { absoluteUrl } from '@/lib/site';
+import { relativeTime } from '@/lib/theme';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,42 +53,32 @@ export default async function ScanPage({ params }: PageProps) {
     redirect(`/scan/live?id=${id}`);
   }
 
-  const checkedAt = formatUtc(scan.finished_at ?? scan.created_at);
+  const checkedLabel = `scanned ${relativeTime(scan.finished_at ?? scan.created_at)}`;
   const user = await currentUser();
   const owned = user ? await hasFixpackEntitlement(user.id) : false;
 
   return (
-    <Shell>
-      <Nav action={<ButtonLink href="/" size="sm">Check another site</ButtonLink>} />
-
-      <main id="main" className="pb-14">
+    <div className="min-h-dvh bg-canvas">
+      <SiteHeader />
+      <main id="main">
         {score ? (
-          <CompleteResult
-            id={id}
+          <ResultsView
+            scanId={id}
             domain={site.domain}
             url={scan.url}
-            checkedAt={checkedAt}
+            checkedLabel={checkedLabel}
             score={score}
             results={results}
             findings={view.findings}
-            passing={view.passing}
             pagesCrawled={scan.pages_crawled}
             scannerVersion={scan.scanner_version}
             owned={owned}
           />
         ) : (
-          <UnscoredResult
-            domain={site.domain}
-            url={scan.url}
-            checkedAt={checkedAt}
-            status={scan.status}
-            message={scan.error_message}
-            results={results}
-          />
+          <UnscoredView domain={site.domain} url={scan.url} checkedLabel={checkedLabel} status={scan.status} message={scan.error_message} results={results} />
         )}
       </main>
-
-      <Footer />
-    </Shell>
+      <SiteFooter />
+    </div>
   );
 }

@@ -14,7 +14,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/scan/live', '/app'],
+        // The app and the account area are a person's own workspace, and the
+        // preview routes render fixtures rather than measurements. Everything
+        // else a person can read, a crawler can read.
+        disallow: ['/api/', '/scan/live', '/app', '/account', '/claim', '/preview'],
       },
     ],
     sitemap: `${SITE.origin}/sitemap.xml`,
