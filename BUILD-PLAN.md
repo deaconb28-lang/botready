@@ -310,3 +310,25 @@ level up. The public URL is still `/index/[segment]` as the plan says; the
 route lives in `app/ranking/[segment]` with a rewrite from `/index/:segment`
 and a permanent redirect back from `/ranking/:segment`, so exactly one URL
 is reachable. ISR at one hour is unchanged.
+
+### First live scan, and the four things it found
+
+The pipeline ran end to end on 2026-09-04: the web app accepted the
+scan, QStash delivered it to Railway with a valid signature, the worker
+crawled example.com and wrote 21 evidence rows, and the result page and
+share card rendered a D at 44. Getting there took four fixes that no local
+test could have surfaced, all pushed:
+
+1. A route directory literally named `index` breaks the Vercel build. The
+   ranking lives in `app/ranking/` with a rewrite from `/index/:segment`.
+2. QStash tokens are regional. `QSTASH_URL` now travels with the token.
+3. QStash forbids a colon in a deduplication id. It is `scan-<uuid>` now.
+4. Node 22's autoSelectFamily asks the pinned lookup for an array of
+   addresses. The old bare-string answer failed every real fetch with
+   "Invalid IP address: undefined". The scan tests missed it because their
+   fixture is addressed by IP literal, which skips the lookup entirely.
+
+Two configuration facts worth keeping: Supabase's direct connection host is
+IPv6 only and Railway cannot reach it, so the worker must use the session
+pooler; and Supabase's newer `sb_publishable_` / `sb_secret_` keys are
+accepted under their own names.
