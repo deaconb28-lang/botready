@@ -48,6 +48,8 @@ for 20%) disagree, and those are the six checks that matter most.
 
 This is the single most damaging thing on the list, because it is the one a
 sceptical engineer will find first, on the page we invite them to argue with.
+**Closed by S1**, which is why the numbers above no longer describe the live
+site; they are kept as the record of what was wrong.
 
 ### 2. Thresholds are cliffs, and the cliff is worth four points
 
@@ -137,19 +139,6 @@ Verified: all five fixtures score exactly what they scored before, and a test
 asserts for every check that its published number equals what the findings list
 prints, that they sum to 100 across the catalog, and that they sum to each
 category's weight within it.
-
-Rescale each category's points so they sum to that category's weight. This is
-provably a no-op on every score: a category's score is `earned / available`,
-which is scale-invariant, and the category weights are untouched. Retrievability
-becomes 12.9 / 7.9 / 2.1 / 2.1 instead of 18 / 11 / 3 / 3; the other five
-categories mostly already satisfy this. After it, "points" means "of the final
-100" everywhere, `pointsLost` agrees with the catalog by construction, and the
-weights page and the result page stop contradicting each other.
-
-Add a `rationale` string to every check and category — one or two sentences on
-why this is measured and why it is worth what it is worth, including "this is a
-first guess pending the calibration in S5" where that is the honest answer.
-Publish it on `/what-we-check` under each check.
 
 **Done:** `packages/core/__tests__/effective-points.test.ts` asserts the
 equality for every check, the sum to 100, the sum to each weight, and that
