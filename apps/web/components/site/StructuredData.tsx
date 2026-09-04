@@ -27,7 +27,7 @@ const ORGANISATION = {
   '@id': `${SITE.origin}/#organization`,
   name: 'BotReady',
   url: SITE.origin,
-  logo: absoluteUrl('/icon.svg'),
+  logo: absoluteUrl('/logo.svg'),
   email: CRAWLER_EMAIL,
   description: 'Measures how legible a website is to AI agents, and generates the files that fix what it finds.',
 };

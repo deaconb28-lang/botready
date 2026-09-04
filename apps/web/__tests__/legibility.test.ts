@@ -33,7 +33,7 @@ const OTHER_SERVED_PATHS = new Set([
   '/.well-known/ai-plugin.json',
   '/sitemap.xml',
   '/robots.txt',
-  '/icon.svg',
+  '/logo.svg',
   '/index/saas',
   '/index/devtools',
   '/index/ecommerce',

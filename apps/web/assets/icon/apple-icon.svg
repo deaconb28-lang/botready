@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <title>BotReady</title>
+  <!--
+    The same mark for iOS, without the rounded rectangle and without the ink
+    border: the home screen applies its own mask and its own shadow, so a
+    rounded tile inside a rounded mask reads as a sticker of an icon. Violet to
+    the edges, and the glyph sized for a large target rather than a small one.
+  -->
+  <rect width="180" height="180" fill="#4B44F5"/>
+  <g fill="none" stroke="#C6F53C" stroke-width="19" stroke-linecap="round">
+    <path d="M52 40V137"/>
+    <circle cx="101" cy="107" r="29"/>
+  </g>
+</svg>

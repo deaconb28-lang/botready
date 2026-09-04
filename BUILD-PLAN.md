@@ -571,3 +571,29 @@ we have not measured (`[MEASURE]` markers fail the build's own warning if they
 survive), and nothing claims a high score causes citation, because we do not
 have that evidence and saying so would be the exact failure the product exists
 to argue against.
+
+## The favicon
+
+There was not one. The tab was showing whatever the browser makes up.
+
+It is the header's mark — a violet tile with a lime lowercase `b` — but drawn
+as a stem and a bowl rather than set in JetBrains Mono. A favicon cannot wait
+on a web font, and the type would be a smudge at 16 pixels regardless. What the
+drawing buys is control over the two things that decide whether it reads: the
+stroke weight, and how much violet is left around the glyph. Both were tuned
+against a rendered contact sheet at 16, 32, 48 and 64, and then against a mock
+tab strip, because 16px is the size that actually matters and the only way to
+judge it is to look at it at 16px.
+
+`scripts/build-icons.mjs` (`pnpm icons`) derives the rest from the two source
+SVGs: the `.ico` at 16, 32 and 48 — packed with PNG entries, which is how every
+icon since Vista is built and is why there is no BMP encoder in that file — and
+the 180px Apple touch icon from a second source that drops the rounded tile and
+the ink border, since iOS applies its own mask and a rounded rectangle inside a
+rounded mask reads as a sticker of an icon. The outputs are committed, so no
+build needs a browser.
+
+One collision worth recording: the logo the JSON-LD and the agent manifests
+point at used to be `public/icon.svg`, and `app/icon.svg` claims that same URL
+through Next's own convention. Two files answering to one path is a trap for
+whoever edits one of them, so the logo moved to `/logo.svg`.

@@ -16,6 +16,7 @@
     "db:push": "node scripts/db-push.mjs",
     "db:migrate": "node scripts/db-migrate.mjs",
     "seed:index": "node scripts/seed-index.mjs",
+    "icons": "node scripts/build-icons.mjs",
     "audit:ui": "pnpm --filter @botready/tools audit:ui"
   },
   "devDependencies": {

@@ -71,7 +71,7 @@ function aiPluginManifest() {
     description_for_model: agent.description_for_model,
     auth: { type: 'none' },
     api: { type: 'openapi', url: agent.api.url },
-    logo_url: absoluteUrl('/icon.svg'),
+    logo_url: absoluteUrl('/logo.svg'),
     contact_email: agent.contact_email,
     legal_info_url: agent.legal_info_url,
   };

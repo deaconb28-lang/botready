@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>BotReady</title>
+  <!--
+    The header's mark, drawn rather than set: a favicon cannot wait on a web
+    font, and JetBrains Mono's lowercase b at 16 pixels would be a smudge
+    anyway.
+
+    Sized for the smallest place it appears rather than the largest. The stroke
+    is thinner and the glyph smaller than the same mark set in type, because at
+    16 pixels the counter is three pixels across and the violet around the
+    glyph is what stops the whole thing reading as a filled blob.
+  -->
+  <rect x="1" y="1" width="30" height="30" rx="8.5" fill="#4B44F5" stroke="#111318" stroke-width="2"/>
+  <g fill="none" stroke="#C6F53C" stroke-width="3.4" stroke-linecap="round">
+    <path d="M9.3 8V24.3"/>
+    <circle cx="17.6" cy="19.3" r="5"/>
+  </g>
+</svg>

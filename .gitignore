@@ -12,3 +12,6 @@ coverage/
 .vercel
 test-results/
 playwright-report/
+
+# Intermediate frames from scripts/build-icons.mjs; the packed .ico is committed.
+apps/web/assets/icon/.ico-*.png
