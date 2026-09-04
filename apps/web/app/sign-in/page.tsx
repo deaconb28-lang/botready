@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+
+import { pageMetadata } from '@/lib/metadata';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -7,10 +9,7 @@ import { currentUser, safeNext } from '@/lib/auth';
 import { PLAN_LIMITS } from '@/lib/site';
 import { SignInForm } from './SignInForm';
 
-export const metadata: Metadata = {
-  title: 'Sign in',
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = pageMetadata('/sign-in', { robots: { index: false, follow: false } });
 
 export const dynamic = 'force-dynamic';
 

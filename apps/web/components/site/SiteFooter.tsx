@@ -28,6 +28,7 @@ export function SiteFooter() {
           </div>
           <div className="grid content-start gap-[9px]">
             <span className="font-mono text-[11px] font-medium tracking-[0.12em] text-placeholder">FOR DEVELOPERS</span>
+            <Link href="/docs">API and docs</Link>
             <Link href="/bot">Our crawler</Link>
             <Link href="/what-we-check#weights">Published weights</Link>
             <a href={`mailto:${CRAWLER_EMAIL}`}>{CRAWLER_EMAIL}</a>

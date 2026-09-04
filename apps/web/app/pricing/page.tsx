@@ -1,17 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { PricingStructuredData } from '@/components/site/StructuredData';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, DashConnector, GradeTile, PillEyebrow, TerminalLine, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
+import { pageMetadata } from '@/lib/metadata';
 import { PRICING } from '@/lib/site';
 
-export const metadata: Metadata = {
-  title: 'Pricing',
-  description: 'The diagnosis is free. The files are not. A one-time fix pack and monthly monitoring.',
-  alternates: { canonical: '/pricing' },
-};
+export const metadata: Metadata = pageMetadata('/pricing');
 
 interface Tier {
   eyebrow: string;
@@ -72,6 +70,7 @@ const TIERS: Tier[] = [
 export default function PricingPage() {
   return (
     <div className="min-h-dvh bg-canvas">
+      <PricingStructuredData />
       <SiteHeader />
       <Container as="main" id="main" width={1100} className="pb-24 pt-14">
         <div className="text-center">

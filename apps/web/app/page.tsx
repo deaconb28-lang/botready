@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 
+import { HomeStructuredData } from '@/components/site/StructuredData';
+import { pageMetadata } from '@/lib/metadata';
+
 import { AgentRace } from '@/components/home/AgentRace';
 import { BotScene } from '@/components/bot/BotScene';
 import { ChatProof } from '@/components/home/ChatProof';
@@ -10,16 +13,12 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, Eyebrow, PillEyebrow, TerminalCard, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
 
-export const metadata: Metadata = {
-  title: 'Are you BotReady?',
-  description:
-    'We request your page as five different clients, compare what each one gets back, and hand you the exact files that fix the gaps.',
-  alternates: { canonical: '/' },
-};
+export const metadata: Metadata = pageMetadata('/');
 
 export default function HomePage() {
   return (
     <div className="min-h-dvh overflow-x-hidden bg-canvas">
+      <HomeStructuredData />
       <SiteHeader />
       <main id="main">
         <Hero />

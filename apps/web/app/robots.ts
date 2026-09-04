@@ -13,7 +13,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        // The share card lives under /api/, and a social crawler that obeys the
+        // disallow below would otherwise skip the one thing it came for.
+        allow: ['/', '/api/og/'],
         // The app and the account area are a person's own workspace, and the
         // preview routes render fixtures rather than measurements. Everything
         // else a person can read, a crawler can read.

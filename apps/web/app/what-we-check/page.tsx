@@ -2,16 +2,17 @@ import type { Metadata } from 'next';
 
 import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
+import { ArticleStructuredData } from '@/components/site/StructuredData';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Card, Container, Eyebrow, PageTitle, cx } from '@/components/ui';
+import { pageFor } from '@/lib/content';
+import { pageMetadata } from '@/lib/metadata';
 import { CATEGORY_PAINT } from '@/lib/theme';
 
-export const metadata: Metadata = {
-  title: 'What we check',
-  description: `The full check catalog and the weights, published. ${catalog.checks.length} checks across ${catalog.categories.length} categories, scoring version ${catalog.scoringVersion}.`,
-  alternates: { canonical: '/what-we-check' },
-};
+export const metadata: Metadata = pageMetadata('/what-we-check');
+
+const PAGE = pageFor('/what-we-check')!;
 
 const MAX_WEIGHT = Math.max(...catalog.categories.map((c) => c.weight));
 const TOTAL_POINTS = catalog.categories.reduce((sum, c) => sum + c.weight, 0);
@@ -28,6 +29,7 @@ function formatPoints(value: number): string {
 export default function WhatWeCheckPage() {
   return (
     <div className="min-h-dvh bg-canvas">
+      <ArticleStructuredData path="/what-we-check" headline={PAGE.title} description={PAGE.description} updated={PAGE.updated} />
       <SiteHeader />
       <Container as="main" id="main" width={960} className="pb-24 pt-14">
         <PageTitle eyebrow={`Scoring v${catalog.scoringVersion}`} size="xl">

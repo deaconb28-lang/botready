@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
 
+import { ArticleStructuredData } from '@/components/site/StructuredData';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { BotScene } from '@/components/bot/BotScene';
 import { Card, Container, PageTitle, cx } from '@/components/ui';
+import { pageFor } from '@/lib/content';
+import { pageMetadata } from '@/lib/metadata';
 import { CRAWLER_EMAIL, LIMITS, ROBOTS_TOKEN, USER_AGENT } from '@/lib/site';
 
-export const metadata: Metadata = {
-  title: 'Our crawler',
-  description: `What ${USER_AGENT} requests, how to block it, and what it never does.`,
-  alternates: { canonical: '/bot' },
-};
+export const metadata: Metadata = pageMetadata('/bot');
+
+const PAGE = pageFor('/bot')!;
 
 const REQUESTS = [
   'GET /robots.txt — first, always. If it disallows us, the scan ends here.',
@@ -35,6 +36,7 @@ const NOT_DO = [
 export default function CrawlerPage() {
   return (
     <div className="min-h-dvh bg-canvas">
+      <ArticleStructuredData path="/bot" headline={PAGE.title} description={PAGE.description} updated={PAGE.updated} />
       <SiteHeader />
       <Container as="main" id="main" width={820} className="pb-24 pt-14">
         {/* The title spans the full measure: "BotreadyBot/1.0" cannot wrap, and
