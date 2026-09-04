@@ -152,3 +152,29 @@ describe('the development allowlist', () => {
     });
   });
 });
+
+describe('pinnedLookup', () => {
+  it('answers a Node 22 autoSelectFamily lookup, which asks for every address', async () => {
+    // The socket names a host, so Node consults the lookup, and with
+    // autoSelectFamily at its default it passes `all: true` and expects an
+    // array. Answering with a bare string here made every production scan fail
+    // with "Invalid IP address: undefined".
+    const { createServer, get } = await import('node:http');
+    const { pinnedLookup } = await import('./guard');
+    const server = createServer((_req, res) => res.end('ok'));
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const port = (server.address() as { port: number }).port;
+    const lookup = pinnedLookup({ url: 'http://localhost/', hostname: 'localhost', address: '127.0.0.1', family: 4 });
+    try {
+      const status = await new Promise<number>((resolve, reject) => {
+        get({ host: 'localhost', port, path: '/', lookup }, (res) => {
+          res.resume();
+          resolve(res.statusCode ?? 0);
+        }).on('error', reject);
+      });
+      expect(status).toBe(200);
+    } finally {
+      server.close();
+    }
+  });
+});

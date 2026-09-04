@@ -240,7 +240,19 @@ const defaultResolver: Resolver = async (hostname) => {
  * gap between them.
  */
 export function pinnedLookup(target: PinnedTarget): LookupFunction {
-  return (_hostname, _options, callback) => {
+  return (_hostname, options, callback) => {
+    // Node 20+ connects with autoSelectFamily on by default, and in that mode
+    // the socket asks the lookup for every address (`all: true`) and expects an
+    // array back. Answering with a bare string there makes Node read
+    // `addresses[0].address` off a string and fail with "Invalid IP address:
+    // undefined", which is what a scan on Railway did. Honour both shapes.
+    if (typeof options === 'object' && options !== null && options.all) {
+      (callback as unknown as (err: null, addresses: Array<{ address: string; family: number }>) => void)(
+        null,
+        [{ address: target.address, family: target.family }],
+      );
+      return;
+    }
     callback(null, target.address, target.family);
   };
 }
