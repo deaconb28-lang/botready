@@ -28,8 +28,8 @@ export const LIMITS = {
 } as const;
 
 export const PRICING = {
-  fixpack: { amount: 17, currency: 'usd', label: '$17', cadence: 'one time' },
-  monitor: { amount: 7, currency: 'usd', label: '$7', cadence: 'per month' },
+  fixpack: { amount: 15, currency: 'usd', label: '$15', cadence: 'one time' },
+  monitor: { amount: 5, currency: 'usd', label: '$5', cadence: 'per month' },
 } as const;
 
 /**

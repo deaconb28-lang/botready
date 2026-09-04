@@ -398,14 +398,16 @@ that says what to do instead. The prototype's `C−`/`B+` grades became `A` to
 
 **Three things in the handoff were deliberately not built.** The header's
 "Landing page" and "Mobile" pills were a known gap in the prototype and are
-removed rather than faked. The app's "$17" and "11 files" are computed from
+removed rather than faked. The app's price and file count are computed from
 `PRICING` and the real pack. The "Cancel plan" button opens the Stripe customer
 portal rather than cancelling directly, because the portal is what Stripe
 expects to own that decision.
 
-**The old prices in the plan were wrong.** The handoff sells the fix pack at
-$17 and monitoring at $7; `lib/site.ts` said $99 and $29. The handoff wins,
-and the Stripe price IDs in the environment must match.
+**The prices moved twice.** The handoff sells the fix pack at $17 and
+monitoring at $7 against the plan's original $99 and $29; you then set them to
+$15 and $5. Both numbers live once, in `PRICING` in `lib/site.ts`, and every
+screen and receipt line reads them from there. The Stripe price IDs in the
+environment must match.
 
 **The scanner needs a redeploy and the database needs the migration.** Page
 detail is empty until a scan runs on 1.1.0, and the account and app pages
