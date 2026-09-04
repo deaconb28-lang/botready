@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 
 import { Cursor, Mark, PillEyebrow } from '@/components/ui';
 import { currentUser, safeNext } from '@/lib/auth';
+import { authProviders } from '@/lib/auth-providers';
 import { PLAN_LIMITS } from '@/lib/site';
 import { SignInForm } from './SignInForm';
 
@@ -43,6 +44,10 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   const user = await currentUser();
   if (user) redirect(next);
 
+  // Asked rather than assumed: the provider is a Supabase dashboard setting and
+  // a button that leads to its raw JSON 400 is worse than no button.
+  const providers = await authProviders();
+
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <main id="main" className="grid flex-1 items-stretch grid-cols-[repeat(auto-fit,minmax(360px,1fr))]">
@@ -60,19 +65,23 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
             {/* The button stays white on hover and lifts instead. The G is
                 Google's mark, and it may not be recoloured or set on a colour
                 of ours — the lime hover this used to have put it on lime. */}
-            <a
-              href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-              className="edge lift flex w-full cursor-pointer items-center justify-center gap-3 rounded-[12px] bg-white p-[15px] font-body text-[15.5px] font-bold text-ink no-underline shadow-hard-4 transition-all duration-150"
-            >
-              <GoogleMark />
-              Continue with Google
-            </a>
+            {providers.google ? (
+              <>
+                <a
+                  href={`/api/auth/google?next=${encodeURIComponent(next)}`}
+                  className="edge lift flex w-full cursor-pointer items-center justify-center gap-3 rounded-[12px] bg-white p-[15px] font-body text-[15.5px] font-bold text-ink no-underline shadow-hard-4 transition-all duration-150"
+                >
+                  <GoogleMark />
+                  Continue with Google
+                </a>
 
-            <div className="my-[22px] flex items-center gap-3" aria-hidden="true">
-              <span className="h-[2px] flex-1 bg-divider" />
-              <span className="font-mono text-[12px] text-subtle">or</span>
-              <span className="h-[2px] flex-1 bg-divider" />
-            </div>
+                <div className="my-[22px] flex items-center gap-3" aria-hidden="true">
+                  <span className="h-[2px] flex-1 bg-divider" />
+                  <span className="font-mono text-[12px] text-subtle">or</span>
+                  <span className="h-[2px] flex-1 bg-divider" />
+                </div>
+              </>
+            ) : null}
 
             <SignInForm next={next} initialError={error ?? null} />
           </div>
