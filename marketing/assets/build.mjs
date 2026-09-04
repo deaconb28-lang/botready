@@ -327,7 +327,7 @@ emit(
 const PH = { w: 1270, h: 760 };
 
 emit(
-  'ph-01-thumbnail',
+  'ph-01-cover',
   PH.w,
   PH.h,
   [
@@ -843,6 +843,140 @@ for (const [w, h] of [
 }
 
 // ------------------------------------------------------------------ write
+
+// ------------------------------------------------- 6. the two launch channels
+//
+// Sizes the platforms actually ask for, which the compositions above do not
+// cover: Product Hunt wants a square thumbnail beside a 1270x760 gallery, and
+// X wants a 1500x500 header and 16:9 in-stream images.
+
+/**
+ * Product Hunt's thumbnail. 240x240, and it is rendered at about 60px in the
+ * feed — so it is the mark and one word, and nothing else survives that size.
+ */
+emit(
+  'ph-thumbnail',
+  240,
+  240,
+  [
+    `<rect width="240" height="240" fill="${C.violet}"/>`,
+    // The favicon's b, scaled. Drawn rather than set: at 60px a webfont's
+    // lowercase b is a smudge, and the counter has to stay a hole.
+    `<g fill="none" stroke="${C.lime}" stroke-width="21" stroke-linecap="round">`,
+    `<path d="M74 52V176"/>`,
+    `<circle cx="139" cy="140" r="35"/>`,
+    `</g>`,
+  ].join(''),
+);
+
+/**
+ * The X header. 1500x500, but the profile picture covers the bottom-left and
+ * the bio crowds the bottom edge, so everything lives in the right two thirds
+ * and vertically centred — the only part of this canvas that is reliably seen.
+ */
+emit(
+  'x-header',
+  1500,
+  500,
+  [
+    ground(1500, 500),
+    // Two codes at the left, clear of the avatar, which sits below the frame.
+    card({ x: 96, y: 150, w: 200, h: 92, r: 14, fill: C.lime, shadow: 5 }),
+    text({ x: 196, y: 214, s: '200', size: 62, family: DISPLAY, weight: 700, anchor: 'middle', tracking: -2 }),
+    card({ x: 96, y: 258, w: 200, h: 92, r: 14, fill: C.coral, shadow: 5 }),
+    text({ x: 196, y: 322, s: '403', size: 62, family: DISPLAY, weight: 700, anchor: 'middle', tracking: -2 }),
+    display({ x: 360, y: 228, lines: ['Same site. Same second.'], size: fit(['Same site. Same second.'], 1040, 64) }),
+    text({ x: 360, y: 286, s: 'The free check for whether AI agents can read your site.', size: 26, family: BODY, fill: C.muted }),
+    text({ x: 360, y: 330, s: 'botready.dev', size: 26, family: MONO, weight: 500, fill: C.violet }),
+  ].join(''),
+);
+
+/** In-stream images for the launch thread. 16:9, which is what X crops to. */
+function xPost(lines, sub, body) {
+  const w = 1600;
+  const h = 900;
+  return [
+    ground(w, h),
+    wordmark({ x: 88, y: 108, size: 30 }),
+    display({ x: 88, y: 260, lines, size: fit(lines, w - 176, 84) }),
+    text({ x: 88, y: 260 + fit(lines, w - 176, 84) * (lines.length - 1) * 1.02 + 70, s: sub, size: 30, family: BODY, fill: C.muted }),
+    body ?? '',
+  ].join('');
+}
+
+emit(
+  'x-post-curl',
+  1600,
+  900,
+  xPost(
+    ['Do it in your own', 'terminal. Three lines.'],
+    'A user agent is all it takes to find this.',
+    [
+      card({ x: 88, y: 520, w: 1424, h: 300, r: 20, fill: C.ink, shadow: 6, shadowColor: C.violet, stroke: C.ink }),
+      text({ x: 124, y: 580, s: '$ curl -sI -A "Mozilla/5.0" yoursite.com | head -1', size: 30, family: MONO, fill: C.onInk }),
+      text({ x: 124, y: 624, s: 'HTTP/2 200', size: 30, family: MONO, weight: 700, fill: C.lime }),
+      text({ x: 124, y: 700, s: '$ curl -sI -A "ClaudeBot/1.0" yoursite.com | head -1', size: 30, family: MONO, fill: C.onInk }),
+      text({ x: 124, y: 744, s: 'HTTP/2 403', size: 30, family: MONO, weight: 700, fill: C.coral }),
+    ].join(''),
+  ),
+);
+
+emit(
+  'x-post-weights',
+  1600,
+  900,
+  xPost(
+    ['Every weight is', 'published.'],
+    'A score nobody can argue with is a horoscope.',
+    (() => {
+      const cats = [
+        ['RETR', 25, C.violet],
+        ['DISC', 20, C.lime],
+        ['REPR', 20, C.amber],
+        ['STRU', 15, C.coral],
+        ['ACTI', 15, '#3EC6C6'],
+        ['FRES', 5, '#F79ED0'],
+      ];
+      const x0 = 88;
+      const y0 = 520;
+      const w = 1424;
+      const hh = 300;
+      const bw = Math.floor((w - 60 - 5 * 20) / 6);
+      return [
+        card({ x: x0, y: y0, w, h: hh, r: 20, fill: C.ink, shadow: 6, shadowColor: C.violet, stroke: C.ink }),
+        ...cats.map(([label, weight, colour], i) => {
+          const bh = Math.round((weight / 25) * (hh - 110));
+          const bx = x0 + 30 + i * (bw + 20);
+          const by = y0 + hh - 56 - bh;
+          return [
+            `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="8" fill="${colour}" stroke="${C.lime}" stroke-width="2"/>`,
+            text({ x: bx + bw / 2, y: by - 14, s: `${weight}%`, size: 24, family: MONO, weight: 700, fill: C.onInk, anchor: 'middle' }),
+            text({ x: bx + bw / 2, y: y0 + hh - 24, s: label, size: 16, family: MONO, weight: 500, fill: C.onInkMuted, anchor: 'middle', tracking: 2 }),
+          ].join('');
+        }),
+      ].join('');
+    })(),
+  ),
+);
+
+emit(
+  'x-post-refusal',
+  1600,
+  900,
+  xPost(
+    ['We never work', 'around a block.'],
+    'No spoofed agents. No proxies. No captcha solving.',
+    [
+      card({ x: 88, y: 560, w: 700, h: 250, r: 20, fill: C.ink, shadow: 6, stroke: C.ink }),
+      text({ x: 124, y: 620, s: '# your robots.txt', size: 26, family: MONO, fill: C.onInkMuted }),
+      text({ x: 124, y: 672, s: 'User-agent: BotreadyBot', size: 30, family: MONO, fill: C.lime }),
+      text({ x: 124, y: 716, s: 'Disallow: /', size: 30, family: MONO, fill: C.lime }),
+      text({ x: 124, y: 770, s: 'and we stop. Every scan, forever.', size: 24, family: MONO, fill: C.onInkMuted }),
+      card({ x: 826, y: 560, w: 686, h: 250, r: 20, fill: C.coral, shadow: 6 }),
+      display({ x: 862, y: 640, lines: ['A number you', 'cheated to get is', 'worth nothing.'], size: 46 }),
+    ].join(''),
+  ),
+);
 
 mkdirSync(OUT, { recursive: true });
 for (const file of files) writeFileSync(join(OUT, `${file.name}.svg`), file.markup);

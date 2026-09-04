@@ -84,6 +84,7 @@ Two things we never say:
 | File | What is in it |
 |---|---|
 | `taglines.md` | The tagline bank, ranked, with where each one is cleared for use |
+| `launch-kit.md` | **Start here on the day.** X and Product Hunt, in the order you paste it, no alternates |
 | `product-hunt.md` | Listing, gallery, first comment, the replies to the five questions we will get |
 | `x.md` | The launch thread, thirty standalone posts, the reply bank |
 | `linkedin.md` | Founder post, company page, four follow-ups, comment starters |
