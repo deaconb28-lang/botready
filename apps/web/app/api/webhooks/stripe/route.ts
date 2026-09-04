@@ -6,6 +6,8 @@ import { claimOnce } from '@/lib/redis';
 import { serviceClient } from '@/lib/supabase';
 import { verifyWebhook } from '@/lib/stripe';
 import { sendFixpackReady } from '@/lib/email';
+import { assembleFixPack } from '@/lib/fixpack';
+import { loadScanView } from '@/lib/scan-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -96,7 +98,14 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
   if (outcome.granted && scanId) {
     // Best effort. A missing email is a support ticket; a failed webhook is a
     // retry that grants nothing and confuses everyone.
-    await sendFixpackReady({ to: email, scanId, domain }).catch(() => {});
+    // Build the pack here so the buyer gets the files in the message rather
+    // than a link they may not be able to sign in behind. A failure to build
+    // must not swallow the email: they paid, and a confirmation that never
+    // arrives is worse than one without its attachment.
+    const pack = await assembleForEmail(scanId);
+    await sendFixpackReady({ to: email, scanId, domain, pack }).catch((err) => {
+      console.error('[stripe] fix pack email failed', err);
+    });
   }
 
   return NextResponse.json({
@@ -148,4 +157,19 @@ async function domainFor(plan: Plan, reference: string): Promise<string | null> 
 function periodEndFor(session: Stripe.Checkout.Session): Date {
   const created = session.created ? new Date(session.created * 1000) : new Date();
   return new Date(created.getTime() + 31 * 24 * 3600 * 1000);
+}
+
+/**
+ * The pack for the purchase email, or null. Never throws: every failure here
+ * ends with the buyer getting an email that says the files are coming, which
+ * is recoverable, rather than with no email at all, which is not.
+ */
+async function assembleForEmail(scanId: string) {
+  try {
+    const view = await loadScanView(scanId);
+    return view ? assembleFixPack(view, scanId) : null;
+  } catch (err) {
+    console.error('[stripe] could not assemble the fix pack for', scanId, err);
+    return null;
+  }
 }

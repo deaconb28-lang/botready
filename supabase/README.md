@@ -21,8 +21,28 @@ phone and will act on it from a laptop.
 POST /functions/v1/send-email
 Authorization: Bearer <the user's access token>
 
-{ "template": "scan_result", "scanId": "…" }
+{ "template": "scan_result",  "scanId": "…" }   # the result, in your inbox
+{ "template": "fixpack_link", "scanId": "…" }   # send my fix pack again
 ```
+
+### Where the fix pack actually comes from
+
+Not here. The buyer gets the files **attached to the purchase email**, sent by
+the Stripe webhook in the web app — `sendFixpackReady` in
+`apps/web/lib/email.ts`, assembled by `assembleFixPack` in `lib/fixpack.ts`.
+
+That is deliberate, and it is not only about where the generator lives. The pack
+is built by `packages/core`, which is npm TypeScript this Deno runtime cannot
+import — but the deeper reason is that a link needs a session, sign-in is Google
+only, and a buyer whose Stripe address is not a Google account could pay and
+never reach what they bought. Attaching the files takes the account out of the
+path: the thing they paid for is in the message.
+
+`fixpack_link` is the second way in — "send it to me again" — and it emails the
+download URL to someone who has already bought it. It checks the entitlement
+with the service role rather than through RLS, because the answer decides
+whether an email goes out at all, and a policy that quietly returns no rows
+looks identical to "you have not bought this".
 
 ### The two rules
 

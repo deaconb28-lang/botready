@@ -53,7 +53,7 @@ const SITE = 'https://www.botready.dev';
 /** Per person, per hour. They can only mail themselves, so this guards quota. */
 const LIMIT_PER_HOUR = 5;
 
-type TemplateKey = 'scan_result';
+type TemplateKey = 'scan_result' | 'fixpack_link';
 
 interface Body {
   template?: unknown;
@@ -109,8 +109,8 @@ export default {
     }
 
     const template = body.template;
-    if (template !== 'scan_result') {
-      return problem(400, 'Unknown template. The only one is "scan_result".');
+    if (template !== 'scan_result' && template !== 'fixpack_link') {
+      return problem(400, 'Unknown template. They are "scan_result" and "fixpack_link".');
     }
 
     const scanId = typeof body.scanId === 'string' ? body.scanId.trim() : '';
@@ -147,7 +147,26 @@ export default {
     // ------------------------------------------------------------- send
     const domain = (scan as { sites?: { domain?: string } | null }).sites?.domain ?? 'your site';
     const link = `${SITE}/scan/${scanId}`;
-    const message = scanResult(domain, link);
+
+    // The fix pack is behind a purchase, so this template checks for one. The
+    // check is a service-role read rather than RLS because the answer decides
+    // whether an email goes out at all, and a policy that silently returns no
+    // rows would look exactly like "you have not bought it".
+    if (template === 'fixpack_link') {
+      const { data: paid } = await admin
+        .from('entitlements')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('plan', 'fixpack')
+        .limit(1)
+        .maybeSingle();
+      if (!paid) {
+        return problem(403, 'There is no fix pack on this account for that scan.');
+      }
+    }
+
+    const message =
+      template === 'fixpack_link' ? fixpackLink(domain, `${SITE}/api/fixpack/${scanId}`, link) : scanResult(domain, link);
 
     let resend: Response;
     try {
@@ -210,6 +229,40 @@ function scanResult(domain: string, link: string): { subject: string; text: stri
 </div></body></html>`;
 
   return { subject, text: lines.join('\n'), html };
+}
+
+/**
+ * A link rather than the files. The generator lives in packages/core, which is
+ * npm TypeScript the Deno runtime here cannot import, so the pack itself is
+ * attached by the web app at purchase time — see sendFixpackReady in
+ * apps/web/lib/email.ts. This is the "send it to me again" path, and it points
+ * at the download the buyer is already entitled to.
+ */
+function fixpackLink(domain: string, download: string, result: string): { subject: string; text: string; html: string } {
+  const subject = `Your BotReady fix pack for ${domain}`;
+  const text = [
+    `The fix pack for ${domain} is here:`,
+    '',
+    download,
+    '',
+    'It is generated fresh from your most recent scan each time you open it, so it',
+    'is never out of date with the site it describes.',
+    '',
+    `The result it came from: ${result}`,
+    '',
+    '— botready.dev',
+  ].join('\n');
+
+  const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#EDEBFB;font:16px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#111318">
+<div style="max-width:520px;margin:0 auto;background:#fff;border:2px solid #111318;border-radius:16px;padding:28px">
+<p style="margin:0 0 16px">The fix pack for <strong>${escapeHtml(domain)}</strong> is here:</p>
+<p style="margin:0 0 20px"><a href="${escapeHtml(download)}" style="display:inline-block;background:#4B44F5;color:#fff;font-weight:700;text-decoration:none;border:2px solid #111318;border-radius:12px;padding:13px 20px">Download the fix pack</a></p>
+<p style="margin:0 0 16px;color:#4A4A57">It is generated fresh from your most recent scan each time you open it, so it is never out of date with the site it describes.</p>
+<p style="margin:0 0 16px;color:#4A4A57"><a href="${escapeHtml(result)}" style="color:#4B44F5">The result it came from</a></p>
+<p style="margin:0;color:#6B6B7B;font:13px ui-monospace,monospace">botready.dev</p>
+</div></body></html>`;
+
+  return { subject, text, html };
 }
 
 /** The domain comes from the database, but it started life as user input. */
