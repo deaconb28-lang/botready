@@ -248,6 +248,27 @@ left join user_settings us on us.user_id = si.claimed_by
 where si.segment is not null
   and coalesce(us.show_in_index, true);
 
+-- ---------------------------------------------------------------- email
+
+-- One row per email the send-email edge function has sent, for the rate limit
+-- and so "did that email go?" can be answered without asking the provider.
+create table email_sends (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users (id) on delete cascade,
+  template    text not null,
+  provider_id text,
+  created_at  timestamptz not null default now()
+);
+
+create index email_sends_user_time_idx on email_sends (user_id, created_at desc);
+
+alter table email_sends enable row level security;
+
+-- Read your own; write nothing. The function inserts with the service role, so
+-- a client cannot forge a row to spend someone else's allowance.
+create policy email_sends_own on email_sends
+  for select using (auth.uid() = user_id);
+
 -- ---------------------------------------------------------------- claims
 
 -- A claim is proven, never asserted. The token is an HMAC over (user, domain)
