@@ -406,8 +406,24 @@ expects to own that decision.
 **The prices moved twice.** The handoff sells the fix pack at $17 and
 monitoring at $7 against the plan's original $99 and $29; you then set them to
 $15 and $5. Both numbers live once, in `PRICING` in `lib/site.ts`, and every
-screen and receipt line reads them from there. The Stripe price IDs in the
-environment must match.
+screen and receipt line reads them from there.
+
+**Payment links replaced the Checkout Sessions.** You supplied two live Stripe
+payment links, so both Buy buttons now redirect straight to them; the
+price-id path is still there and takes over when no link resolves. A payment
+link is a page Stripe hosts, which means it cannot carry our metadata, so the
+scan id (or the site id, for monitoring) travels as `client_reference_id` and
+the webhook reads it back. The webhook tells the two plans apart by the
+session's mode, since a payment link carries no `plan` key: a one-off payment
+is the fix pack, a subscription is monitoring. The links are public URLs, so
+they sit in `lib/site.ts` beside the prices rather than in the environment,
+overridable by `STRIPE_LINK_FIXPACK` and `STRIPE_LINK_MONITOR` for test mode,
+and anything that is not an https Stripe host is refused rather than
+redirected to.
+
+The webhook still needs `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` on
+Vercel, and the endpoint has to be pointed at `https://www.botready.dev/api/webhooks/stripe`.
+Without them a purchase completes at Stripe and grants nothing here.
 
 **The scanner needs a redeploy and the database needs the migration.** Page
 detail is empty until a scan runs on 1.1.0, and the account and app pages

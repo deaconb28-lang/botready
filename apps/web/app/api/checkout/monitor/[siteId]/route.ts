@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { currentUser } from '@/lib/auth';
 import { serverEnv } from '@/lib/env';
-import { absoluteUrl } from '@/lib/site';
+import { absoluteUrl, paymentLink } from '@/lib/site';
 import { stripe } from '@/lib/stripe';
 import { publicClient } from '@/lib/supabase';
 
@@ -10,10 +10,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/checkout/monitor/:siteId -> 303 to Stripe Checkout, subscription mode.
+ * GET /api/checkout/monitor/:siteId -> 303 to Stripe, for the subscription.
  *
- * Only for a site this person has claimed. The webhook's `checkout.session.completed`
- * grants the first period and `invoice.paid` extends it.
+ * Only for a site this person has claimed. The site id rides along as
+ * `client_reference_id` on the payment link, or in metadata on a Checkout
+ * Session; either way the webhook grants the first period and `invoice.paid`
+ * extends it.
  */
 export async function GET(_request: Request, context: { params: Promise<{ siteId: string }> }) {
   const { siteId } = await context.params;
@@ -34,10 +36,14 @@ export async function GET(_request: Request, context: { params: Promise<{ siteId
     return NextResponse.json({ error: `Claim ${row.domain} first. Monitoring is for a site you have proven you control.` }, { status: 403 });
   }
 
+  const link = paymentLink('monitor', siteId, user.email);
+  if (link) return NextResponse.redirect(link, { status: 303 });
+
   const session = await stripe().checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: serverEnv.stripePriceMonitor(), quantity: 1 }],
     customer_email: user.email,
+    client_reference_id: siteId,
     metadata: { plan: 'monitor', siteId, domain: row.domain },
     subscription_data: { metadata: { plan: 'monitor', siteId, domain: row.domain } },
     success_url: absoluteUrl(`/claim/${row.domain}?subscribed=1`),

@@ -68,9 +68,22 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
     return NextResponse.json({ received: true, handled: false, reason: 'no email on session' });
   }
 
-  const plan: Plan = session.metadata?.plan === 'monitor' ? 'monitor' : 'fixpack';
-  const scanId = session.metadata?.scanId ?? null;
-  const domain = session.metadata?.domain ?? null;
+  // A Checkout Session this code created says what it is in metadata. A
+  // payment link cannot: Stripe hosts that page and we never touch it, so the
+  // only things that come back are the session's mode and whatever we hung on
+  // `client_reference_id` when we sent the person there. Mode is the reliable
+  // discriminator — the fix pack is a one-off payment, monitoring is a
+  // subscription — and the reference is the scan or the site.
+  const plan: Plan = session.metadata?.plan === 'monitor' || session.mode === 'subscription' ? 'monitor' : 'fixpack';
+  const reference = session.client_reference_id ?? null;
+  let scanId = session.metadata?.scanId ?? (plan === 'fixpack' ? reference : null);
+  let domain = session.metadata?.domain ?? null;
+
+  // Fill in what the link could not carry, so the email names the right site.
+  if (!domain && reference) {
+    domain = await domainFor(plan, reference);
+  }
+  if (plan === 'monitor') scanId = null;
 
   const outcome = await grantEntitlement(supabaseStore(serviceClient()), {
     eventId,
@@ -115,6 +128,20 @@ async function handleRenewal(invoice: Stripe.Invoice, eventId: string) {
     granted: outcome.granted,
     duplicate: outcome.duplicate,
   });
+}
+
+/**
+ * The domain behind a `client_reference_id`: a scan id for the fix pack, a
+ * site id for monitoring. Best effort — it only decorates the email.
+ */
+async function domainFor(plan: Plan, reference: string): Promise<string | null> {
+  const supabase = serviceClient();
+  if (plan === 'monitor') {
+    const { data } = await supabase.from('sites').select('domain').eq('id', reference).maybeSingle();
+    return (data as { domain: string } | null)?.domain ?? null;
+  }
+  const { data } = await supabase.from('scans').select('sites(domain)').eq('id', reference).maybeSingle();
+  return (data as unknown as { sites: { domain: string } | null } | null)?.sites?.domain ?? null;
 }
 
 /** A month from checkout for a new subscription. The renewal invoice corrects it. */

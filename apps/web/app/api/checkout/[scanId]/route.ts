@@ -3,21 +3,26 @@ import { NextResponse } from 'next/server';
 import { currentUser } from '@/lib/auth';
 import { serverEnv } from '@/lib/env';
 import { loadScanView } from '@/lib/scan-data';
-import { absoluteUrl, PRICING } from '@/lib/site';
+import { absoluteUrl, PRICING, paymentLink } from '@/lib/site';
 import { stripe } from '@/lib/stripe';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/checkout/:scanId -> 303 to Stripe Checkout
+ * GET /api/checkout/:scanId -> 303 to Stripe
  *
  * A link rather than a form, so the button on the result page is an anchor and
- * works without JavaScript. The scan id travels in the session metadata, which
- * is how the webhook knows what was bought; the price is Stripe's, from the
- * configured price id, and never a number this code holds.
+ * works without JavaScript.
  *
- * No account is required to buy. Checkout collects the email, and the webhook
+ * Two ways to pay, and the payment link comes first because it needs no secret
+ * key and no API call: the scan id rides along as `client_reference_id`, which
+ * Stripe echoes on the completed session, and that is how the webhook knows
+ * which scan was bought. When no link is configured this falls back to a
+ * Checkout Session built from the price id, which carries the same facts in
+ * metadata.
+ *
+ * No account is required to buy. Stripe collects the email, and the webhook
  * turns it into a user and an entitlement.
  */
 export async function GET(_request: Request, context: { params: Promise<{ scanId: string }> }) {
@@ -36,10 +41,14 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
 
   const user = await currentUser();
 
+  const link = paymentLink('fixpack', scanId, user?.email);
+  if (link) return NextResponse.redirect(link, { status: 303 });
+
   const session = await stripe().checkout.sessions.create({
     mode: 'payment',
     line_items: [{ price: serverEnv.stripePriceFixpack(), quantity: 1 }],
     ...(user ? { customer_email: user.email } : {}),
+    client_reference_id: scanId,
     metadata: {
       scanId,
       domain: view.site.domain,

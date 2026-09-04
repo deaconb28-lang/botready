@@ -33,6 +33,47 @@ export const PRICING = {
 } as const;
 
 /**
+ * Stripe payment links.
+ *
+ * A payment link is a page Stripe hosts and we redirect to, rather than a
+ * Checkout Session this code creates. It is public by design — the URL is
+ * meant to be pasted into an email — so it lives here beside the prices
+ * rather than in the environment, and an env var overrides it when the same
+ * build is pointed at a test-mode link.
+ *
+ * What the link cannot carry, we carry ourselves: `client_reference_id` holds
+ * the scan or site the purchase is for, and the webhook reads it back. That is
+ * the whole reason these are not raw URLs in a template.
+ */
+export const PAYMENT_LINKS = {
+  fixpack: process.env.STRIPE_LINK_FIXPACK ?? 'https://buy.stripe.com/fZuaEWagy9pTfzFg7D0x208',
+  monitor: process.env.STRIPE_LINK_MONITOR ?? 'https://buy.stripe.com/6oU9ASewO1Xr4V12gN0x207',
+} as const;
+
+/**
+ * A payment link with the purchase attached to it. Stripe echoes
+ * `client_reference_id` on the completed session, which is how the webhook
+ * knows which scan was bought, and prefills the email so the receipt and the
+ * entitlement land on the same address.
+ *
+ * Refuses anything that is not one of Stripe's own hosted checkout hosts, so a
+ * mistyped environment variable cannot turn a "Buy" button into an open
+ * redirect.
+ */
+export function paymentLink(plan: keyof typeof PAYMENT_LINKS, reference: string, email?: string | null): string | null {
+  let url: URL;
+  try {
+    url = new URL(PAYMENT_LINKS[plan]);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || !['buy.stripe.com', 'checkout.stripe.com'].includes(url.hostname)) return null;
+  url.searchParams.set('client_reference_id', reference);
+  if (email) url.searchParams.set('prefilled_email', email);
+  return url.toString();
+}
+
+/**
  * What each plan allows. The account area prints these as "2 of 3", and the
  * monitor cron and the claim flow enforce them.
  */
