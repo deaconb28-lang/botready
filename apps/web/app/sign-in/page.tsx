@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 import { Cursor, Mark, PillEyebrow } from '@/components/ui';
 import { currentUser, safeNext } from '@/lib/auth';
 import { authProviders } from '@/lib/auth-providers';
-import { CRAWLER_EMAIL, PLAN_LIMITS } from '@/lib/site';
+import { CONTACT_EMAIL, PLAN_LIMITS } from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/sign-in', { robots: { index: false, follow: false } });
 
@@ -78,7 +78,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
               // leaving a panel with a heading and nothing under it.
               <p role="status" className="edge rounded-[12px] bg-amber-tint px-[15px] py-[14px] text-[15px] leading-[1.5] text-ink">
                 Sign-in is unavailable right now. Nothing is wrong with your account and nothing needs doing — try again
-                shortly, or write to <a href={`mailto:${CRAWLER_EMAIL}`}>{CRAWLER_EMAIL}</a> if it persists.
+                shortly, or write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> if it persists.
               </p>
             )}
 

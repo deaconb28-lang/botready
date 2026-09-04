@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { PUBLIC_PAGES, httpDate, markdownPathFor, newestUpdate } from '@/lib/content';
-import { CRAWLER_EMAIL, LIMITS, PRICING, SITE, USER_AGENT, absoluteUrl } from '@/lib/site';
+import { CONTACT_EMAIL, LIMITS, PRICING, SITE, USER_AGENT, absoluteUrl } from '@/lib/site';
 
 /**
  * The `.well-known` manifests, served through a rewrite because a route segment
@@ -27,7 +27,7 @@ function agentManifest() {
     description_for_model:
       'Scores a website on how readable it is to non-browser clients. POST a URL to /api/scan, poll GET /api/scan/{id} until settled is true, then read score.total and score.failedChecks.',
     url: SITE.origin,
-    contact_email: CRAWLER_EMAIL,
+    contact_email: CONTACT_EMAIL,
     legal_info_url: absoluteUrl('/bot'),
     api: {
       type: 'openapi',

@@ -10,7 +10,7 @@
 import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
 import { PUBLIC_PAGES, markdownPathFor, pageFor } from './content';
-import { CRAWLER_EMAIL, LIMITS, PRICING, SITE, USER_AGENT, absoluteUrl } from './site';
+import { CONTACT_EMAIL, LIMITS, PRICING, SITE, USER_AGENT, absoluteUrl } from './site';
 
 function heading(path: string): string[] {
   const page = pageFor(path);
@@ -151,7 +151,7 @@ function bot(): string {
     'Disallow: /',
     '```',
     '',
-    `We read that on every scan and stop. Questions: ${CRAWLER_EMAIL}.`,
+    `We read that on every scan and stop. Questions: ${CONTACT_EMAIL}.`,
     '',
   ].join('\n');
 }

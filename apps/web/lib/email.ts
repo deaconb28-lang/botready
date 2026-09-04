@@ -6,11 +6,13 @@
  */
 
 import { serverEnv } from './env';
-import { absoluteUrl, SITE } from './site';
+import { CONTACT_EMAIL, absoluteUrl, SITE } from './site';
 
-const FROM = `botready.dev <team@botready.dev>`;
+/** From lib/site.ts, so the address people are told to write to is the address
+ *  a reply actually reaches. These were separate literals once and drifted. */
+const FROM = `botready.dev <${CONTACT_EMAIL}>`;
 
-const REPLY_TO = 'team@botready.dev';
+const REPLY_TO = CONTACT_EMAIL;
 
 async function send(message: { to: string; subject: string; text: string }): Promise<void> {
   const key = serverEnv.resendApiKey();

@@ -40,7 +40,12 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-/** Matches apps/web/lib/email.ts. A reply is a support request; it must land. */
+/**
+ * The same address as CONTACT_EMAIL in apps/web/lib/site.ts, which is the
+ * source of truth. It is a literal here only because this runs in Deno and
+ * cannot import from the web app — if it changes there, change it here.
+ * A reply is a support request; it has to land somewhere.
+ */
 const FROM = 'botready.dev <team@botready.dev>';
 const REPLY_TO = 'team@botready.dev';
 const SITE = 'https://www.botready.dev';

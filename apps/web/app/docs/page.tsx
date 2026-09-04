@@ -9,7 +9,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Card, Container, Eyebrow, PageTitle, cx } from '@/components/ui';
 import { pageFor } from '@/lib/content';
 import { pageMetadata } from '@/lib/metadata';
-import { CRAWLER_EMAIL, LIMITS, SITE, USER_AGENT } from '@/lib/site';
+import { CONTACT_EMAIL, LIMITS, SITE, USER_AGENT } from '@/lib/site';
 
 const PAGE = pageFor('/docs')!;
 
@@ -124,7 +124,7 @@ export default function DocsPage() {
           {catalog.scoringVersion}.
         </P>
         <P className="mt-4">
-          Something wrong, or something missing from the API? <a href={`mailto:${CRAWLER_EMAIL}`}>{CRAWLER_EMAIL}</a> reaches somebody who
+          Something wrong, or something missing from the API? <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> reaches somebody who
           can change it.
         </P>
       </Container>

@@ -82,8 +82,16 @@ export const PLAN_LIMITS = {
   monitor: { domains: 3, scansPerMonth: 30 },
 } as const;
 
-/** The address on the crawler page and in the footer. */
-export const CRAWLER_EMAIL = 'crawler@botready.dev';
+/**
+ * The one address, everywhere. The footer, the crawler page, the docs, the
+ * sign-in fallback, the JSON-LD, the agent manifests, and the From and Reply-To
+ * on everything we send.
+ *
+ * One constant rather than a constant plus a few literals: the sender was
+ * hardcoded separately once, drifted to an address that did not exist, and mail
+ * from it went nowhere until someone noticed.
+ */
+export const CONTACT_EMAIL = 'team@botready.dev';
 
 /** The credit line in the footer. */
 export const CREDIT = { text: 'designed with love by Deacon Brantley @ itsdeacon.com', href: 'https://itsdeacon.com' };

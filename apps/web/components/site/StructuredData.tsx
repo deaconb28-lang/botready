@@ -1,6 +1,6 @@
 import { catalog } from '@botready/core';
 
-import { CRAWLER_EMAIL, PRICING, SITE, absoluteUrl } from '@/lib/site';
+import { CONTACT_EMAIL, PRICING, SITE, absoluteUrl } from '@/lib/site';
 
 /**
  * JSON-LD, server-rendered so a client that does not run JavaScript sees it.
@@ -28,7 +28,7 @@ const ORGANISATION = {
   name: 'BotReady',
   url: SITE.origin,
   logo: absoluteUrl('/logo.svg'),
-  email: CRAWLER_EMAIL,
+  email: CONTACT_EMAIL,
   description: 'Measures how legible a website is to AI agents, and generates the files that fix what it finds.',
 };
 

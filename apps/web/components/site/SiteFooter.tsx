@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { CRAWLER_EMAIL, CREDIT } from '@/lib/site';
+import { CONTACT_EMAIL, CREDIT } from '@/lib/site';
 
 export function SiteFooter() {
   return (
@@ -31,7 +31,7 @@ export function SiteFooter() {
             <Link href="/docs">API and docs</Link>
             <Link href="/bot">Our crawler</Link>
             <Link href="/what-we-check#weights">Published weights</Link>
-            <a href={`mailto:${CRAWLER_EMAIL}`}>{CRAWLER_EMAIL}</a>
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, TerminalLine } from '@/components/ui';
 import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
 import { loadScanView } from '@/lib/scan-data';
+import { CONTACT_EMAIL } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Purchase complete',
@@ -61,7 +62,7 @@ export default async function PurchasedPage({ params }: { params: Promise<{ id: 
           </div>
         </Card>
         <p className="mt-6 text-[14px] leading-[1.6] text-muted">
-          Something not right? Write to <Link href="mailto:crawler@botready.dev">crawler@botready.dev</Link> with the domain and we will sort it out.
+          Something not right? Write to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> with the domain and we will sort it out.
         </p>
       </Container>
       <SiteFooter />

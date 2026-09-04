@@ -7,7 +7,7 @@ import { BotScene } from '@/components/bot/BotScene';
 import { Card, Container, PageTitle, cx } from '@/components/ui';
 import { pageFor } from '@/lib/content';
 import { pageMetadata } from '@/lib/metadata';
-import { CRAWLER_EMAIL, LIMITS, ROBOTS_TOKEN, USER_AGENT } from '@/lib/site';
+import { CONTACT_EMAIL, LIMITS, ROBOTS_TOKEN, USER_AGENT } from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/bot');
 
@@ -108,7 +108,7 @@ export default function CrawlerPage() {
 
         <H2>Reaching us</H2>
         <P>
-          <a href={`mailto:${CRAWLER_EMAIL}`}>{CRAWLER_EMAIL}</a> reaches somebody who can change the crawler&rsquo;s behaviour. If we have
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> reaches somebody who can change the crawler&rsquo;s behaviour. If we have
           got something wrong about your site, that is worth knowing: a check that fires on a correctly configured site is our bug.
         </P>
       </Container>
