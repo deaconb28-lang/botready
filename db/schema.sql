@@ -16,7 +16,10 @@ create table sites (
   is_claimed    boolean not null default false,
   claimed_by    uuid references auth.users(id) on delete set null,
   claimed_at    timestamptz,
-  segment       text                             -- 'saas' | 'devtools' | 'ecommerce' | 'media' | null
+  segment       text,                            -- 'saas' | 'devtools' | 'ecommerce' | 'media' | null
+  -- Which of the three decided the segment. An inference drawn from a scan's
+  -- own evidence never overwrites a curated or owner-stated one.
+  segment_source text check (segment_source in ('seed', 'inferred', 'owner'))
 );
 
 create index sites_segment_idx on sites (segment) where segment is not null;

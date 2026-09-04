@@ -286,6 +286,33 @@
 .anim-cursor {
   animation: blinkStep 1.1s step-end infinite;
 }
+/* The skeleton fill, for the loading.tsx bodies. It breathes rather than
+   sweeps: a shimmer travelling across a dozen bars at once is more movement
+   than a 400ms wait deserves. */
+@keyframes br-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.skeleton {
+  background: var(--color-hairline);
+  border-radius: 6px;
+  animation: br-breathe 1.4s ease-in-out infinite;
+}
+
+/* The one spinner on the site. A ring with a bright quarter, turning. */
+@keyframes br-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.anim-spin {
+  animation: br-spin 0.72s linear infinite;
+}
 .anim-marquee {
   animation: marquee 26s linear infinite;
 }
@@ -534,6 +561,19 @@
   .br-scanline,
   .br-halo {
     display: none !important;
+  }
+
+  /* A frozen spinner reads as broken rather than as busy. The label beside it
+     already says what is happening, so the ring goes and the words stay. */
+  .anim-spin {
+    display: none !important;
+  }
+
+  /* The skeleton stays: it is the layout, not the animation, that says a page
+     is coming. It just stops breathing. */
+  .skeleton {
+    animation: none !important;
+    opacity: 0.7 !important;
   }
   .br-caret,
   .br-march-1,

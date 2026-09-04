@@ -17,17 +17,24 @@ export const maxDuration = 300;
 /**
  * GET /api/cron/nightly — re-scan the index cohort.
  *
- * Two hundred sites, spread across an hour so the worker never holds more than
+ * Up to COHORT sites, spread across an hour so the worker never holds more than
  * its concurrency cap: message i is delayed by i × SPREAD seconds and QStash
  * delivers it then. At a cap of 2 and thirty seconds a scan the worker drains
  * faster than the queue fills, so the window is set by the spread and not by
  * the worker, and the whole run finishes inside two hours whatever the worker
  * is doing.
  *
+ * The cohort is the stalest sites first and is capped, because it is no longer
+ * a fixed list: a site now joins the index the first time anyone scans it, so
+ * "every site with a segment" grows without limit and would eventually ask for
+ * a window longer than a night. Oldest-first means every site comes round, and
+ * the ones nobody has looked at in longest come round first.
+ *
  * Also sweeps for finished scans that have no score row yet and writes one,
  * which is what keeps the index view current if a result page was never opened.
  */
 const SPREAD_SECONDS = 20;
+const COHORT = 200;
 
 export async function GET(request: Request) {
   const auth = authoriseCron(request);
@@ -41,11 +48,15 @@ export async function GET(request: Request) {
 
   // ---------------------------------------------------------------- the cohort
 
+  // index_rows is exactly "sites in the ranking, with their latest finished
+  // scan", so it carries the staleness this needs to sort by. Reading it here
+  // rather than `sites` also means the cron and the page can never disagree
+  // about who is in the index.
   const { data: sites, error } = await supabase
-    .from('sites')
-    .select('id, domain')
-    .not('segment', 'is', null)
-    .order('domain');
+    .from('index_rows')
+    .select('site_id, domain, finished_at')
+    .order('finished_at', { ascending: true, nullsFirst: true })
+    .limit(COHORT);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -57,7 +68,7 @@ export async function GET(request: Request) {
     const domain = String(site.domain);
     const url = `https://${domain}/`;
     try {
-      const scanId = await createScan({ siteId: String(site.id), url, trigger: 'index' });
+      const scanId = await createScan({ siteId: String(site.site_id), url, trigger: 'index' });
       // The cache now points at tonight's scan, so a click from the index page
       // tomorrow lands on the fresh result rather than yesterday's.
       await rememberScan(domain, scanId, LIMITS.cacheHours, kv);
@@ -70,6 +81,8 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     queued: queued.length,
+    cohort: COHORT,
+    oldestFirst: sites?.[0]?.domain ?? null,
     failed,
     scoresWritten: swept,
     windowMinutes: Math.ceil(((sites?.length ?? 0) * SPREAD_SECONDS) / 60),

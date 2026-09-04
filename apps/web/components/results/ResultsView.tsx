@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { buildFixPack, catalog, type CheckResult, type Finding, type PerAgentFetch, type ScoreDetail } from '@botready/core';
 
 import { FindingsList } from './FindingsList';
+import { FixPackButton } from './FixPackButton';
 import { ClientPanel } from './ClientPanel';
 import { ReportHeader } from './ReportHeader';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
@@ -44,18 +45,23 @@ export function ResultsView({
   const pack = buildFixPack(domain, results);
   const errored = score.erroredChecks.length;
 
+  // Two of these on the page, on two different grounds. Violet on white is the
+  // loudest thing on the result; inside the violet panel it would disappear,
+  // so there it is lime.
   const action = fixture ? (
-    <Button href="/pricing" tone="ink" size="lg" className="text-[15px]">
+    <Button href="/pricing" tone="violet" size="lg" shadow="lime-6" weight={700} className="text-[15.5px]">
       Get the fix pack — {PRICING.fixpack.label}
     </Button>
-  ) : owned ? (
-    <a href={`/api/fixpack/${scanId}`} className="edge inline-flex items-center rounded-[12px] bg-lime px-[22px] py-[14px] font-body text-[15px] font-semibold text-ink no-underline shadow-hard-3 hover:bg-white">
-      Download the fix pack
-    </a>
   ) : (
-    <a href={`/api/checkout/${scanId}`} className="inline-flex items-center rounded-[12px] bg-ink px-[22px] py-[14px] font-body text-[15px] font-semibold text-white no-underline hover:bg-violet">
+    <FixPackButton scanId={scanId} owned={owned} />
+  );
+
+  const panelAction = fixture ? (
+    <Button href="/pricing" tone="lime" size="lg" shadow={4} weight={700} className="text-[15.5px]">
       Get the fix pack — {PRICING.fixpack.label}
-    </a>
+    </Button>
+  ) : (
+    <FixPackButton scanId={scanId} owned={owned} on="violet" />
   );
 
   return (
@@ -114,7 +120,7 @@ export function ResultsView({
               </div>
               <div className="grid min-w-[240px] gap-3">
                 <TerminalLine>$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
-                {action}
+                {panelAction}
               </div>
             </div>
           </Card>
@@ -157,9 +163,17 @@ function summaries(results: CheckResult[], findings: Finding[], score: ScoreDeta
     };
   }
   return {
-    plain: `${worst.headline} That is the biggest thing between you and a better grade.`,
+    // The headlines in finding-copy.ts are written without terminal
+    // punctuation, because most of the places they appear are their own line.
+    // Here one runs into the next sentence.
+    plain: `${sentence(worst.headline)} That is the biggest thing between you and a better grade.`,
     tech: `${worst.key} — ${worst.status}, costing ${worst.pointsLost} points. ${findings.length} ${findings.length === 1 ? 'check' : 'checks'} did not pass.`,
   };
+}
+
+/** End a headline so the sentence after it does not run into it. */
+function sentence(text: string): string {
+  return /[.!?]$/.test(text.trim()) ? text.trim() : `${text.trim()}.`;
 }
 
 function wordNumber(n: number): string {

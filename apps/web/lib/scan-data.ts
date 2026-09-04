@@ -9,6 +9,7 @@
  */
 
 import {
+  classifySegment,
   findings,
   passing,
   scoreDetail,
@@ -96,6 +97,40 @@ export async function persistScore(scanId: string, results: CheckResult[]): Prom
       },
       { onConflict: 'scan_id,scoring_version' },
     );
+
+  // A settled scan is also the only moment we know enough to file the site in
+  // the public index. Best effort: a score that is written and a segment that
+  // is not is a smaller problem than a score that is not written at all.
+  await inferSegment(scanId, results).catch(() => {});
+}
+
+/**
+ * File the site in a segment, if the scan's evidence is unambiguous enough to
+ * say. This is what lets a site anyone scanned appear in the ranking and get
+ * re-scanned by the nightly cron; without it `sites.segment` was only ever
+ * written by the seed script and the index listed the seed cohort forever.
+ *
+ * Only ever fills a blank. A segment set by the seed or stated by the owner is
+ * an answer from someone who knows, and an inference does not get to overrule
+ * it — including on every subsequent re-scan.
+ */
+async function inferSegment(scanId: string, results: CheckResult[]): Promise<void> {
+  const verdict = classifySegment(results);
+  if (!verdict) return;
+
+  const supabase = serviceClient();
+  const { data: scan } = await supabase.from('scans').select('site_id').eq('id', scanId).maybeSingle();
+  const siteId = (scan as { site_id?: string } | null)?.site_id;
+  if (!siteId) return;
+
+  const { data: site } = await supabase.from('sites').select('segment').eq('id', siteId).maybeSingle();
+  if ((site as { segment?: string | null } | null)?.segment) return;
+
+  await supabase
+    .from('sites')
+    .update({ segment: verdict.segment, segment_source: 'inferred' })
+    .eq('id', siteId)
+    .is('segment', null);
 }
 
 /** The most recent finished scan for a domain, for the index and the cache. */

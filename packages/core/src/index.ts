@@ -14,4 +14,5 @@ export * from './scoring';
 export * from './domain';
 export * from './addresses';
 export * from './findings';
+export * from './segment';
 export * from './remedies';

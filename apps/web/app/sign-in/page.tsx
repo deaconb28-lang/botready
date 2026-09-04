@@ -57,15 +57,14 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
               Sign in to see your domains, your score history and the alerts we have logged since your last visit.
             </p>
 
+            {/* The button stays white on hover and lifts instead. The G is
+                Google's mark, and it may not be recoloured or set on a colour
+                of ours — the lime hover this used to have put it on lime. */}
             <a
               href={`/api/auth/google?next=${encodeURIComponent(next)}`}
-              className="edge flex w-full cursor-pointer items-center justify-center gap-3 rounded-[12px] bg-white p-[15px] font-body text-[15.5px] font-bold text-ink no-underline shadow-hard-4 transition-colors duration-150 hover:bg-lime hover:text-ink"
+              className="edge lift flex w-full cursor-pointer items-center justify-center gap-3 rounded-[12px] bg-white p-[15px] font-body text-[15.5px] font-bold text-ink no-underline shadow-hard-4 transition-all duration-150"
             >
-              <span
-                aria-hidden="true"
-                className="inline-block h-5 w-5 flex-none rounded-full"
-                style={{ background: 'conic-gradient(#EA4335 0deg 90deg, #FBBC05 90deg 180deg, #34A853 180deg 270deg, #4285F4 270deg 360deg)' }}
-              />
+              <GoogleMark />
               Continue with Google
             </a>
 
@@ -102,5 +101,29 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         </aside>
       </main>
     </div>
+  );
+}
+
+/** Google's G, unmodified. Four paths, their colours, no recolouring. */
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true" className="h-5 w-5 flex-none" focusable="false">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
+    </svg>
   );
 }

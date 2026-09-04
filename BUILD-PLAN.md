@@ -597,3 +597,49 @@ One collision worth recording: the logo the JSON-LD and the agent manifests
 point at used to be `public/icon.svg`, and `app/icon.svg` claims that same URL
 through Next's own convention. Two files answering to one path is a trap for
 whoever edits one of them, so the logo moved to `/logo.svg`.
+
+## Three fixes after the first look at a real result
+
+**The paid button was the quietest thing on the page.** Plain ink, identical to
+"Run a check" in the header and to every other button on the site — on a page
+whose entire commercial argument is one button. It is violet on a hard lime
+shadow now, the only place either treatment is used, with the price in a chip
+rather than trailing the label as prose. Inside the violet fix-pack panel it
+flips to lime, because a violet button on violet is not a button.
+
+Both destinations redirect through a server route — checkout to Stripe, the
+download to a generated zip — so the click was followed by a wait with nothing
+on screen, which is how you get people clicking twice. It has a pending state
+now.
+
+**There were no loading boundaries at all.** Every page under /scan, /r, /index,
+/app and /account is force-dynamic and waits on Supabase, and not one had a
+`loading.tsx`, so a click sat on the old page until the new one arrived whole.
+Four skeletons now, in the shape of the page they precede. Two things they do
+not do: show a number, a grade or a domain — inventing one for 400ms and then
+replacing it is how a page ends up saying something untrue — and sit at
+/account, where the shell lives inside the page and a skeleton would flash a
+screen with no chrome. The app's went under `app/[domain]/` for the same reason
+in reverse: there is a layout there, so the sidebar stays and only the panel
+is replaced.
+
+**A scanned site could never enter the rankings.** `sites.segment` was written
+by exactly one thing, `scripts/seed-index.mjs`, and both the `index_rows` view
+and the nightly cron require it to be non-null. So a site anyone scanned from
+the home page was invisible to the ranking and never re-scanned — while the
+page told readers it listed "every site we've scanned in this category". The
+sentence was false and had been since the index shipped.
+
+`classifySegment` in packages/core infers one from the scan's own evidence, and
+`persistScore` writes it. It is deliberately reluctant: every rule needs a fact
+the site published about itself — a schema.org type, a path it links to — and
+returning null is the common and correct answer, because a site filed under a
+guess is worse for the index than a site left out of it. Docs alone do not make
+a developer tool; docs plus developer wording in the site's own title do. It
+reports its reasons so a wrong answer can be argued with, and `segment_source`
+records which of seed, inference or owner decided, so an inference can never
+overwrite an answer from someone who actually knows.
+
+That change makes the cohort unbounded, so the nightly cron is now capped and
+rotates: it reads `index_rows` rather than `sites`, takes the 200 stalest first,
+and every site comes round.
