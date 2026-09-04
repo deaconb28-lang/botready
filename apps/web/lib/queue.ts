@@ -51,7 +51,8 @@ export async function enqueueScan(job: QueuedScan, options: QueueOptions = {}): 
       timeout: '30s',
       ...(options.delaySeconds ? { delay: options.delaySeconds } : {}),
       // One scan per id, even if the cron and a person race for the same site.
-      deduplicationId: `scan:${job.scanId}`,
+      // A hyphen, not a colon: QStash rejects a colon in a deduplication id.
+      deduplicationId: `scan-${job.scanId}`,
     });
     return { mode: 'qstash', messageId: message.messageId };
   }
