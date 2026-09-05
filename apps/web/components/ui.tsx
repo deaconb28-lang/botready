@@ -19,15 +19,36 @@ export function cx(...parts: Array<string | false | null | undefined>): string {
 // ------------------------------------------------------------------ brand
 
 /** The 28px violet rounded square with a lime `b` in mono. */
+/**
+ * The mark, drawn — the same artwork as the favicon rather than a lowercase b
+ * set in JetBrains Mono.
+ *
+ * The two used to be different things that happened to look alike: a browser
+ * tab showed a drawn glyph and the header showed a typed one, so the stem
+ * weight and the bowl never quite agreed and the header's version depended on
+ * a web font having loaded.
+ *
+ * The paths here are app/icon.svg's, verbatim. That file has to be a literal
+ * .svg for Next's icon convention, so this is a copy and there is no way round
+ * that — change one and change the other, or the tab and the header start
+ * disagreeing again.
+ */
 export function Mark({ size = 28 }: { size?: number }) {
   return (
-    <span
+    <svg
+      viewBox="0 0 32 32"
+      width={size}
+      height={size}
       aria-hidden="true"
-      className="edge flex flex-none items-center justify-center rounded-[9px] bg-violet font-mono font-bold text-lime"
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.54) }}
+      focusable="false"
+      className="flex-none"
     >
-      b
-    </span>
+      <rect x="1" y="1" width="30" height="30" rx="8.5" fill="var(--color-violet)" stroke="var(--color-ink)" strokeWidth="2" />
+      <g fill="none" stroke="var(--color-lime)" strokeWidth="3.4" strokeLinecap="round">
+        <path d="M9.3 8V24.3" />
+        <circle cx="17.6" cy="19.3" r="5" />
+      </g>
+    </svg>
   );
 }
 

@@ -5,6 +5,10 @@
     font, and JetBrains Mono's lowercase b at 16 pixels would be a smudge
     anyway.
 
+    The same paths are inlined in the Mark component in components/ui.tsx,
+    which is the header's version of this. Next's icon convention needs this to
+    be a literal .svg file, so the drawing exists twice; change both together.
+
     Sized for the smallest place it appears rather than the largest. The stroke
     is thinner and the glyph smaller than the same mark set in type, because at
     16 pixels the counter is three pixels across and the violet around the
