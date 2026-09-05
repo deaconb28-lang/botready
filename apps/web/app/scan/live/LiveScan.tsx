@@ -94,6 +94,15 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
 
         if (body.settled) {
           settled.current = true;
+          // A note for the result page, so the celebration fires for the
+          // person who just watched it happen and not for everyone who opens
+          // the link afterwards. sessionStorage rather than a query parameter:
+          // a shared URL should not carry a party with it.
+          try {
+            sessionStorage.setItem(`botready:fresh:${scanId}`, '1');
+          } catch {
+            /* private mode; the result page simply stays quiet */
+          }
           setTimeout(() => router.replace(next ?? `/scan/${scanId}`), 600);
           return;
         }

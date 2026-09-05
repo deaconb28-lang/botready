@@ -20,6 +20,7 @@ import { ClientPanel } from './ClientPanel';
 import { SitePanel } from './SitePanel';
 import { SitePanelAsync, SitePanelSkeleton } from './SitePanelAsync';
 import { ReportHeader } from './ReportHeader';
+import { ScoreReveal } from './ScoreReveal';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
 import { PRICING } from '@/lib/site';
 import { siteIdentity } from '@/lib/site-identity';
@@ -65,6 +66,16 @@ export function ResultsView({
   const ledger = packLedger(pack);
   const errored = score.erroredChecks.length;
 
+  // Anything short of an A gets told what it costs, in the same breath as the
+  // fact that most of it is already written. A grade B used to be drawn in the
+  // healthy green and left at that, which reads as a pass to somebody whose
+  // site three clients cannot open.
+  const missing = 100 - score.total;
+  const verdict =
+    score.grade === 'A' || findings.length === 0
+      ? null
+      : `Grade ${score.grade} is not a pass. ${findings.length} ${findings.length === 1 ? 'check' : 'checks'} failed, ${missing} ${missing === 1 ? 'point' : 'points'} missing, and ${ledger.covered} of them already have a file written.`;
+
   // Two of these on the page, on two different grounds. Violet on white is the
   // loudest thing on the result; inside the violet panel it would disappear,
   // so there it is lime.
@@ -93,12 +104,15 @@ export function ResultsView({
         <span className="text-ink">{stripScheme(url)}</span> · {checkedLabel} · {pagesCrawled} {pagesCrawled === 1 ? 'page' : 'pages'}
       </div>
 
+      <ScoreReveal grade={score.grade} scanId={scanId} />
+
       <ReportHeader
         total={score.total}
         grade={score.grade}
         scoringVersion={score.scoringVersion}
         summary={summary}
         categories={score.categories.map((c) => ({ key: c.key, label: c.label, pct: c.score }))}
+        verdict={verdict}
         action={action}
       />
 

@@ -24,6 +24,7 @@ export function ReportHeader({
   grade,
   scoringVersion,
   summary,
+  verdict,
   categories,
   action,
   animate = true,
@@ -32,12 +33,23 @@ export function ReportHeader({
   grade: string;
   scoringVersion: string;
   summary: string;
+  /** For anything below an A: what it costs, revealed as the number lands. */
+  verdict?: string | null;
   categories: CategoryCell[];
   action: React.ReactNode;
   animate?: boolean;
 }) {
   const [fill, setFill] = useState(animate ? 0 : total);
+  // The verdict lands a beat after the number stops, so the two are separate
+  // events rather than one wall of text arriving at once.
+  const [showVerdict, setShowVerdict] = useState(!animate);
   const raf = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!animate) return;
+    const timer = setTimeout(() => setShowVerdict(true), COUNT_MS + 120);
+    return () => clearTimeout(timer);
+  }, [animate]);
 
   useEffect(() => {
     if (!animate) {
@@ -68,7 +80,9 @@ export function ReportHeader({
     };
   }, [total, animate]);
 
-  const healthy = grade.startsWith('A') || grade.startsWith('B');
+  // An A, and nothing else. A B was drawn in the healthy green, which told
+  // somebody whose site three clients cannot read that they were fine.
+  const healthy = grade.startsWith('A');
 
   return (
     <div className="edge mt-[18px] overflow-hidden rounded-[24px] bg-white">
@@ -88,6 +102,11 @@ export function ReportHeader({
             <span className="font-mono text-[12.5px] text-subtle-2">scoring v{scoringVersion}</span>
           </div>
           <p className="mt-[10px] max-w-[46ch] text-[15.5px] leading-[1.5] text-muted">{summary}</p>
+          {verdict && showVerdict ? (
+            <p className="anim-rise-fast mt-[10px] inline-block rounded-[9px] border-2 border-ink bg-coral-tint px-[11px] py-[6px] font-mono text-[12.5px] leading-[1.45] text-ink">
+              {verdict}
+            </p>
+          ) : null}
         </div>
         {action}
       </div>
