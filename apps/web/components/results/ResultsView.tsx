@@ -103,9 +103,12 @@ export function ResultsView({
 
       <div className="mt-[34px] grid grid-cols-1 items-start gap-[26px] lg:grid-cols-[minmax(0,1fr)_340px]">
         <div>
-          <FindingsList items={items} pointsMissing={100 - score.total} />
-
-          <Card surface="violet" radius="panel" shadow={5} className="mt-8 p-6 sm:p-7">
+          {/* The answer before the list of problems. The findings are the
+              evidence and they are long; a reader who scrolls all of them
+              before meeting the pack has already decided the page is a
+              complaint. Leading with what is written for them makes the
+              findings read as the receipt for it. */}
+          <Card surface="violet" radius="panel" shadow={5} className="p-6 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-5">
               <div className="min-w-[260px] flex-1">
                 <h2 className="display text-[22px] text-white">Already written for {domain}</h2>
@@ -144,6 +147,10 @@ export function ResultsView({
               <FixPackPreview files={pack.files} domain={domain} />
             </div>
           </Card>
+
+          <div className="mt-9">
+            <FindingsList items={items} pointsMissing={100 - score.total} />
+          </div>
 
           <ScanFacts url={url} pagesCrawled={pagesCrawled} scannerVersion={scannerVersion} scoringVersion={score.scoringVersion} checkCount={results.length} />
         </div>
