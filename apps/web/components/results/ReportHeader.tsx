@@ -87,9 +87,20 @@ export function ReportHeader({
   // somebody whose site three clients cannot read that they were fine.
   const healthy = grade.startsWith('A');
 
+  // The card took the same white ground whatever the number was, so a 51 and a
+  // 98 arrived looking identically calm. The grade is the loudest fact on the
+  // page and the page should look like it: lime for the one grade worth
+  // celebrating, coral for the two that mean a client is being turned away
+  // from something, amber in between.
+  const ground = healthy
+    ? 'bg-lime-tint'
+    : grade.startsWith('D') || grade.startsWith('F')
+      ? 'bg-coral-tint'
+      : 'bg-amber-tint';
+
   return (
     <div className="edge mt-[18px] overflow-hidden rounded-[24px] bg-white">
-      <div className="flex flex-wrap items-center gap-8 border-b border-hairline px-6 py-[30px] sm:px-8">
+      <div className={cx('flex flex-wrap items-center gap-8 border-b-2 border-ink px-6 py-[30px] sm:px-8', ground)}>
         <div className="flex items-baseline gap-3">
           <span className="display-tight text-[64px] leading-none tracking-[-0.04em] tabular-nums" aria-live="off">
             {Math.round(fill)}

@@ -124,3 +124,39 @@ function clean(value: string | null): string | null {
   const text = (value ?? '').replace(/\s+/g, ' ').trim();
   return text.length > 0 ? text : null;
 }
+
+export interface Standing {
+  /** How this total places among every scored site. 1 is best. */
+  rank: number;
+  /** How many sites have a score at all. */
+  of: number;
+  /** How many of them reached an A. */
+  atA: number;
+}
+
+/**
+ * Where a score sits against every other site we have measured.
+ *
+ * True, comparative and it cuts both ways, which is the only kind of pressure
+ * worth applying: a D is worse when you can see twenty sites above it, and an
+ * A is worth more when you can see how few there are.
+ *
+ * Null below ten scored sites. "Third of four" is not a standing, and dressing
+ * a tiny sample up as one is the sort of thing this product exists to argue
+ * against.
+ */
+export async function standingFor(total: number | null): Promise<Standing | null> {
+  if (total === null) return null;
+  const client = publicClient();
+
+  const [better, scored, aGrade] = await Promise.all([
+    client.from('chart_rows').select('site_id', { count: 'exact', head: true }).gt('total', total),
+    client.from('chart_rows').select('site_id', { count: 'exact', head: true }).not('total', 'is', null),
+    client.from('chart_rows').select('site_id', { count: 'exact', head: true }).eq('grade', 'A'),
+  ]);
+
+  const of = scored.count ?? 0;
+  if (of < 10) return null;
+
+  return { rank: (better.count ?? 0) + 1, of, atA: aGrade.count ?? 0 };
+}

@@ -5,6 +5,7 @@ import { ResultsView, UnscoredView } from '@/components/results/ResultsView';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { currentUser, hasFixpackFor, ownsAnyFixpack } from '@/lib/auth';
+import { standingFor } from '@/lib/chart-data';
 import { loadScanView } from '@/lib/scan-data';
 import { absoluteUrl } from '@/lib/site';
 import { relativeTime } from '@/lib/theme';
@@ -59,6 +60,9 @@ export default async function ScanPage({ params }: PageProps) {
   // Owns a pack, but not this one: the button offers to add this domain at the
   // repeat price, and says which price before the click.
   const repeat = Boolean(user) && !owned && (user ? await ownsAnyFixpack(user.id) : false);
+  // Where this lands against everything else measured. Best effort: a chart
+  // that will not answer is not a reason to fail a result page.
+  const standing = await standingFor(view.score?.total ?? null).catch(() => null);
 
   return (
     <div className="min-h-dvh bg-canvas">
@@ -77,6 +81,7 @@ export default async function ScanPage({ params }: PageProps) {
             scannerVersion={scan.scanner_version}
             owned={owned}
             repeat={repeat}
+            standing={standing}
           />
         ) : (
           <UnscoredView domain={site.domain} url={scan.url} checkedLabel={checkedLabel} status={scan.status} message={scan.error_message} results={results} />

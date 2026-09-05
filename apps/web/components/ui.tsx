@@ -447,9 +447,29 @@ export function Bar({
 /** The thin 5px unbordered bar the results page uses under each category. */
 export function ThinBar({ pct, color, className = '' }: { pct: number; color: string; className?: string }) {
   const clamped = Math.max(0, Math.min(100, pct));
+  // Zero used to draw nothing, which made the worst score on the card the
+  // least visible thing on it: an empty grey track reads as "not measured",
+  // not as "nothing here works". A zero is a result, so it gets a mark.
+  const empty = clamped === 0;
   return (
-    <div className={cx('h-[5px] overflow-hidden rounded-full bg-hairline', className)} aria-hidden="true">
-      <div className="bar-fill h-full rounded-full" style={{ width: `${clamped}%`, background: color }} />
+    <div
+      className={cx('h-[5px] overflow-hidden rounded-full', empty ? 'bg-coral-tint' : 'bg-hairline', className)}
+      aria-hidden="true"
+    >
+      <div
+        className="bar-fill h-full rounded-full"
+        style={{ width: empty ? '100%' : `${clamped}%`, background: empty ? undefined : color }}
+      >
+        {empty ? (
+          <span
+            className="block h-full w-full rounded-full"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(135deg, var(--color-coral) 0 4px, transparent 4px 8px)',
+            }}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

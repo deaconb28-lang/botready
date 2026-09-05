@@ -23,8 +23,10 @@ import { SitePanelAsync, SitePanelSkeleton } from './SitePanelAsync';
 import { CriticalAlert } from './CriticalAlert';
 import { ReportHeader } from './ReportHeader';
 import { ScoreReveal } from './ScoreReveal';
+import { ScoreStanding } from './ScoreStanding';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
 import { PRICING } from '@/lib/site';
+import type { Standing } from '@/lib/chart-data';
 import { siteIdentity } from '@/lib/site-identity';
 import { CLIENT_NAMES } from '@/lib/theme';
 
@@ -43,6 +45,7 @@ export function ResultsView({
   pagesCrawled,
   scannerVersion,
   owned,
+  standing = null,
   repeat = false,
   fixture = false,
 }: {
@@ -56,6 +59,8 @@ export function ResultsView({
   pagesCrawled: number;
   scannerVersion: string | null;
   owned: boolean;
+  /** Where this score places against every other site measured. */
+  standing?: Standing | null;
   /** Owns a pack for another domain, so this one is the extra-domain price. */
   repeat?: boolean;
   fixture?: boolean;
@@ -130,6 +135,8 @@ export function ResultsView({
         verdict={verdict}
         action={action}
       />
+
+      <ScoreStanding standing={standing} grade={score.grade} />
 
       {errored > 0 ? (
         <p className="mt-4 font-mono text-[12.5px] leading-[1.6] text-subtle-2">
