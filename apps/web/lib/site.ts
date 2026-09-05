@@ -38,6 +38,21 @@ export const LIMITS = {
  * The cadence strings are the words on the page, not a Stripe interval. The
  * fix pack is a one-off charge either way.
  */
+/**
+ * The launch-day discount.
+ *
+ * One flag, because the banner has to come down the moment the code stops
+ * working and hunting for it in JSX is how a dead offer stays on a site for a
+ * week. `code` must exist as a promotion code in Stripe on a coupon of the
+ * matching size — nothing here creates it, and a banner advertising a code
+ * checkout rejects is worse than no banner.
+ */
+export const PROMO = {
+  active: true,
+  code: 'LAUNCHDAY',
+  off: '50% off',
+} as const;
+
 export const PRICING = {
   fixpack: { amount: 15, currency: 'usd', label: '$15', cadence: 'one time' },
   fixpackExtra: { amount: 5, currency: 'usd', label: '$5', cadence: 'per extra domain' },
