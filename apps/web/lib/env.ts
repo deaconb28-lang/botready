@@ -27,6 +27,11 @@ function want(name: string): string | undefined {
  * supabase-js, so accept both names rather than making someone rename a
  * variable they pasted straight from the dashboard.
  */
+/** The optional form of the same idea. */
+function wantEither(primary: string, alias: string): string | undefined {
+  return process.env[primary] || process.env[alias] || undefined;
+}
+
 function needEither(primary: string, alias: string): string {
   const value = process.env[primary] || process.env[alias];
   if (!value) {
@@ -43,8 +48,19 @@ export const serverEnv = {
   /** Bypasses row level security. Never import this into a client component. */
   supabaseServiceRoleKey: () => needEither('SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SECRET_KEY'),
 
-  redisUrl: () => want('UPSTASH_REDIS_REST_URL'),
-  redisToken: () => want('UPSTASH_REDIS_REST_TOKEN'),
+  /**
+   * Two names for one thing, because there are two ways to attach Upstash to a
+   * Vercel project and they disagree. Upstash's own integration writes
+   * UPSTASH_REDIS_REST_URL; adding a Redis store through the Vercel
+   * Marketplace writes KV_REST_API_URL. Both are the same REST endpoint.
+   *
+   * This is not a nicety. Everything here degrades open when Redis is absent —
+   * no rate limit, no burst cache — so a variable under the wrong name is a
+   * silent loss of the only thing stopping /api/scan being pointed at somebody
+   * else's site in a loop. Accepting both names removes the way that happens.
+   */
+  redisUrl: () => wantEither('UPSTASH_REDIS_REST_URL', 'KV_REST_API_URL'),
+  redisToken: () => wantEither('UPSTASH_REDIS_REST_TOKEN', 'KV_REST_API_TOKEN'),
 
   qstashToken: () => want('QSTASH_TOKEN'),
   /**
