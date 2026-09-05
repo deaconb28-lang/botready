@@ -5,7 +5,7 @@ import { grantEntitlement, supabaseStore, type Plan } from '@/lib/entitlements';
 import { claimOnce } from '@/lib/redis';
 import { serviceClient } from '@/lib/supabase';
 import { verifyWebhook } from '@/lib/stripe';
-import { sendFixpackReady } from '@/lib/email';
+import { sendFixpackReady, sendMonitorStarted } from '@/lib/email';
 import { assembleFixPack } from '@/lib/fixpack';
 import { loadScanView } from '@/lib/scan-data';
 
@@ -115,9 +115,18 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
       .catch((err) => {
         console.error('[stripe] fix pack email failed', err);
       });
+  } else if (outcome.granted && plan === 'monitor') {
+    // Monitoring used to send nothing at all: the fix pack email needs a scan
+    // and this plan has none, so a subscriber's only confirmation was Stripe's
+    // receipt. Paying every month and never hearing from us is the same
+    // experience as paying for nothing.
+    await sendMonitorStarted({ to: email, domain: domain ?? 'your site' })
+      .then(() => console.info('[stripe] monitoring welcome sent'))
+      .catch((err) => {
+        console.error('[stripe] monitoring welcome failed', err);
+      });
   } else if (outcome.granted) {
-    // Granted but nothing to send: a monitoring subscription, or a fix pack
-    // whose payment link came back without the scan it was for.
+    // A fix pack whose payment link came back without the scan it was for.
     console.warn(`[stripe] ${plan} granted with no scan to send; reference=${reference ?? 'none'}`);
   }
 

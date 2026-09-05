@@ -29,7 +29,11 @@ async function scanOnce(mode: FixtureMode) {
   const cached = scans.get(mode);
   if (cached) return cached;
   fixture.setMode(mode);
-  const outcome = await scan(`${fixture.origin}/`);
+  const batches: number[][] = [];
+  const outcome = await scan(`${fixture.origin}/`, async (batch) => {
+    batches.push(batch.map(() => 1));
+  });
+  batchesByMode.set(mode, batches.map((b) => b.length));
   // The request log belongs to this scan, so it is captured alongside it.
   requestsByMode.set(mode, [...fixture.requests]);
   scans.set(mode, outcome);
@@ -37,6 +41,8 @@ async function scanOnce(mode: FixtureMode) {
 }
 
 const requestsByMode = new Map<FixtureMode, Fixture['requests']>();
+/** How many checks each progress batch carried, in the order they arrived. */
+const batchesByMode = new Map<FixtureMode, number[]>();
 
 function requestsFor(mode: FixtureMode): Fixture['requests'] {
   return requestsByMode.get(mode) ?? [];
@@ -228,3 +234,23 @@ function observedFrom(outcome: Awaited<ReturnType<typeof scan>>): Record<string,
   for (const result of outcome.results) Object.assign(merged, result.observed);
   return merged;
 }
+
+describe('progress', () => {
+  it('reports checks in batches as they land, not all at the end', async () => {
+    const outcome = await scanOnce('good');
+    const batches = batchesByMode.get('good') ?? [];
+
+    // More than one batch is the whole point: one batch is the old behaviour,
+    // where /scan/live showed "0 of 21" until the scan was over.
+    expect(batches.length).toBeGreaterThan(1);
+    // And every check reaches the sink exactly once, so a counter driven by it
+    // arrives at the same number the result page shows.
+    expect(batches.reduce((n, b) => n + b, 0)).toBe(outcome.results.length);
+  });
+
+  it('runs the same without a sink at all', async () => {
+    fixture.setMode('robots-blocked');
+    const outcome = await scan(`${fixture.origin}/`);
+    expect(outcome.status).toBe('blocked');
+  });
+});

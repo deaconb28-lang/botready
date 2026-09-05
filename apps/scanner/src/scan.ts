@@ -60,6 +60,13 @@ export interface ScanOutcome {
 }
 
 /**
+ * Called with each batch of checks as the scan produces them, so a caller can
+ * record progress without waiting for the whole run. Optional: `scan()` is a
+ * pure pipeline over a URL and works exactly the same without one.
+ */
+export type ProgressSink = (batch: CheckResult[]) => Promise<void>;
+
+/**
  * The database-backed entry point, called from the HTTP route. Reads the URL
  * back off the scan row rather than trusting the request body, so a valid
  * signature over a tampered payload still cannot make us fetch something the
@@ -81,7 +88,9 @@ export async function runScan(job: ScanJob): Promise<void> {
 
   let outcome: ScanOutcome;
   try {
-    outcome = await scan(target.url);
+    outcome = await scan(target.url, async (batch) => {
+      await writeEvidence(job.scanId, batch);
+    });
   } catch (err) {
     // A crash still has to leave a readable scan row. A scan stuck on 'running'
     // forever is the worst outcome for the result page, which polls.
@@ -116,8 +125,30 @@ export async function runScan(job: ScanJob): Promise<void> {
  * The scan itself: takes a URL, returns observations. No database, so a test
  * can run a whole scan against a loopback server and read the results back.
  */
-export async function scan(url: string): Promise<ScanOutcome> {
+export async function scan(url: string, onResults?: ProgressSink): Promise<ScanOutcome> {
   const results: CheckResult[] = [];
+
+  /**
+   * Hand each batch to the caller as it is produced, then carry on.
+   *
+   * A scan takes about half a minute and used to write every row at the end,
+   * so /scan/live sat on "0 of 21" for the whole thing and then filled in at
+   * once. The checks were always finishing in stages; only the record of them
+   * was batched. Flushing per stage makes the number on the loading screen a
+   * real one that climbs.
+   *
+   * Never allowed to fail the scan. A progress write is a nicety; the
+   * authoritative write is the one runScan does at the end, and it upserts, so
+   * a dropped batch costs nothing but a slower-looking counter.
+   */
+  const flush = async (batch: CheckResult[]) => {
+    if (!onResults || batch.length === 0) return;
+    try {
+      await onResults(batch);
+    } catch {
+      // Reported by the caller if it cares. Not this function's business.
+    }
+  };
 
   let targetPath: string;
   try {
@@ -145,6 +176,7 @@ export async function scan(url: string): Promise<ScanOutcome> {
   }
 
   results.push(...robots.results);
+  await flush(robots.results);
 
   if (!robots.weAreAllowed) {
     log.info('robots.txt disallows us, stopping', { url, rule: robots.ourMatchedRule });
@@ -193,12 +225,14 @@ export async function scan(url: string): Promise<ScanOutcome> {
   await pause();
   const passC = await runPassC(url, robots.robots);
   results.push(...passC.results);
+  await flush(passC.results);
 
   // ---------------------------------------------------------------- 4. Pass A
 
   await pause();
   const passA = await runPassA(url);
   results.push(...passA.results);
+  await flush(passA.results);
 
   // ---------------------------------------------------------------- 5. Pass B
 
@@ -232,18 +266,18 @@ export async function scan(url: string): Promise<ScanOutcome> {
     });
   }
 
-  results.push(
-    ...documentChecks({
-      targetUrl: url,
-      rawResponse: identity,
-      rawFacts,
-      renderedFacts,
-      comparison,
-      renderFailed,
-      pages,
-      negotiation,
-    }),
-  );
+  const documents = documentChecks({
+    targetUrl: url,
+    rawResponse: identity,
+    rawFacts,
+    renderedFacts,
+    comparison,
+    renderFailed,
+    pages,
+    negotiation,
+  });
+  results.push(...documents);
+  await flush(documents);
 
   return { status: 'complete', results, pagesCrawled };
 }

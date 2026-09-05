@@ -118,7 +118,8 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
 
   const done = poll?.progress.length ?? 0;
   const total = catalog.checks.length;
-  const percent = Math.min(96, Math.round((done / total) * 100));
+  const shown = useCountUp(done, poll?.settled ?? false);
+  const percent = Math.min(96, Math.round((shown / total) * 100));
   const landed = new Set(poll?.progress.map((entry) => entry.key) ?? []);
   const stageDone = STAGES.map((stage) => landed.has(stage.provenBy));
   // The first stage not yet proven is the one in flight. Once every stage is
@@ -146,7 +147,7 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
           className="br-sweep pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-violet-chip to-transparent opacity-70"
         />
         <div className="relative flex flex-wrap items-center gap-8 border-b border-hairline px-6 py-[30px] sm:px-8">
-          <ProgressRing done={done} total={total} />
+          <ProgressRing done={shown} total={total} />
           <div className="min-w-[200px] flex-1">
             <div className="flex items-center gap-[10px]">
               <span className="relative inline-flex h-[10px] w-[10px]" aria-hidden="true">
@@ -228,6 +229,37 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
       </noscript>
     </Container>
   );
+}
+
+/**
+ * The count, walked up to the truth rather than snapped to it.
+ *
+ * The worker finishes its checks in four stages and now records each one as it
+ * lands, so the real number climbs 0 → 2 → 6 → 11 → 21 across half a minute.
+ * Four jumps still reads as a stalled page, so this steps between them about
+ * five times a second.
+ *
+ * It only ever lags the truth; it never runs ahead of it. Showing a check as
+ * done before the worker says so would be inventing a result on a screen whose
+ * whole job is to report one — and it would have to count backwards when the
+ * real number arrived lower, which is the tell that a progress bar is decorative.
+ */
+function useCountUp(target: number, settled: boolean): number {
+  const [shown, setShown] = useState(0);
+
+  useEffect(() => {
+    // A finished scan is about to navigate away. Show the total rather than
+    // animating towards a page nobody will still be on.
+    if (settled) {
+      setShown(target);
+      return;
+    }
+    if (shown >= target) return;
+    const timer = setTimeout(() => setShown((n) => Math.min(target, n + 1)), 190);
+    return () => clearTimeout(timer);
+  }, [shown, target, settled]);
+
+  return Math.min(shown, target);
 }
 
 const RING_RADIUS = 34;

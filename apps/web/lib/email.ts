@@ -12,7 +12,8 @@
  * Supabase's own mailer is a separate thing and is not used: sign-in is Google
  * only, so nothing in the app asks Supabase to send anything.
  *
- * Two emails in the whole product: the fix pack is ready, and a monitor alert.
+ * Three emails in the whole product: the fix pack is ready, monitoring has
+ * started, and a monitor alert.
  * Neither is optional, but both degrade — if RESEND_API_KEY is unset the send
  * is logged and skipped rather than throwing, because the purchase already
  * happened and the entitlement is already granted by the time this runs.
@@ -135,6 +136,34 @@ export async function sendFixpackReady(opts: {
       'Everything here was built from the scan itself. Re-run the check after each',
       'change rather than after all of them: the only proof a client can read your',
       'site is that it did.',
+      '',
+      `— ${SITE.name}`,
+    ].join('\n'),
+  });
+}
+
+/**
+ * Somebody has just started paying for monitoring.
+ *
+ * This is the only mail they get until something actually changes on their
+ * site, which could be weeks. Paying five dollars a month and hearing nothing
+ * at all is indistinguishable from paying five dollars a month for nothing, so
+ * it says what was bought, what will arrive, and how to stop it.
+ */
+export async function sendMonitorStarted(opts: { to: string; domain: string }): Promise<void> {
+  await send({
+    to: opts.to,
+    subject: `Monitoring is on for ${opts.domain}`,
+    text: [
+      `Monitoring is on for ${opts.domain}. Thank you.`,
+      '',
+      'From here we re-check the site every week as the same five clients, and',
+      'we write to you on the day something moves: a category drops, or a client',
+      'that could read the site suddenly cannot. If nothing changes you will not',
+      'hear from us, which is the point.',
+      '',
+      `Your dashboard: ${absoluteUrl(`/app/${opts.domain}`)}`,
+      `Billing and cancellation: ${absoluteUrl('/account/billing')}`,
       '',
       `— ${SITE.name}`,
     ].join('\n'),
