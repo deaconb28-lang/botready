@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 import type { PerAgentFetch } from '@botready/core';
 
-import { loadScanView, persistScore } from '@/lib/scan-data';
+import { isStuck } from '@/lib/scan-gate';
+import { loadScanView, markScanErrored, persistScore } from '@/lib/scan-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,29 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   }
 
   const { scan, site, score } = view;
-  const settled = scan.status === 'complete' || scan.status === 'blocked' || scan.status === 'error';
+
+  // A scan that has outlived any possible run is settled here, because nothing
+  // else will settle it. The worker is the only thing that marks a scan
+  // finished, and a worker that restarted mid-scan is by definition not going
+  // to come back and do it — the row sits at `running` and the live page polls
+  // it forever, which is what somebody experiences as "it has taken five
+  // minutes". This route is polled every second by that page, so it is the one
+  // place guaranteed to be looking at exactly the moment it matters.
+  let status = scan.status;
+  if (isStuck(status, scan.started_at, scan.created_at)) {
+    status = 'error';
+    await markScanErrored(
+      scan.id,
+      'The scan stopped before it finished, which is our problem and not the site\'s. Nothing was measured. Run it again.',
+    ).catch(() => {});
+    // And forget the cached id, or the 24-hour window hands the next person
+    // this same dead scan instead of crawling.
+    const { forgetCachedScan } = await import('@/lib/redis');
+    const { defaultKV } = await import('@/lib/kv');
+    await forgetCachedScan(site.domain, defaultKV()).catch(() => {});
+  }
+
+  const settled = status === 'complete' || status === 'blocked' || status === 'error';
 
   // The first read of a finished scan writes its score row. Idempotent on
   // (scan_id, scoring_version), cheap, and it is what keeps the index view
@@ -45,11 +68,14 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       scanId: scan.id,
       domain: site.domain,
       url: scan.url,
-      status: scan.status,
+      status,
       settled,
       scannerVersion: scan.scanner_version,
       pagesCrawled: scan.pages_crawled,
-      errorMessage: scan.error_message,
+      errorMessage:
+        status === 'error' && !scan.error_message
+          ? 'The scan stopped before it finished, which is our problem and not the site\'s. Nothing was measured. Run it again.'
+          : scan.error_message,
       startedAt: scan.started_at,
       finishedAt: scan.finished_at,
       checksComplete: view.results.length,

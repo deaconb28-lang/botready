@@ -78,3 +78,35 @@ export function limitedMessage(verdict: RateLimitVerdict, signedIn: boolean, sig
     ? `You have used all ${verdict.limit} scans in this hour. ${when}`
     : `You have used all ${verdict.limit} scans in this hour. ${when} Signing in raises it to ${signedInLimit}.`;
 }
+
+/**
+ * How long a scan may run before we call it dead.
+ *
+ * Six pages a second apart, five clients, and a headless render: the slowest
+ * real scan on record finished in 90 seconds. Five minutes is far outside
+ * that, so anything past it is not slow, it is gone — almost always a worker
+ * that restarted mid-scan and took the run with it.
+ */
+export const STUCK_AFTER_MS = 5 * 60 * 1000;
+
+/**
+ * Whether a scan has outlived any possible run.
+ *
+ * Nothing marks an orphaned scan as finished. The worker is the only thing
+ * that would, and a worker that has been restarted is by definition not going
+ * to. So the row sits at `running` forever and the live page polls it forever,
+ * which is what a person experiences as "it has taken five minutes".
+ *
+ * Pure, so the ceiling is a test rather than a number somebody has to trust.
+ */
+export function isStuck(
+  status: string,
+  startedAt: string | null,
+  createdAt: string,
+  now: number = Date.now(),
+): boolean {
+  if (status !== 'running' && status !== 'queued') return false;
+  const began = Date.parse(startedAt ?? createdAt);
+  if (!Number.isFinite(began)) return false;
+  return now - began > STUCK_AFTER_MS;
+}

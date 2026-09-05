@@ -56,7 +56,7 @@ export default async function DomainResultPage({ params }: { params: Promise<{ d
         </div>
         {PUBLIC_INDEX_LISTED ? (
           <p className="mt-6 font-mono text-[12.5px] text-subtle-2">
-            Or browse <Link href="/index">the public index</Link>.
+            Or browse <Link href="/chart">the chart</Link>.
           </p>
         ) : null}
       </Container>

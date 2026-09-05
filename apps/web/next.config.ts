@@ -12,15 +12,20 @@ const config: NextConfig = {
     '/api/og/[id]': ['./assets/fonts/**'],
     '/api/og/site': ['./assets/fonts/**'],
   },
-  // The public URL of the ranking is /index/[segment], as the plan says. The
-  // route lives in app/ranking/ because a route segment literally named
-  // `index` collides with Next's own index.html convention: the prerendered
-  // pages land in .next/server/app/index/index/*.html and Vercel's builder,
-  // looking in app/index/*.html, fails the deploy with ENOENT. The rewrite
-  // keeps the URL and the redirect keeps it the only one.
+  // The chart is /chart and the per-segment lists are /index/[segment]. Both
+  // live in app/ranking/ because a route segment literally named `index`
+  // collides with Next's own index.html convention: the prerendered pages land
+  // in .next/server/app/index/index/*.html and Vercel's builder, looking in
+  // app/index/*.html, fails the deploy with ENOENT.
+  //
+  // The bare /index is worse than that and cannot be used at all. Vercel
+  // normalises it to / before rewrites are consulted — a request for /index
+  // comes back with x-matched-path: / — so a rewrite from it never fires. The
+  // segment form is unaffected, which is why /index/saas works and /index did
+  // not. The chart is /chart, which is also what it is called.
   async rewrites() {
     return [
-      { source: '/index', destination: '/ranking' },
+      { source: '/chart', destination: '/ranking' },
       { source: '/index/:segment', destination: '/ranking/:segment' },
       // The manifests an agent looks for before it looks at the HTML. They are
       // rewrites rather than routes because the App Router will not build a
@@ -41,7 +46,7 @@ const config: NextConfig = {
   },
   async redirects() {
     return [
-      { source: '/ranking', destination: '/index', permanent: true },
+      { source: '/ranking', destination: '/chart', permanent: true },
       { source: '/ranking/:segment', destination: '/index/:segment', permanent: true },
     ];
   },

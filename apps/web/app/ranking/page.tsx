@@ -11,12 +11,12 @@ import { SEGMENTS, absoluteUrl } from '@/lib/site';
 export const metadata: Metadata = {
   title: 'The chart',
   description: 'Every site we have checked, ranked by how much of it an AI client can actually read.',
-  alternates: { canonical: absoluteUrl('/index') },
+  alternates: { canonical: absoluteUrl('/chart') },
 };
 
 /**
- * The chart. Served at /index through a rewrite — see next.config.ts for why
- * the directory cannot be called that.
+ * The chart, at /chart through a rewrite. next.config.ts has the two reasons
+ * the directory cannot be called either of those things.
  *
  * Dynamic, and deliberately so. A site's score changes the moment it is
  * re-scanned, and a chart that is a build artefact is a chart that is wrong
