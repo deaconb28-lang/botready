@@ -75,11 +75,7 @@ export default function PricingPage() {
       <Container as="main" id="main" width={1100} className="pb-24 pt-14">
         <div className="text-center">
           <span className="eyebrow text-subtle-2">Pricing</span>
-          <h1 className="display-tight mx-auto mt-3 max-w-[18ch] text-[clamp(38px,5.2vw,64px)]">The diagnosis is free. The files are not.</h1>
-          <p className="mx-auto mt-4 max-w-[54ch] text-[17px] leading-[1.6] text-muted">
-            Everything the check measures sits on a page anyone can read, never blurred. What you pay for is the pack of files that fixes
-            it, generated from your own scan.
-          </p>
+          <h1 className="display-tight mx-auto mt-3 max-w-[26ch] text-[clamp(38px,5.2vw,64px)]">Simple, transparent pricing</h1>
         </div>
 
         <div className="mt-11 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[18px]">

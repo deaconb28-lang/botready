@@ -55,7 +55,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
     path: '/pricing',
     title: 'Pricing',
     description: 'The diagnosis is free. The files are not. A one-time fix pack and monthly monitoring.',
-    updated: '2026-08-30',
+    updated: '2026-09-05',
     sources: ['apps/web/app/pricing'],
     changeFrequency: 'monthly',
     priority: 0.7,
