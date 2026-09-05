@@ -51,6 +51,16 @@ describe('probeSite', () => {
     expect((await probeSite(url)).icon).toBe(`${url}a.png`);
   });
 
+  it('keeps reading past </head>, where Next puts the icon links', async () => {
+    // Not a hypothetical: botready.dev's own page closes <head> at byte 1,497
+    // and streams <link rel="apple-touch-icon"> at byte 37,763, inside the
+    // body, for the browser to hoist. Stopping at </head> found nothing on it.
+    const html = `<head><title>x</title></head><body>${'<p>filler</p>'.repeat(3000)}<link rel="apple-touch-icon" href="/apple-icon.png"></body>`;
+    answers(page(html));
+    const url = origin();
+    expect((await probeSite(url)).icon).toBe(`${url}apple-icon.png`);
+  });
+
   it('ignores a data: icon rather than inlining it into our page', async () => {
     answers(page('<head><link rel="icon" href="data:image/png;base64,AAA"></head>'));
     expect((await probeSite(origin())).icon).toBe('');

@@ -30,8 +30,16 @@ const UNKNOWN: SiteProbe = { icon: '', framing: 'unknown' };
 
 const USER_AGENT = 'BotreadyBot/1.0 (+https://botready.dev/bot)';
 const TIMEOUT_MS = 4000;
-/** Enough of the document to contain <head>, and a hard stop for anything else. */
-const READ_LIMIT = 96 * 1024;
+/**
+ * How far into the document to look for the icon.
+ *
+ * Deliberately not "until </head>". Next App Router closes the head 1.5 KB in
+ * and streams the icon links out at byte 37,000, inside the body, for the
+ * browser to hoist — botready.dev's own page does exactly that, and stopping
+ * at </head> found nothing on it. So this reads a flat budget instead, wide
+ * enough for late-injected metadata and hard enough to stay one small request.
+ */
+const READ_LIMIT = 128 * 1024;
 const CACHE_SECONDS = 6 * 60 * 60;
 /** A site that would not answer is asked again sooner, but not on every view. */
 const FAILURE_CACHE_SECONDS = 30 * 60;
@@ -108,8 +116,6 @@ async function head(response: Response): Promise<string> {
       if (done) break;
       text += decoder.decode(value, { stream: true });
       if (text.length >= READ_LIMIT) break;
-      // Everything we want is above this line, and most pages are mostly body.
-      if (/<\/head>/i.test(text)) break;
     }
   } catch {
     // Whatever arrived is what we work with.
