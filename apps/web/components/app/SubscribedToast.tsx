@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { CONTACT_EMAIL } from '@/lib/site';
+
 /**
  * The one moment after paying for monitoring.
  *
@@ -11,7 +13,7 @@ import { usePathname, useRouter } from 'next/navigation';
  * bought. They land in the app now, and this says the thing a receipt cannot:
  * that it worked, and what happens next.
  *
- * It takes itself down after eight seconds and strips `?subscribed=1` from the
+ * It takes itself down after twelve seconds and strips `?subscribed=1` from the
  * URL as soon as it is shown, so a refresh or a shared link does not
  * congratulate anyone twice.
  */
@@ -28,7 +30,7 @@ export function SubscribedToast({ domain }: { domain: string }) {
 
   useEffect(() => {
     if (!open) return;
-    const timer = setTimeout(() => setOpen(false), 8000);
+    const timer = setTimeout(() => setOpen(false), 12000);
     return () => clearTimeout(timer);
   }, [open]);
 
@@ -55,6 +57,14 @@ export function SubscribedToast({ domain }: { domain: string }) {
           <p className="display m-0 text-[16px] font-semibold text-ink">Thank you for subscribing!</p>
           <p className="m-0 mt-1 text-[13.5px] leading-[1.5] text-ink">
             We re-check {domain} every week and email you the day something changes.
+          </p>
+          {/* Our mail still lands in spam at Gmail more often than not, and the
+              next one we send is the one saying something broke — so this is
+              worth the extra line here rather than only in the mail itself. */}
+          <p className="m-0 mt-[6px] text-[13px] leading-[1.5] text-ink">
+            Check your spam folder for the welcome mail from{' '}
+            <span className="font-mono text-[12px]">{CONTACT_EMAIL}</span> and mark it &ldquo;not spam&rdquo;, so the alerts
+            reach you.
           </p>
         </div>
         <button

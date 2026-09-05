@@ -7,7 +7,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, DashConnector, GradeTile, PillEyebrow, TerminalLine, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
 import { pageMetadata } from '@/lib/metadata';
-import { PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
+import { CONTACT_EMAIL, PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/pricing');
 
@@ -125,6 +125,15 @@ export default function PricingPage() {
             </div>
           ))}
         </div>
+
+        {/* Both things you can buy here arrive by email, and our mail still
+            lands in spam at Gmail more often than not: the domain is weeks old
+            and reputation is the one thing correct DKIM cannot buy. Better said
+            before the purchase than discovered after it. */}
+        <p className="mt-5 text-center text-[14px] leading-[1.6] text-muted">
+          Both arrive by email from <span className="font-mono text-[13px]">{CONTACT_EMAIL}</span>. We are a new domain, so
+          check your spam folder the first time and mark it &ldquo;not spam&rdquo; if you find it there.
+        </p>
 
         <Card surface="violet" radius="panel-lg" shadow={7} className="mt-7 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-center gap-8 p-6 sm:p-[34px]">
           <div>

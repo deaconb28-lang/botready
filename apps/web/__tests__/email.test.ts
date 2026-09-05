@@ -16,6 +16,7 @@ interface SentMessage {
   to: string;
   subject: string;
   text: string;
+  html: string;
   attachments?: Array<{ filename: string }>;
 }
 
@@ -61,11 +62,12 @@ describe('monitoring', () => {
 });
 
 describe('the fix pack', () => {
-  it('attaches every file individually and the zip, so nothing needs an account to open', async () => {
+  it('attaches every file individually, and links the zip rather than attaching it', async () => {
     await sendFixpackReady({
       to: 'buyer@example.com',
       scanId: 'scan-1',
       domain: 'example.com',
+      sessionId: 'cs_test_1',
       pack: {
         domain: 'example.com',
         filename: 'botready-example.com.zip',
@@ -81,11 +83,47 @@ describe('the fix pack', () => {
       } as never,
     });
     const message = sent.mock.calls[0]?.[0];
-    expect(message?.attachments?.map((a) => a.filename)).toEqual([
-      'robots.txt',
-      'llms.txt',
-      'botready-example.com.zip',
-    ]);
+    // The files, and not the archive. A zip from a sender with no history is
+    // the single most spam-triggering thing a first email can carry.
+    expect(message?.attachments?.map((a) => a.filename)).toEqual(['robots.txt', 'llms.txt']);
+    expect(message?.attachments?.some((a) => a.filename.endsWith('.zip'))).toBe(false);
+    // It is still one click away, and the checkout session travels with the
+    // link so it opens without an account.
+    expect(message?.text).toContain('/api/fixpack/scan-1?session_id=cs_test_1');
+  });
+
+  it('does not paste the punch list into the body; it is attached', async () => {
+    await sendFixpackReady({
+      to: 'buyer@example.com',
+      scanId: 'scan-1',
+      domain: 'example.com',
+      sessionId: 'cs_test_1',
+      pack: {
+        domain: 'example.com',
+        filename: 'botready-example.com.zip',
+        archive: new Uint8Array([1]),
+        entries: [{ name: 'punch-list.md', content: '# What to fix' }],
+        names: ['punch-list.md'],
+        agentPrompt: 'do the thing',
+        punchList: '# What to fix on example.com\n\n### Replace the robots.txt rules',
+      } as never,
+    });
+    const message = sent.mock.calls[0]?.[0];
+    expect(message?.text).not.toContain('### Replace the robots.txt rules');
+  });
+
+  it('sends both a text and an HTML part, from the same words', async () => {
+    await sendMonitorStarted({ to: 'buyer@example.com', domain: 'example.com' });
+    const message = sent.mock.calls[0]?.[0];
+    expect(message?.html).toContain('<p style=');
+    expect(message?.html).toContain('example.com');
+    // The HTML is generated from the text, so they cannot drift apart.
+    expect(message?.html).not.toContain('<table');
+  });
+
+  it('says what to do if it landed in spam', async () => {
+    await sendMonitorStarted({ to: 'buyer@example.com', domain: 'example.com' });
+    expect(sent.mock.calls[0]?.[0]?.text).toContain('not spam');
   });
 
   it('still sends when the pack could not be built, because they paid', async () => {

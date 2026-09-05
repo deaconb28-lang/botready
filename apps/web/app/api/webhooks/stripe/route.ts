@@ -110,7 +110,7 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
     // must not swallow the email: they paid, and a confirmation that never
     // arrives is worse than one without its attachment.
     const pack = await assembleForEmail(scanId);
-    await sendFixpackReady({ to: email, scanId, domain, pack })
+    await sendFixpackReady({ to: email, scanId, domain, pack, sessionId: session.id })
       .then(() => console.info(`[stripe] fix pack email sent for scan ${scanId} (${pack ? pack.entries.length : 0} files)`))
       .catch((err) => {
         console.error('[stripe] fix pack email failed', err);

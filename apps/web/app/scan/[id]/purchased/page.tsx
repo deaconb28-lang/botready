@@ -5,10 +5,11 @@ import { notFound } from 'next/navigation';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { PromptPanel } from '@/components/results/PromptPanel';
+import { MailNote } from '@/components/site/MailNote';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
 import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
 import { assembleFixPack } from '@/lib/fixpack';
-import { purchaseCovers } from '@/lib/purchase';
+import { verifiedPurchase } from '@/lib/purchase';
 import { loadScanView } from '@/lib/scan-data';
 import { CONTACT_EMAIL } from '@/lib/site';
 
@@ -50,9 +51,13 @@ export default async function PurchasedPage({
   const user = await currentUser();
   // Either proof is enough, and the session is checked first because it is the
   // one the person standing here almost certainly has.
-  const paid = await purchaseCovers(sessionId, id);
+  const purchase = await verifiedPurchase(sessionId);
+  const paid = purchase?.scanId === id;
   const entitled = paid || (user ? await hasFixpackEntitlement(user.id) : false);
   const domain = view.site.domain;
+  // Stripe knows the address the receipt went to; it is often not the address
+  // the person is signed in with, and naming it is half of "check your spam".
+  const buyerEmail = (paid ? purchase?.email : null) ?? user?.email ?? null;
 
   // The prompt goes on the page, not just into a zip. It is the thing they act
   // on, and making them open an email to see it is a step nobody needs.
@@ -91,6 +96,12 @@ export default async function PurchasedPage({
           </div>
         </Card>
 
+        {/* Said here as well as in the mail itself, because the person who
+            cannot find the mail is by definition not reading the mail. */}
+        <div className="mt-6">
+          <MailNote to={buyerEmail} subject={`Your fix pack for ${domain}`} />
+        </div>
+
         {pack ? <PromptPanel prompt={pack.agentPrompt} filename="botready-fixes.md" /> : null}
 
         {pack ? (
@@ -109,8 +120,8 @@ export default async function PurchasedPage({
               </ul>
             </Card>
             <p className="mt-3 text-[14px] leading-[1.6] text-muted">
-              All of it is attached to the email as well, each file on its own, so you can open any of them without unzipping
-              anything.
+              Every one of these is attached to the email too, each file on its own, so you can open any of them without
+              unzipping anything.
             </p>
           </section>
         ) : null}
