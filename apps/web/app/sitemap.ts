@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { PUBLIC_PAGES } from '@/lib/content';
-import { SEGMENTS, SITE } from '@/lib/site';
+import { PUBLIC_INDEX_LISTED, SEGMENTS, SITE } from '@/lib/site';
 
 /**
  * The static pages, with the date each one's content actually changed.
@@ -27,8 +27,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: page.priority,
     })),
     // The ranking pages are rebuilt nightly, so yesterday is the honest answer
-    // and today would be a claim we cannot make until tonight's run.
-    ...SEGMENTS.map((segment) => ({
+    // and today would be a claim we cannot make until tonight's run. Left out
+    // entirely while the index is unlisted: a sitemap is where we say what is
+    // worth reading, and a ranking of too few sites is not.
+    ...(PUBLIC_INDEX_LISTED ? SEGMENTS : []).map((segment) => ({
       url: `${SITE.origin}/index/${segment.key}`,
       lastModified: indexUpdated,
       changeFrequency: 'daily' as const,

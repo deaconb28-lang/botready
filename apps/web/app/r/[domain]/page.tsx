@@ -9,7 +9,7 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Container } from '@/components/ui';
 import { latestScanForDomain } from '@/lib/scan-data';
-import { absoluteUrl } from '@/lib/site';
+import { PUBLIC_INDEX_LISTED, absoluteUrl } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,9 +54,11 @@ export default async function DomainResultPage({ params }: { params: Promise<{ d
         <div className="mt-8">
           <HeroScanCard compact />
         </div>
-        <p className="mt-6 font-mono text-[12.5px] text-subtle-2">
-          Or browse <Link href="/index/saas">the public index</Link>.
-        </p>
+        {PUBLIC_INDEX_LISTED ? (
+          <p className="mt-6 font-mono text-[12.5px] text-subtle-2">
+            Or browse <Link href="/index/saas">the public index</Link>.
+          </p>
+        ) : null}
       </Container>
       <SiteFooter />
     </div>

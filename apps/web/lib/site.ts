@@ -96,6 +96,19 @@ export const CONTACT_EMAIL = 'team@botready.dev';
 /** The credit line in the footer. */
 export const CREDIT = { text: 'designed with love by Deacon Brantley @ itsdeacon.com', href: 'https://itsdeacon.com' };
 
+/**
+ * Whether the public index is advertised anywhere on the site.
+ *
+ * Off while there are too few scored sites for a ranking to be worth reading.
+ * The pages themselves still work and every link ever shared still resolves —
+ * what this turns off is us pointing at them: the header, the footer, the two
+ * calls to action, the sitemap, llms.txt, and the pages' own indexability.
+ *
+ * Flip it back to true when there are enough answers to rank. That is the
+ * whole change; nothing was deleted.
+ */
+export const PUBLIC_INDEX_LISTED = false;
+
 export const SEGMENTS = [
   { key: 'saas', label: 'SaaS' },
   { key: 'devtools', label: 'Dev tools' },

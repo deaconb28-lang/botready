@@ -10,7 +10,7 @@
 import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
 import { PUBLIC_PAGES, markdownPathFor, pageFor } from './content';
-import { CONTACT_EMAIL, LIMITS, PRICING, SITE, USER_AGENT, absoluteUrl } from './site';
+import { CONTACT_EMAIL, LIMITS, PRICING, PUBLIC_INDEX_LISTED, SITE, USER_AGENT, absoluteUrl } from './site';
 
 function heading(path: string): string[] {
   const page = pageFor(path);
@@ -247,10 +247,9 @@ export function llmsTxt(): string {
     `- [OpenAPI description](${absoluteUrl('/openapi.json')}): the two public endpoints, POST /api/scan and GET /api/scan/{id}.`,
     `- [Agent manifest](${absoluteUrl('/.well-known/agent.json')}): what this site offers a client, in JSON.`,
     '',
-    '## Optional',
-    '',
-    `- [Public index](${absoluteUrl('/index/saas')}): scored sites by segment.`,
-    '',
+    ...(PUBLIC_INDEX_LISTED
+      ? ['## Optional', '', `- [Public index](${absoluteUrl('/index/saas')}): scored sites by segment.`, '']
+      : []),
     '## Notes',
     '',
     `- Our own crawler is \`${USER_AGENT}\`. It obeys robots.txt and never evades a block.`,

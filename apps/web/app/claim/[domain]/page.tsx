@@ -9,7 +9,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Container, Eyebrow, PageTitle } from '@/components/ui';
 import { currentUser } from '@/lib/auth';
 import { instructions } from '@/lib/claims';
-import { PRICING } from '@/lib/site';
+import { PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
 import { publicClient } from '@/lib/supabase';
 import { ClaimForm } from './ClaimForm';
 
@@ -132,7 +132,7 @@ export default async function ClaimPage({
           </div>
 
           <p className="mt-12 text-[14.5px] text-muted">
-            <Link href="/index/saas">Back to the index</Link>
+            {PUBLIC_INDEX_LISTED ? <Link href="/index/saas">Back to the index</Link> : <Link href="/account">Back to your domains</Link>}
           </p>
         </Container>
       </main>

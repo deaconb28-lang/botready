@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { useMode } from '@/lib/mode';
 import { Button, Wordmark, cx } from '@/components/ui';
+import { PUBLIC_INDEX_LISTED } from '@/lib/site';
 
 const NAV: Array<{ label: string; href: string }> = [
   { label: 'Why AEO', href: '/#aeo' },
   { label: 'What we check', href: '/what-we-check' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Index', href: '/index/saas' },
+  ...(PUBLIC_INDEX_LISTED ? [{ label: 'Index', href: '/index/saas' }] : []),
   { label: 'Crawler', href: '/bot' },
 ];
 

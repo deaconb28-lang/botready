@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Card, Container, cx } from '@/components/ui';
 import { loadIndex, type IndexRow } from '@/lib/index-data';
-import { SEGMENTS, isSegment, type SegmentKey } from '@/lib/site';
+import { PUBLIC_INDEX_LISTED, SEGMENTS, isSegment, type SegmentKey } from '@/lib/site';
 import { scoreColorFor } from '@/lib/theme';
 
 /**
@@ -30,6 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
     title: `Who agents can read · ${label}`,
     description: `${label} sites, re-checked every night and ranked by how readable they are to the clients that answer questions about them.`,
     alternates: { canonical: `/index/${segment}` },
+    // Unlisted means unlisted. The page still answers for anyone holding a
+    // link, but we are not asking a search engine to send strangers to a
+    // ranking of too few sites while we say the ranking is not ready.
+    ...(PUBLIC_INDEX_LISTED ? {} : { robots: { index: false, follow: false } }),
   };
 }
 

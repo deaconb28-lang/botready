@@ -7,7 +7,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, DashConnector, GradeTile, PillEyebrow, TerminalLine, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
 import { pageMetadata } from '@/lib/metadata';
-import { PRICING } from '@/lib/site';
+import { PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/pricing');
 
@@ -137,9 +137,15 @@ export default function PricingPage() {
               <Button href="/#check" tone="lime" size="lg" shadow={4} weight={700} className="px-[26px] text-[15.5px]">
                 Run the free check
               </Button>
-              <Button href="/index/saas" tone="outline-white" size="lg" className="px-[22px]">
-                See the public index
-              </Button>
+              {PUBLIC_INDEX_LISTED ? (
+                <Button href="/index/saas" tone="outline-white" size="lg" className="px-[22px]">
+                  See the public index
+                </Button>
+              ) : (
+                <Button href="/what-we-check" tone="outline-white" size="lg" className="px-[22px]">
+                  See what we check
+                </Button>
+              )}
             </div>
           </div>
           <div className="grid gap-[14px]">
@@ -166,7 +172,13 @@ export default function PricingPage() {
             the files earn their own money.
           </p>
           <p className="text-[16.5px] leading-[1.65] text-muted">
-            It also means every result can be a page anyone can open, which is how the <Link href="/index/saas">public index</Link> works.
+            {PUBLIC_INDEX_LISTED ? (
+              <>
+                It also means every result can be a page anyone can open, which is how the <Link href="/index/saas">public index</Link> works.
+              </>
+            ) : (
+              'It also means every result is a page anyone can open and link to, for as long as the address exists.'
+            )}
           </p>
         </div>
       </Container>

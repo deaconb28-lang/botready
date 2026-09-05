@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Container } from '@/components/ui';
+import { PUBLIC_INDEX_LISTED } from '@/lib/site';
 
 export const metadata: Metadata = { title: 'Not found' };
 
@@ -21,9 +22,15 @@ export default function NotFound() {
           <Button href="/" tone="ink" size="lg" shadow={3}>
             Run a check
           </Button>
-          <Button href="/index/saas" tone="white" size="lg">
-            Browse the index
-          </Button>
+          {PUBLIC_INDEX_LISTED ? (
+            <Button href="/index/saas" tone="white" size="lg">
+              Browse the index
+            </Button>
+          ) : (
+            <Button href="/what-we-check" tone="white" size="lg">
+              See what we check
+            </Button>
+          )}
         </div>
         <p className="mt-6 font-mono text-[12.5px] text-subtle-2">
           Looking for the crawler docs? <Link href="/bot">/bot</Link>.

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { CONTACT_EMAIL, CREDIT } from '@/lib/site';
+import { CONTACT_EMAIL, CREDIT, PUBLIC_INDEX_LISTED } from '@/lib/site';
 import { ProductHuntBadge } from './ProductHuntBadge';
 
 export function SiteFooter() {
@@ -26,7 +26,7 @@ export function SiteFooter() {
             <span className="font-mono text-[11px] font-medium tracking-[0.12em] text-placeholder">PRODUCT</span>
             <Link href="/what-we-check">What we check</Link>
             <Link href="/pricing">Pricing</Link>
-            <Link href="/index/saas">Public index</Link>
+            {PUBLIC_INDEX_LISTED ? <Link href="/index/saas">Public index</Link> : null}
           </div>
           <div className="grid content-start gap-[9px]">
             <span className="font-mono text-[11px] font-medium tracking-[0.12em] text-placeholder">FOR DEVELOPERS</span>
