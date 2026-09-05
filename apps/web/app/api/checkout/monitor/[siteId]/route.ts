@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 
 import { currentUser } from '@/lib/auth';
 import { serverEnv } from '@/lib/env';
-import { absoluteUrl, paymentLink } from '@/lib/site';
+import { PRICING, absoluteUrl, paymentLink } from '@/lib/site';
 import { stripe } from '@/lib/stripe';
 import { publicClient } from '@/lib/supabase';
 
@@ -48,12 +49,43 @@ export async function GET(_request: Request, context: { params: Promise<{ siteId
   return NextResponse.json({ error: 'Checkout is not configured right now. Nothing was charged.' }, { status: 502 });
 }
 
+/**
+ * The subscription, priced from PRICING when no price id is configured — same
+ * reasoning as the fix pack's route, and the same reason: a missing
+ * environment variable should not be able to quietly downgrade checkout.
+ */
+function lineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
+  const price = configuredPrice();
+  if (price) return { price, quantity: 1 };
+
+  return {
+    quantity: 1,
+    price_data: {
+      currency: PRICING.monitor.currency,
+      unit_amount: PRICING.monitor.amount * 100,
+      recurring: { interval: 'month' },
+      product_data: {
+        name: 'BotReady monitoring',
+        description: 'Weekly re-checks, and an alert the day a rule changes under you.',
+      },
+    },
+  };
+}
+
+function configuredPrice(): string | null {
+  try {
+    return serverEnv.stripePriceMonitor();
+  } catch {
+    return null;
+  }
+}
+
 /** Null rather than a throw when Stripe is not configured, so the caller can fall back. */
 async function createSession(siteId: string, domain: string, email: string) {
   try {
     return await stripe().checkout.sessions.create({
       mode: 'subscription',
-      line_items: [{ price: serverEnv.stripePriceMonitor(), quantity: 1 }],
+      line_items: [lineItem()],
       customer_email: email,
       client_reference_id: siteId,
       metadata: { plan: 'monitor', siteId, domain },

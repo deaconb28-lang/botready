@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 
 import { currentUser } from '@/lib/auth';
 import { serverEnv } from '@/lib/env';
@@ -66,6 +67,50 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
 }
 
 /**
+ * What is being bought, priced from PRICING rather than from a price id.
+ *
+ * STRIPE_PRICE_FIXPACK is used when it is set, because a price defined once in
+ * Stripe keeps the dashboard tidy. It is not required, and that is the point:
+ * the whole checkout was falling back to the payment link — and every buyer
+ * was finishing on Stripe's own page instead of ours — because one
+ * environment variable was missing. A price we already state in three places
+ * on the site is not a secret, and a $15 charge should not need a second
+ * source of truth to happen.
+ *
+ * PRICING is that source, and `apps/web/__tests__/payment-link.test.ts`
+ * already holds it to what the paywall says.
+ */
+function lineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
+  const price = configuredPrice();
+  if (price) return { price, quantity: 1 };
+
+  return {
+    quantity: 1,
+    price_data: {
+      currency: PRICING.fixpack.currency,
+      // Stripe counts in the currency's smallest unit.
+      unit_amount: PRICING.fixpack.amount * 100,
+      // Deliberately generic. Stripe creates a product per session for an
+      // inline price, so naming the domain here would put one row in the
+      // catalogue per customer. The domain is on the payment intent and in
+      // metadata, which is where anyone would look for it.
+      product_data: {
+        name: 'BotReady fix pack',
+        description: 'Generated files and an agent prompt that fix what the scan found.',
+      },
+    },
+  };
+}
+
+function configuredPrice(): string | null {
+  try {
+    return serverEnv.stripePriceFixpack();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Null rather than a throw when Stripe is not configured, so the caller can
  * fall back — but never silently. A swallowed error here is the difference
  * between a buyer landing on our confirmation screen and a buyer landing on
@@ -76,7 +121,7 @@ async function createSession(scanId: string, domain: string, email: string | nul
   try {
     return await stripe().checkout.sessions.create({
       mode: 'payment',
-      line_items: [{ price: serverEnv.stripePriceFixpack(), quantity: 1 }],
+      line_items: [lineItem()],
       ...(email ? { customer_email: email } : {}),
       client_reference_id: scanId,
       metadata: { scanId, domain, plan: 'fixpack' },
