@@ -38,11 +38,16 @@ export const metadata: Metadata = {
     default: `${SITE.name} — ${SITE.tagline}`,
     template: `%s — ${SITE.name}`,
   },
-  // The same sentence the home page opens with. A description that promises
-  // something different from the first line of the page is a description
-  // somebody wrote once and never read again.
+  // The home page's opening line, cut where a search result cuts it.
+  //
+  // Google truncates a description somewhere around 155 characters, so the
+  // hero's third sentence — "No engineer, no rebuild, no marketing budget" —
+  // would be sheared off mid-promise in the one place this text is read by
+  // strangers. Dropping it here keeps the description a whole thought and
+  // still the same thought the page opens with; the page itself keeps the
+  // full line, where nothing is cutting it.
   description:
-    'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you. No engineer, no rebuild, no marketing budget.',
+    'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you.',
   openGraph: {
     siteName: SITE.name,
     type: 'website',
