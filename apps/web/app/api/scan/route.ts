@@ -123,10 +123,27 @@ export async function POST(request: NextRequest) {
  * and everything after it is a proxy we do not control, so only the first entry
  * is an identity.
  */
+/**
+ * The address the rate limit counts against.
+ *
+ * This read the *first* entry of x-forwarded-for, which is the one value in the
+ * request an attacker controls. Vercel appends the real client address to any
+ * chain the caller sends rather than replacing it, so a client that sets
+ * `X-Forwarded-For: 1.2.3.4` gets a fresh bucket on every request and the
+ * anonymous scan limit stops existing.
+ *
+ * x-real-ip is set by the platform and is a single value, so it is the answer
+ * when it is there. Otherwise take the *last* entry of the chain, which is the
+ * one our own proxy wrote; everything to the left of it is hearsay.
+ *
+ * 'unknown' is deliberately one shared bucket rather than a free pass: a
+ * request that arrives with neither header should be limited more, not less.
+ */
 function callerIp(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const first = forwarded?.split(',')[0]?.trim();
-  return first || request.headers.get('x-real-ip') || 'unknown';
+  const real = request.headers.get('x-real-ip')?.trim();
+  if (real) return real;
+  const chain = request.headers.get('x-forwarded-for')?.split(',') ?? [];
+  return chain[chain.length - 1]?.trim() || 'unknown';
 }
 
 function problem(status: number, error: string, headers: Record<string, string> = {}) {

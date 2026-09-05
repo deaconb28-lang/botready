@@ -54,6 +54,20 @@ const config: NextConfig = {
             key: 'strict-transport-security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
+          // Nothing here is meant to be framed. The result page embeds other
+          // people's sites; nobody embeds ours. Without this, any page of ours
+          // can be loaded invisibly over a decoy and a click lands on a real
+          // control — the claim button, a toggle, checkout. Two headers because
+          // frame-ancestors is the one that counts and X-Frame-Options is what
+          // the older clients read.
+          { key: 'content-security-policy', value: "frame-ancestors 'none'" },
+          { key: 'x-frame-options', value: 'DENY' },
+          // We ask for no camera, microphone or location anywhere, so say so
+          // rather than leaving it to a default that varies by browser.
+          {
+            key: 'permissions-policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
         ],
       },
     ];

@@ -24,6 +24,11 @@ const sql = postgres(url, { max: 1, onnotice: () => {} });
 
 try {
   await sql.unsafe('create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())');
+  // Everything in `public` is served by PostgREST to anyone holding the anon
+  // key, and this table was the one thing in the schema without RLS. Enabled
+  // with no policy, which denies every role; the service role bypasses RLS, so
+  // this runner is unaffected.
+  await sql.unsafe('alter table schema_migrations enable row level security');
   const applied = new Set((await sql`select name from schema_migrations`).map((r) => r.name));
   const files = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
   let ran = 0;
