@@ -36,18 +36,16 @@ export function cx(...parts: Array<string | false | null | undefined>): string {
 export function Mark({ size = 28 }: { size?: number }) {
   return (
     <svg
-      viewBox="0 0 32 32"
+      viewBox="0 0 512 512"
       width={size}
       height={size}
       aria-hidden="true"
       focusable="false"
       className="flex-none"
     >
-      <rect x="1" y="1" width="30" height="30" rx="8.5" fill="var(--color-violet)" stroke="var(--color-ink)" strokeWidth="2" />
-      <g fill="none" stroke="var(--color-lime)" strokeWidth="3.4" strokeLinecap="round">
-        <path d="M9.3 8V24.3" />
-        <circle cx="17.6" cy="19.3" r="5" />
-      </g>
+      <rect x="11" y="11" width="490" height="490" rx="132" fill="var(--color-violet)" stroke="var(--color-ink)" strokeWidth="22" />
+      <path d="M168 120V390" fill="none" stroke="var(--color-lime)" strokeWidth="58" strokeLinecap="round" />
+      <circle cx="255" cy="305" r="92" fill="none" stroke="var(--color-lime)" strokeWidth="54" />
     </svg>
   );
 }
