@@ -59,7 +59,11 @@ export async function probeSite(url: string): Promise<SiteProbe> {
   const origin = safeOrigin(url);
   if (!origin) return UNKNOWN;
 
-  const key = `sitecard:v1:${origin}`;
+  // The version moves whenever what we extract changes. A cached answer from
+  // an older reader is a wrong answer served for the rest of its six hours,
+  // and the entries are cheap enough that abandoning them is the right trade:
+  // v1 stopped at </head> and so recorded no icon for any Next site.
+  const key = `sitecard:v2:${origin}`;
   const kv = cache();
 
   const hit = await kv.get(key).catch(() => null);
