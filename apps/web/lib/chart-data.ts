@@ -132,14 +132,24 @@ export interface Standing {
   of: number;
   /** How many of them reached an A. */
   atA: number;
+  /** The nearest site above, and what it scored. Null at the top. */
+  nextUp: { domain: string; total: number } | null;
+  /** Points needed to pass it. Null at the top. */
+  gap: number | null;
+  /** How many sites that would clear, ties included. Null at the top. */
+  clears: number | null;
 }
 
 /**
  * Where a score sits against every other site we have measured.
  *
  * True, comparative and it cuts both ways, which is the only kind of pressure
- * worth applying: a D is worse when you can see twenty sites above it, and an
- * A is worth more when you can see how few there are.
+ * worth applying: a D is worse when you can see forty sites above it, and an A
+ * is worth more when you can see how few there are.
+ *
+ * The gap is the part that turns it into something other than a scolding.
+ * "40th of 41" is a fact about the past; "four points clears three sites" is a
+ * target, and it is the same fact.
  *
  * Null below ten scored sites. "Third of four" is not a standing, and dressing
  * a tiny sample up as one is the sort of thing this product exists to argue
@@ -148,15 +158,37 @@ export interface Standing {
 export async function standingFor(total: number | null): Promise<Standing | null> {
   if (total === null) return null;
   const client = publicClient();
+  const rows = () => client.from('chart_rows').select('site_id', { count: 'exact', head: true });
 
-  const [better, scored, aGrade] = await Promise.all([
-    client.from('chart_rows').select('site_id', { count: 'exact', head: true }).gt('total', total),
-    client.from('chart_rows').select('site_id', { count: 'exact', head: true }).not('total', 'is', null),
-    client.from('chart_rows').select('site_id', { count: 'exact', head: true }).eq('grade', 'A'),
+  const [better, scored, aGrade, above] = await Promise.all([
+    rows().gt('total', total),
+    rows().not('total', 'is', null),
+    rows().eq('grade', 'A'),
+    // The nearest score above this one. Everything above is at least this, so
+    // reaching it by a point passes every site sitting on it.
+    client
+      .from('chart_rows')
+      .select('domain,total')
+      .gt('total', total)
+      .order('total', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const of = scored.count ?? 0;
   if (of < 10) return null;
 
-  return { rank: (better.count ?? 0) + 1, of, atA: aGrade.count ?? 0 };
+  const next = (above.data ?? null) as { domain: string; total: number } | null;
+  const ties = next
+    ? await client.from('chart_rows').select('site_id', { count: 'exact', head: true }).eq('total', next.total)
+    : null;
+
+  return {
+    rank: (better.count ?? 0) + 1,
+    of,
+    atA: aGrade.count ?? 0,
+    nextUp: next,
+    gap: next ? next.total - total + 1 : null,
+    clears: next ? (ties?.count ?? 1) : null,
+  };
 }
