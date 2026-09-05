@@ -56,7 +56,19 @@ export function AppShell({
             </Link>
           </nav>
           <div className="ml-auto flex items-center gap-3">
-            <span className="hidden whitespace-nowrap font-mono text-[13px] text-quiet md:inline">signed in · {property?.domain ?? email}</span>
+            <span className="hidden whitespace-nowrap font-mono text-[13px] text-quiet lg:inline">signed in · {property?.domain ?? email}</span>
+            {/* The one thing being sold, on every view rather than only on the
+                two that happen to carry a card for it. A plain anchor: the
+                unbought href is a checkout route that redirects to Stripe, and
+                a client-side navigation cannot follow that. */}
+            {property?.scanId ? (
+              <a
+                href={packHref}
+                className="edge whitespace-nowrap rounded-[10px] bg-lime px-[14px] py-[7px] font-body text-[13.5px] font-bold text-ink no-underline shadow-hard-2 hover:bg-white"
+              >
+                {owned ? 'Download the pack' : `Get the pack — ${PRICING.fixpack.label}`}
+              </a>
+            ) : null}
             <Link href="/account" className="whitespace-nowrap font-body text-[13.5px] font-medium text-muted no-underline hover:text-ink">
               Account
             </Link>

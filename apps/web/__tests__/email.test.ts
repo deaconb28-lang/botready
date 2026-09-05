@@ -9,7 +9,17 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const sent = vi.fn(async () => ({ data: { id: 'msg_1' }, error: null }));
+/** Typed so `sent.mock.calls[0][0]` is a value tsc will let the tests read. */
+interface SentMessage {
+  from: string;
+  replyTo: string;
+  to: string;
+  subject: string;
+  text: string;
+  attachments?: Array<{ filename: string }>;
+}
+
+const sent = vi.fn(async (_message: SentMessage) => ({ data: { id: 'msg_1' }, error: null }));
 
 vi.mock('resend', () => ({
   Resend: class {
@@ -28,25 +38,25 @@ afterEach(() => vi.clearAllMocks());
 describe('every email we send', () => {
   it('comes from team@botready.dev, and replies reach the same address', async () => {
     await sendMonitorStarted({ to: 'buyer@example.com', domain: 'example.com' });
-    const message = sent.mock.calls[0]?.[0] as unknown as { from: string; replyTo: string };
-    expect(message.from).toBe('botready.dev <team@botready.dev>');
-    expect(message.replyTo).toBe('team@botready.dev');
+    const message = sent.mock.calls[0]?.[0];
+    expect(message?.from).toBe('botready.dev <team@botready.dev>');
+    expect(message?.replyTo).toBe('team@botready.dev');
   });
 
   it('goes to the address that paid', async () => {
     await sendMonitorStarted({ to: 'buyer@example.com', domain: 'example.com' });
-    expect((sent.mock.calls[0]?.[0] as unknown as { to: string }).to).toBe('buyer@example.com');
+    expect(sent.mock.calls[0]?.[0]?.to).toBe('buyer@example.com');
   });
 });
 
 describe('monitoring', () => {
   it('sends a welcome naming the domain, the dashboard and how to cancel', async () => {
     await sendMonitorStarted({ to: 'buyer@example.com', domain: 'example.com' });
-    const message = sent.mock.calls[0]?.[0] as unknown as { subject: string; text: string };
-    expect(message.subject).toContain('example.com');
-    expect(message.text).toContain('/app/example.com');
+    const message = sent.mock.calls[0]?.[0];
+    expect(message?.subject).toContain('example.com');
+    expect(message?.text).toContain('/app/example.com');
     // Somebody paying every month must be able to find the way out of it.
-    expect(message.text).toContain('/account/billing');
+    expect(message?.text).toContain('/account/billing');
   });
 });
 
@@ -70,8 +80,8 @@ describe('the fix pack', () => {
         punchList: '- [ ] Fix the robots rules',
       } as never,
     });
-    const message = sent.mock.calls[0]?.[0] as unknown as { attachments: Array<{ filename: string }> };
-    expect(message.attachments.map((a) => a.filename)).toEqual([
+    const message = sent.mock.calls[0]?.[0];
+    expect(message?.attachments?.map((a) => a.filename)).toEqual([
       'robots.txt',
       'llms.txt',
       'botready-example.com.zip',
@@ -81,7 +91,6 @@ describe('the fix pack', () => {
   it('still sends when the pack could not be built, because they paid', async () => {
     await sendFixpackReady({ to: 'buyer@example.com', scanId: 'scan-1', domain: 'example.com', pack: null });
     expect(sent).toHaveBeenCalledTimes(1);
-    const message = sent.mock.calls[0]?.[0] as unknown as { attachments?: unknown[] };
-    expect(message.attachments ?? []).toHaveLength(0);
+    expect(sent.mock.calls[0]?.[0]?.attachments ?? []).toHaveLength(0);
   });
 });

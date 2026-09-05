@@ -60,6 +60,21 @@ export function AppSidebar({
         )}
       </div>
 
+      {/* Above the nav rather than pinned to the bottom with mt-auto. Eight nav
+          rows is enough to push it under the fold on a laptop, and the thing
+          being sold should not be the one panel you have to scroll a sidebar
+          to find. */}
+      <div className="edge on-dark rounded-[14px] bg-violet p-[18px] text-white shadow-hard-3">
+        <div className="display text-[17px] leading-[1.2]">{promo.title}</div>
+        <p className="mb-[14px] mt-[9px] font-mono text-[13px] leading-[1.5] text-on-violet">{promo.body}</p>
+        <a
+          href={promo.href}
+          className="edge block w-full rounded-[10px] bg-lime px-3 py-[11px] text-center font-body text-[14px] font-bold text-ink no-underline shadow-hard-2 hover:bg-white"
+        >
+          {promo.cta}
+        </a>
+      </div>
+
       {nav.length > 0
         ? groups.map((group) => (
             <div key={group}>
@@ -89,16 +104,6 @@ export function AppSidebar({
           ))
         : null}
 
-      <div className="edge on-dark mt-auto rounded-[14px] bg-violet p-[18px] text-white shadow-hard-3">
-        <div className="display text-[17px] leading-[1.2]">{promo.title}</div>
-        <p className="mb-[14px] mt-[9px] font-mono text-[13px] leading-[1.5] text-on-violet">{promo.body}</p>
-        <a
-          href={promo.href}
-          className="edge block w-full rounded-[10px] bg-lime px-3 py-[11px] text-center font-body text-[14px] font-bold text-ink no-underline shadow-hard-2 hover:bg-white"
-        >
-          {promo.cta}
-        </a>
-      </div>
     </>
   );
 
