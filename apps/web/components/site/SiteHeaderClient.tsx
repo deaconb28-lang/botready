@@ -53,6 +53,19 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
       <div className="mx-auto flex max-w-[1200px] items-center gap-5 px-6 py-[14px] sm:px-[26px]">
         <Wordmark />
 
+        {/* Beside the wordmark rather than in the account cluster on the right.
+            This switches the register the whole site is written in — it belongs
+            with what you are reading, not with signing in and running a check. */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-pressed={mode === 'tech'}
+          aria-label={mode === 'plain' ? 'Switch to technical language' : 'Switch to plain language'}
+          className="edge hidden cursor-pointer whitespace-nowrap rounded-[9px] bg-white px-3 py-2 font-body text-[13px] font-medium text-muted hover:text-ink sm:inline-block"
+        >
+          {mode === 'plain' ? 'Plain ⇄' : 'Technical ⇄'}
+        </button>
+
         <nav aria-label="Site" className="mx-auto hidden min-w-0 gap-5 lg:flex">
           {NAV.map((item) => (
             <Link
@@ -70,21 +83,25 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
         </nav>
 
         <div className="ml-auto flex items-center gap-3 lg:ml-0">
-          <button
-            type="button"
-            onClick={toggle}
-            aria-pressed={mode === 'tech'}
-            aria-label={mode === 'plain' ? 'Switch to technical language' : 'Switch to plain language'}
-            className="edge hidden cursor-pointer whitespace-nowrap rounded-[9px] bg-white px-3 py-2 font-body text-[13px] font-medium text-muted hover:text-ink sm:inline-block"
-          >
-            {mode === 'plain' ? 'Plain ⇄' : 'Technical ⇄'}
-          </button>
-          <Link
-            href={signedIn ? '/app' : '/sign-in'}
-            className="hidden whitespace-nowrap py-[6px] font-body text-[14.5px] font-medium text-muted no-underline hover:text-ink sm:inline-block"
-          >
-            {signedIn ? 'Open the app' : 'Log in'}
-          </Link>
+          {/* Signed in, the way back into the product is a button rather than
+              one more muted link among four. Signed out it stays a link,
+              because a second prominent control pointing at the same sign-in
+              page as "Log in" is just two of the same thing. */}
+          {signedIn ? (
+            <Link
+              href="/app"
+              className="edge hidden whitespace-nowrap rounded-[10px] bg-white px-4 py-[9px] font-body text-[14px] font-semibold text-ink no-underline shadow-hard-2 hover:bg-lime sm:inline-block"
+            >
+              Go to app
+            </Link>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="hidden whitespace-nowrap py-[6px] font-body text-[14.5px] font-medium text-muted no-underline hover:text-ink sm:inline-block"
+            >
+              Log in
+            </Link>
+          )}
           <Button onClick={runCheck} tone="ink" size="md">
             Run a check
           </Button>
@@ -116,7 +133,7 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
             </Link>
           ))}
           <Link href={signedIn ? '/app' : '/sign-in'} className="rounded-[9px] px-2 py-2 font-body text-[15px] font-medium text-ink no-underline hover:bg-surface-alt">
-            {signedIn ? 'Open the app' : 'Log in'}
+            {signedIn ? 'Go to app' : 'Log in'}
           </Link>
           <button
             type="button"
