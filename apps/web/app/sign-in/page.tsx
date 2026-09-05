@@ -32,13 +32,18 @@ const PERKS: Array<{ title: string; chip: string; body: string }> = [
 ];
 
 /**
- * The split screen. Left: Google, which is the only way in. Right: what is waiting
- * inside. There is no password anywhere in this product. Someone who is
- * already signed in has no business here and goes straight to their account.
+ * The split screen. Left: Google, which is the only way in. Right: what is
+ * waiting inside. There is no password anywhere in this product. Someone who is
+ * already signed in has no business here and goes straight through.
  */
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   const { next: rawNext, error } = await searchParams;
-  const next = rawNext ? safeNext(rawNext) : '/account';
+  // The app, not the account area. Signing in is how somebody gets to the
+  // product; billing and settings are somewhere you go on purpose, from the
+  // menu, once. /app forwards to the first claimed domain, or to /app/new when
+  // there is not one yet, which is the page that walks a new person through
+  // getting one.
+  const next = rawNext ? safeNext(rawNext) : '/app';
 
   const user = await currentUser();
   if (user) redirect(next);
