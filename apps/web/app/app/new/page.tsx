@@ -15,11 +15,20 @@ export const dynamic = 'force-dynamic';
  *
  * Two audiences on one route. Somebody who already has properties wants the
  * form and nothing else. Somebody who has just signed in and has none is
- * standing in an empty product, and the form alone does not tell them that a
- * scan is only step one — that the app fills in when they claim the domain,
- * which is a thing they have to go and prove. So the first-run version is the
- * three steps, with the form as step one and the rest stated before they
- * arrive rather than after.
+ * standing in an empty product, and the form alone does not tell them a scan is
+ * only step one.
+ *
+ * So the first run is three steps and each is one line. It was four dense
+ * paragraphs, which is the mistake an empty state invites: nothing is on the
+ * screen, so the screen gets filled with explanation. But the reader has one
+ * question here, "what do I do", and every sentence past the answer stands
+ * between them and the box they are supposed to type in. What claiming
+ * actually involves belongs on the claim page, where they will be standing
+ * when they need it.
+ *
+ * Monitoring is the one thing on this route that costs money, so it is said
+ * once, under the path rather than inside it. It is not a fourth step: nobody
+ * has to do it to finish.
  */
 export default async function NewPropertyPage() {
   const user = await requireUser('/app/new');
@@ -32,38 +41,32 @@ export default async function NewPropertyPage() {
         <h1 className="display-tight text-[36px]">{first ? "You're in. One domain to go." : 'New scan'}</h1>
         <p className="mb-[26px] mt-[10px] text-[16px] leading-[1.55] text-body">
           {first
-            ? 'Nothing is here yet because nothing is yours yet. Three steps, and the first one is free and takes about thirty seconds.'
+            ? 'Three steps. The first is free and takes about thirty seconds.'
             : 'One visit, six pages at most, about thirty seconds. When it finishes you can claim the domain and it becomes a property here.'}
         </p>
 
         {first ? (
           <>
             <Step n={1} title="Check a site you control" active>
-              <p className="mb-4">
-                Any site. We ask for it as five different clients and compare what each one gets back. No account needed
-                for this part and no card — the diagnosis is free, always.
-              </p>
+              <p className="mb-4">Any site. No account, no card.</p>
               <NewScanForm mode="claim" />
             </Step>
 
             <Step n={2} title="Claim it">
-              <p>
-                A result page is public; a property is yours. Claiming means publishing a token we give you — one DNS
-                record, or one meta tag on the homepage — so that we know the domain is actually yours before we start
-                keeping history and sending you mail about it. The result page links straight to it, and the whole thing
-                is two minutes.
-              </p>
+              <p>Publish one DNS record or one meta tag, so we know the domain is yours. Two minutes.</p>
             </Step>
 
             <Step n={3} title="Then this fills in" last>
               <p>
-                Score history with every change annotated, the five clients on every run,{' '}
-                <Link href="/what-we-check">every check we make</Link>, competitors measured the same way, and the fix
-                pack regenerated from your own pages. Monitoring adds the weekly re-check and tells you the day a
-                firewall rule starts refusing an agent that used to get through — {PRICING.monitor.label}{' '}
-                {PRICING.monitor.cadence}, and it is the only thing here you have to decide about.
+                Score history, the five clients on every run, competitors, and the fix pack regenerated from your own
+                pages. <Link href="/what-we-check">Every check we make</Link>.
               </p>
             </Step>
+
+            <p className="mt-6 border-t border-hairline-2 pt-5 text-[14px] leading-[1.6] text-muted">
+              Monitoring is optional: {PRICING.monitor.label} {PRICING.monitor.cadence} to re-check weekly and write to
+              you the day a client that could read your site stops being able to.
+            </p>
           </>
         ) : (
           <NewScanForm mode="claim" />

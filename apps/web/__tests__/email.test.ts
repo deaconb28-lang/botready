@@ -121,6 +121,13 @@ describe('the fix pack', () => {
     expect(message?.html).not.toContain('<table');
   });
 
+  it('opens with a greeting rather than a transaction', async () => {
+    await sendFixpackReady({ to: 'a@b.com', scanId: 'scan-1', domain: 'x.com', pack: null });
+    // Somebody has just handed us money; the first line should read like a
+    // person wrote it, not like a receipt printer.
+    expect(sent.mock.calls[0]?.[0]?.text.startsWith('Hi!')).toBe(true);
+  });
+
   it('says what to do if it landed in spam', async () => {
     await sendMonitorStarted({ to: 'buyer@example.com', domain: 'example.com' });
     expect(sent.mock.calls[0]?.[0]?.text).toContain('not spam');
