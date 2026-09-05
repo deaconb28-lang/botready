@@ -23,20 +23,33 @@ function scan(target: Record<string, unknown>): CheckResult[] {
 }
 
 describe('siteIdentity', () => {
-  it('prefers the icon the page declared', () => {
+  it('tries the icon the page declared first', () => {
     const id = siteIdentity(scan({ icon: 'https://cdn.example.com/logo.png' }), 'example.com', 'https://example.com/');
-    expect(id.iconUrl).toBe('https://cdn.example.com/logo.png');
+    expect(id.iconCandidates[0]).toBe('https://cdn.example.com/logo.png');
   });
 
-  it('falls back to /favicon.ico on the scanned origin, never a third party', () => {
+  it('falls back to conventional paths on the scanned origin, never a third party', () => {
     const id = siteIdentity(scan({ icon: '' }), 'example.com', 'https://example.com/pricing');
-    expect(id.iconUrl).toBe('https://example.com/favicon.ico');
+    expect(id.iconCandidates[0]).toBe('https://example.com/favicon.ico');
+    expect(id.iconCandidates).toContain('https://example.com/apple-touch-icon.png');
+    expect(id.iconCandidates.every((c) => c.startsWith('https://example.com/'))).toBe(true);
+  });
+
+  it('does not list the declared icon twice when it is the conventional path', () => {
+    const id = siteIdentity(scan({ icon: 'https://example.com/favicon.ico' }), 'example.com', 'https://example.com/');
+    expect(id.iconCandidates.filter((c) => c.endsWith('/favicon.ico'))).toHaveLength(1);
   });
 
   it('carries the page title and description through', () => {
     const id = siteIdentity(scan({ title: '  Example  ', description: 'We do a thing.' }), 'example.com', 'https://example.com/');
     expect(id.title).toBe('Example');
     expect(id.description).toBe('We do a thing.');
+  });
+
+  it('records whether the scan itself found a declared icon', () => {
+    expect(siteIdentity(scan({ icon: 'https://example.com/i.png' }), 'example.com', 'https://example.com/').declaredIcon).toBe(true);
+    expect(siteIdentity(scan({ icon: '' }), 'example.com', 'https://example.com/').declaredIcon).toBe(false);
+    expect(siteIdentity([], 'example.com', 'https://example.com/').declaredIcon).toBe(false);
   });
 
   it('has a monogram for a site whose icon will not load', () => {

@@ -30,33 +30,43 @@ export function SitePanel({
   fixture?: boolean;
   className?: string;
 }) {
-  // A site that refused every framing header is not worth a blank rectangle.
-  // `unknown` still tries: most sites allow it, and the header only started
-  // being recorded recently, so refusing to try would blank the preview on
-  // every scan taken before then.
-  const embeddable = !fixture && identity.framing !== 'refused';
+  // Only frame a site we have established will allow it.
+  //
+  // This used to try whenever we were unsure, on the reasoning that most sites
+  // allow framing and a preview is worth a gamble. It is not: a browser that
+  // refuses a frame paints its own opaque error page inside it, so a lost
+  // gamble is a white rectangle and nothing drawn behind it can show through.
+  // There is no way to ask a cross-origin frame whether it painted, so the
+  // question has to be settled before the element exists — see lib/site-probe.
+  const embeddable = !fixture && identity.framing === 'allowed';
 
   return (
     <section
       className={cx('edge overflow-hidden rounded-[16px] bg-white shadow-hard-4', className)}
       aria-label={`${identity.domain}, as it looks in a browser`}
     >
-      <div className="flex items-center gap-[10px] border-b-2 border-ink bg-surface-alt px-4 py-[11px]">
-        <SiteFavicon src={identity.iconUrl} domain={identity.domain} size={22} />
+      {/* The header is a link in every state, so the sentence the panel falls
+          back to always has something to point at. */}
+      <a
+        href={identity.url}
+        target="_blank"
+        // nofollow ugc: the destination is whatever domain someone typed into
+        // the scan box, not a site we are vouching for.
+        rel="noopener noreferrer nofollow ugc"
+        className="flex items-center gap-[10px] border-b-2 border-ink bg-surface-alt px-4 py-[11px] no-underline"
+      >
+        <SiteFavicon candidates={identity.iconCandidates} domain={identity.domain} size={22} />
         <span className="min-w-0 flex-1">
           <span className="block truncate font-mono text-[12px] font-medium text-ink">{identity.domain}</span>
           {identity.title ? <span className="block truncate text-[12.5px] leading-[1.3] text-subtle-2">{identity.title}</span> : null}
         </span>
-      </div>
+        <span aria-hidden="true" className="shrink-0 font-mono text-[11px] text-subtle-2">↗</span>
+      </a>
 
       {embeddable ? (
         <Preview identity={identity} />
       ) : (
-        <p className="border-b border-hairline px-4 py-[18px] text-[13.5px] leading-[1.5] text-subtle-2">
-          {fixture
-            ? 'This is a fixture, so there is no site to show here. A real result frames the page that was scanned.'
-            : 'This site sends a header that forbids putting it in a frame, so we are not showing one. That is a deliberate setting and a reasonable one.'}
-        </p>
+        <p className="border-b border-hairline px-4 py-[18px] text-[13.5px] leading-[1.5] text-subtle-2">{unavailable(fixture, identity.framing)}</p>
       )}
 
       {identity.description ? (
@@ -68,6 +78,19 @@ export function SitePanel({
       )}
     </section>
   );
+}
+
+/**
+ * Why there is no frame. Three different reasons and three different
+ * sentences: saying a site forbids framing when we simply could not reach it
+ * would be stating a fact about someone's headers that we never read.
+ */
+function unavailable(fixture: boolean, framing: SiteIdentity['framing']): string {
+  if (fixture) return 'This is a fixture, so there is no site to show here. A real result frames the page that was scanned.';
+  if (framing === 'refused') {
+    return 'This site sends a header that forbids putting it in a frame, so we are not showing one. That is a deliberate setting and a reasonable one; the name above opens it.';
+  }
+  return 'We could not reach this site just now to find out whether it allows being framed, so we are not guessing. The name above still opens it.';
 }
 
 /** The width the frame is laid out at before it is scaled down to fit. */
@@ -105,19 +128,30 @@ function Preview({ identity }: { identity: SiteIdentity }) {
       ref={box}
       style={{ height: scale > 0 ? DESIGN_HEIGHT * scale : undefined, aspectRatio: scale > 0 ? undefined : `${DESIGN_WIDTH} / ${DESIGN_HEIGHT}` }}
     >
-      {/* Behind the frame, not over it. A page that loads paints its own
-          background across this; a page that never arrives leaves the domain
-          sitting there instead of a white rectangle. */}
-      <span aria-hidden="true" className="absolute inset-0 grid place-items-center px-4 text-center font-mono text-[12px] text-placeholder">
-        {identity.domain}
+      {/* Behind the frame, not over it.
+          A page that loads paints its own background across this and it is
+          never seen. A page that does not — still loading, or refusing to be
+          framed with a header this scan is too old to have recorded — leaves
+          this showing, and it has to be a card rather than a white hole. We
+          cannot ask a cross-origin frame whether it painted, so the answer is
+          to make both outcomes look deliberate. */}
+      <span aria-hidden="true" className="absolute inset-0 grid content-center justify-items-center gap-[6px] px-5 text-center">
+        <SiteFavicon candidates={identity.iconCandidates} domain={identity.domain} size={30} />
+        <span className="display line-clamp-2 text-[15px] font-semibold text-ink">{identity.title || identity.domain}</span>
+        <span className="font-mono text-[11.5px] text-subtle-2">open {identity.domain} ↗</span>
       </span>
       {scale > 0 ? (
         <iframe
           src={identity.url}
           title={`${identity.domain} in a frame`}
-          // No `allow-same-origin`: the document runs its own scripts and can
-          // reach nothing of ours, and nothing of ours reaches into it.
-          sandbox="allow-scripts allow-forms allow-popups"
+          // `allow-same-origin` restores the framed document's OWN origin — not
+          // ours. Without it the page loads into an opaque origin where
+          // localStorage throws and its web fonts fail CORS, so a modern site
+          // renders in fallback type or white-screens on boot. It is still
+          // cross-origin to us and can read nothing of this page; what is
+          // withheld is what matters: no top-level navigation, no popups, no
+          // modals, no forms.
+          sandbox="allow-scripts allow-same-origin"
           referrerPolicy="no-referrer"
           loading="lazy"
           tabIndex={-1}

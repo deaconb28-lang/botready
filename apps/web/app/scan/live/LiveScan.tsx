@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { catalog, checkDef, type CheckStatus, type PerAgentFetch } from '@botready/core';
 
 import { BotScene } from '@/components/bot/BotScene';
-import { SiteFavicon, fallbackIcon } from '@/components/results/SiteFavicon';
+import { SiteFavicon, fallbackIcons } from '@/components/results/SiteFavicon';
 import { Container, SoftChip, cx } from '@/components/ui';
 import { CLIENT_IDS, formatInt } from '@/lib/theme';
 
@@ -131,7 +131,7 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
           shows the reader their own icon is a loading screen about their
           site; one that says "your site" is a loading screen about us. */}
       <div className="flex items-center gap-[10px]">
-        <SiteFavicon src={poll ? fallbackIcon(poll.url) : ''} domain={poll?.domain ?? '?'} size={20} />
+        <SiteFavicon candidates={poll ? fallbackIcons(poll.url) : []} domain={poll?.domain ?? '?'} size={20} />
         <div className="min-w-0 font-mono text-[12.5px] text-subtle-2">
           <span className="text-ink">{poll?.domain ?? 'your site'}</span> · reading as {catalog.agents.length} clients… ·{' '}
           <span className="tabular-nums">{elapsed}s</span>

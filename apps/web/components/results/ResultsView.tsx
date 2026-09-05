@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 
 import {
@@ -16,6 +17,7 @@ import { FixPackPreview } from './FixPackPreview';
 import { FixPackButton } from './FixPackButton';
 import { ClientPanel } from './ClientPanel';
 import { SitePanel } from './SitePanel';
+import { SitePanelAsync, SitePanelSkeleton } from './SitePanelAsync';
 import { ReportHeader } from './ReportHeader';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
 import { PRICING } from '@/lib/site';
@@ -164,7 +166,15 @@ export function ResultsView({
             while the findings scroll. */}
         <div className="grid gap-[18px] lg:sticky lg:top-[88px]">
           <ClientPanel results={results} sticky={false} />
-          <SitePanel identity={identity} fixture={fixture} />
+          {/* The fixture names a domain that does not exist, so there is
+              nothing to look at and nothing to wait for. */}
+          {fixture ? (
+            <SitePanel identity={identity} fixture />
+          ) : (
+            <Suspense fallback={<SitePanelSkeleton identity={identity} />}>
+              <SitePanelAsync identity={identity} />
+            </Suspense>
+          )}
         </div>
       </div>
     </Container>
