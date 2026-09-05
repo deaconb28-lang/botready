@@ -34,7 +34,7 @@ export const COPY: Record<Mode, MarketingCopy> = {
   plain: {
     badge: 'Your site says yes to people, no to AI',
     heroSub:
-      'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you — no engineer, no rebuild, no marketing budget.',
+      'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you. No engineer, no rebuild, no marketing budget.',
     question: "What's a good project tracker for a small team?",
     whyTitle: 'People stopped searching. They started asking.',
     whyBody:

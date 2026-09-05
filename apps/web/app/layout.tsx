@@ -38,8 +38,11 @@ export const metadata: Metadata = {
     default: `${SITE.name} — ${SITE.tagline}`,
     template: `%s — ${SITE.name}`,
   },
+  // The same sentence the home page opens with. A description that promises
+  // something different from the first line of the page is a description
+  // somebody wrote once and never read again.
   description:
-    'We request your page as five different clients, compare what each one gets back, and hand you the exact files that fix the gaps.',
+    'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you. No engineer, no rebuild, no marketing budget.',
   openGraph: {
     siteName: SITE.name,
     type: 'website',

@@ -33,8 +33,8 @@ export const PUBLIC_PAGES: PublicPage[] = [
     path: '/',
     title: 'Are you BotReady?',
     description:
-      'We request your page as five different clients, compare what each one gets back, and hand you the exact files that fix the gaps.',
-    updated: '2026-09-04',
+      'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you. No engineer, no rebuild, no marketing budget.',
+    updated: '2026-09-05',
     sources: ['apps/web/app/page.tsx', 'apps/web/components/home'],
     changeFrequency: 'weekly',
     priority: 1,
