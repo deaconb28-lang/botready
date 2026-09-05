@@ -7,7 +7,6 @@ import { AgentRace } from '@/components/home/AgentRace';
 import { BotScene } from '@/components/bot/BotScene';
 import { ChatProof } from '@/components/home/ChatProof';
 import { HeroScanCard } from '@/components/home/HeroScanCard';
-import { ProductHuntBadge } from '@/components/home/ProductHuntBadge';
 import { Copy, CopyItem } from '@/components/ModeText';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
@@ -62,10 +61,6 @@ function Hero() {
             <HeroScanCard className="ml-0" />
           </div>
 
-          {/* Under the scan card rather than above it: the URL box is what the
-              page is for, and nothing gets to push it down. Launch week only —
-              see the note in the component. */}
-          <ProductHuntBadge className="mt-6 inline-block" />
         </div>
 
         {/* Decorative, and the first thing to go: below the two-column

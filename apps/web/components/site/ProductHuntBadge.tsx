@@ -17,9 +17,14 @@ import { useEffect, useRef, useState } from 'react';
  * and two lines of wrapped alt text directly under the URL box — a worse first
  * impression than no badge at all.
  *
+ * It sits in the footer, so it is on every page rather than only the home
+ * page, and it is nowhere near the URL box — which is the one thing the home
+ * page is for and the one thing nothing gets to push down.
+ *
  * **This comes down after launch week.** Delete the component and its one use
- * in app/page.tsx. It is a moment, not a fixture, and a stale "we launched"
- * badge in three months reads as a company that has done nothing since.
+ * in components/site/SiteFooter.tsx. It is a moment, not a fixture, and a
+ * stale "we launched" badge in three months reads as a company that has done
+ * nothing since.
  */
 export function ProductHuntBadge({ className = '' }: { className?: string }) {
   const [failed, setFailed] = useState(false);

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { CONTACT_EMAIL, CREDIT } from '@/lib/site';
+import { ProductHuntBadge } from './ProductHuntBadge';
 
 export function SiteFooter() {
   return (
@@ -13,6 +14,7 @@ export function SiteFooter() {
           <p className="mt-2 max-w-[38ch] text-[14.5px] leading-[1.55] text-subtle-2">
             We ask your site the way an AI agent would, then hand you the files that fix what it found.
           </p>
+          <ProductHuntBadge className="mt-[18px] inline-block" />
           <p className="mt-[14px] font-mono text-[12.5px] text-subtle-2">
             <a href={CREDIT.href} className="text-subtle-2 no-underline hover:text-ink">
               {CREDIT.text}
