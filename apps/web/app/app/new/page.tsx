@@ -87,7 +87,7 @@ function Step({
   last?: boolean;
 }) {
   return (
-    <section className={cx('grid grid-cols-[30px_1fr] gap-x-[16px]', last ? '' : 'pb-7')}>
+    <section className={cx('grid grid-cols-[30px_minmax(0,1fr)] gap-x-[16px]', last ? '' : 'pb-7')}>
       <div className="flex flex-col items-center gap-[6px]">
         <span
           aria-hidden="true"

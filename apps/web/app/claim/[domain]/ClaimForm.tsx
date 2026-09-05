@@ -80,7 +80,11 @@ export function ClaimForm({ domain, instructions }: { domain: string; instructio
       </div>
 
       <Card as="section" shadow={4} radius="panel" className="mt-5 p-[26px]">
-        {method === 'dns' ? <DnsSteps instructions={instructions} /> : <MetaSteps instructions={instructions} domain={domain} />}
+        {method === 'dns' ? (
+          <DnsSteps instructions={instructions} status={state === 'checking' ? 'checking' : error ? 'missing' : 'pending'} />
+        ) : (
+          <MetaSteps instructions={instructions} domain={domain} />
+        )}
 
         <Step n={3} title="Come back and check">
           <p>
@@ -135,7 +139,7 @@ export function ClaimForm({ domain, instructions }: { domain: string; instructio
   );
 }
 
-function DnsSteps({ instructions }: { instructions: ClaimInstructions }) {
+function DnsSteps({ instructions, status }: { instructions: ClaimInstructions; status: RecordStatus }) {
   return (
     <>
       <Step n={1} title="Open the DNS settings for this domain">
@@ -146,15 +150,8 @@ function DnsSteps({ instructions }: { instructions: ClaimInstructions }) {
         </p>
       </Step>
 
-      <Step n={2} title="Add a TXT record with these values">
-        <CopyField label="Host" value={instructions.dns.hostShort} note="What most panels want — they add the domain for you." />
-        <CopyField
-          label="Host, in full"
-          value={instructions.dns.host}
-          note="Use this instead only if your panel asks for the whole name."
-        />
-        <Field label="Type" value="TXT" note="Not CNAME, not A." />
-        <CopyField label="Value" value={instructions.dns.value} wrap />
+      <Step n={2} title="Add this record" wide>
+        <RecordTable instructions={instructions} status={status} />
         {/* A note about the form as a whole, so it is separated from the
             per-field notes above it, which look identical otherwise. */}
         <Tip>
@@ -188,9 +185,12 @@ function MetaSteps({ instructions, domain }: { instructions: ClaimInstructions; 
   );
 }
 
-function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+function Step({ n, title, children, wide = false }: { n: number; title: string; children: ReactNode; wide?: boolean }) {
   return (
-    <div className={cx('grid grid-cols-[28px_1fr] gap-x-[14px] gap-y-2', n > 1 ? 'mt-7 border-t border-hairline pt-7' : '')}>
+    // minmax(0,1fr), not 1fr: a plain `1fr` track is sized by its content, so
+    // the record table refused to shrink on a phone and pushed the whole
+    // document sideways instead of scrolling inside its own overflow-x-auto.
+    <div className={cx('grid grid-cols-[28px_minmax(0,1fr)] gap-x-[14px] gap-y-2', n > 1 ? 'mt-7 border-t border-hairline pt-7' : '')}>
       <span
         aria-hidden="true"
         className="edge grid h-[28px] w-[28px] place-items-center rounded-full bg-violet font-mono text-[13px] font-bold text-white"
@@ -201,8 +201,122 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
         <span className="sr-only">Step {n}: </span>
         {title}
       </h3>
-      <div className="col-start-2 max-w-[58ch] text-[14.5px] leading-[1.6] text-muted [&_p]:m-0">{children}</div>
+      {/* 58ch is a reading measure and it is right for the prose. A table is
+          not prose: constrained to it, the value column collapses to four
+          characters and an ellipsis. */}
+      <div className={cx('col-start-2 text-[14.5px] leading-[1.6] text-muted [&_p]:m-0', wide ? '' : 'max-w-[58ch]')}>{children}</div>
     </div>
+  );
+}
+
+type RecordStatus = 'pending' | 'checking' | 'missing';
+
+const STATUS_TEXT: Record<RecordStatus, string> = {
+  pending: 'Pending',
+  checking: 'Checking',
+  missing: 'Not found',
+};
+
+/**
+ * The record as a DNS panel thinks of it: one row, the columns it will ask for,
+ * in its order.
+ *
+ * This was four stacked labelled fields, which is a form rather than a record —
+ * it reads as four things to do instead of one, and it does not look like
+ * anything the person is about to be shown in Cloudflare or Route 53. Every
+ * host that asks you to prove a domain lays this out as a table, so their eyes
+ * already know where to look.
+ *
+ * One row, because it is one record. The fully qualified name is offered under
+ * the table rather than as a second row: two rows would read as two records to
+ * add, and adding both is the mistake this whole panel exists to prevent.
+ */
+function RecordTable({ instructions, status }: { instructions: ClaimInstructions; status: RecordStatus }) {
+  return (
+    <div className="mt-4">
+      <div className="edge overflow-hidden rounded-[12px] bg-white">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b-2 border-ink bg-surface-alt">
+                <Th>Type</Th>
+                <Th>Name</Th>
+                <Th>Value</Th>
+                <Th>TTL</Th>
+                <Th>Status</Th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="align-middle">
+                <Td>
+                  <span className="font-mono text-[13px] font-medium text-ink">TXT</span>
+                </Td>
+                <Td>
+                  <CopyCell value={instructions.dns.hostShort} />
+                </Td>
+                <Td wide>
+                  <CopyCell value={instructions.dns.value} />
+                </Td>
+                <Td>
+                  <span className="font-mono text-[13px] text-subtle-2">Auto</span>
+                </Td>
+                <Td>
+                  <span
+                    className={cx(
+                      'edge inline-block whitespace-nowrap rounded-[7px] px-[8px] py-[2px] font-mono text-[11.5px] font-medium text-ink',
+                      status === 'missing' ? 'bg-coral-tint' : status === 'checking' ? 'bg-amber' : 'bg-canvas',
+                    )}
+                  >
+                    {STATUS_TEXT[status]}
+                  </span>
+                </Td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p className="mt-[10px] flex flex-wrap items-center gap-x-[10px] gap-y-1 text-[13px] leading-[1.5] text-subtle-2">
+        <span>Panel wants the whole name instead?</span>
+        <span className="font-mono text-ink">{instructions.dns.host}</span>
+        <CopyButton value={instructions.dns.host} label="the full name" />
+      </p>
+    </div>
+  );
+}
+
+function Th({ children }: { children: ReactNode }) {
+  return (
+    <th scope="col" className="eyebrow whitespace-nowrap px-[12px] py-[10px] text-subtle-2">
+      {children}
+    </th>
+  );
+}
+
+/**
+ * `wide` is the value column. `w-full max-w-0` is the table-cell way of saying
+ * "take the leftover width and let your contents truncate inside it" — without
+ * max-w-0 a cell is sized by its content, so a 47-character token wraps to
+ * three lines and shoulders the Status column off the end of the table.
+ */
+function Td({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+  return <td className={cx('px-[12px] py-[12px]', wide ? 'w-full max-w-0' : 'whitespace-nowrap')}>{children}</td>;
+}
+
+/**
+ * A value with its own copy button, so a row can be lifted a field at a time.
+ * One line always: the whole point of the button is that nobody has to read
+ * the token, and a wrapped token makes the row taller than the information in
+ * it deserves.
+ */
+function CopyCell({ value }: { value: string }) {
+  return (
+    <span className="flex items-center gap-[10px]">
+      <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-ink" title={value}>
+        {value}
+      </span>
+      <CopyButton value={value} label={value} />
+    </span>
   );
 }
 
@@ -213,8 +327,8 @@ function Tip({ children }: { children: ReactNode }) {
   );
 }
 
-/** A value that has to be typed exactly, so it is never typed. */
-function CopyField({ label, value, note, wrap = false }: { label: string; value: string; note?: string; wrap?: boolean }) {
+/** The one copy control, used by the table cells and by the meta tag. */
+function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -230,17 +344,24 @@ function CopyField({ label, value, note, wrap = false }: { label: string; value:
   }
 
   return (
+    <button
+      type="button"
+      onClick={copy}
+      className="edge shrink-0 cursor-pointer rounded-[8px] bg-white px-[10px] py-[5px] font-mono text-[11.5px] font-medium text-ink transition-colors duration-150 hover:bg-lime"
+    >
+      <span aria-live="polite">{copied ? 'Copied' : 'Copy'}</span>
+      <span className="sr-only"> {label}</span>
+    </button>
+  );
+}
+
+/** A value that has to be typed exactly, so it is never typed. */
+function CopyField({ label, value, note, wrap = false }: { label: string; value: string; note?: string; wrap?: boolean }) {
+  return (
     <div className="mt-3 first:mt-4">
       <div className="flex items-center justify-between gap-3">
         <span className="eyebrow text-subtle-2">{label}</span>
-        <button
-          type="button"
-          onClick={copy}
-          className="edge shrink-0 cursor-pointer rounded-[8px] bg-white px-[10px] py-[5px] font-mono text-[11.5px] font-medium text-ink transition-colors duration-150 hover:bg-lime"
-        >
-          <span aria-live="polite">{copied ? 'Copied' : 'Copy'}</span>
-          <span className="sr-only"> {label}</span>
-        </button>
+        <CopyButton value={value} label={label} />
       </div>
       <p
         className={cx(
@@ -248,19 +369,6 @@ function CopyField({ label, value, note, wrap = false }: { label: string; value:
           wrap ? 'break-all whitespace-pre-wrap' : 'overflow-x-auto whitespace-nowrap',
         )}
       >
-        {value}
-      </p>
-      {note ? <p className="mt-[6px] text-[13px] leading-[1.5] text-subtle-2">{note}</p> : null}
-    </div>
-  );
-}
-
-/** A value short enough to read and retype, so it gets no button. */
-function Field({ label, value, note }: { label: string; value: string; note?: string }) {
-  return (
-    <div className="mt-3">
-      <span className="eyebrow text-subtle-2">{label}</span>
-      <p className="edge mt-[6px] rounded-[10px] bg-surface-alt px-[13px] py-[10px] font-mono text-[13px] leading-[1.5] text-ink">
         {value}
       </p>
       {note ? <p className="mt-[6px] text-[13px] leading-[1.5] text-subtle-2">{note}</p> : null}
