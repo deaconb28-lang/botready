@@ -46,6 +46,21 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true },
+  /**
+   * Our own claim on botready.dev, proving to this product that we control
+   * this domain — the same tag the /claim flow asks anyone else for.
+   *
+   * Public by design and safe to commit: the token is an HMAC over (user id,
+   * domain) and is only useful to the account it was issued to. It is not a
+   * credential and grants nothing to whoever reads it.
+   *
+   * One thing to know: it is derived from SCANNER_SHARED_SECRET, so rotating
+   * that secret invalidates this string and the claim has to be re-verified
+   * with a fresh one from /claim/botready.dev.
+   */
+  other: {
+    'botready-verify': 'botready-verify=T5ypwC2V2UjR0fKxw2UjEtofns8giG2V',
+  },
 };
 
 export const viewport: Viewport = {
