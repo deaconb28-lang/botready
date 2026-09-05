@@ -1,8 +1,18 @@
 import Link from 'next/link';
 
-import { buildFixPack, catalog, type CheckResult, type Finding, type PerAgentFetch, type ScoreDetail } from '@botready/core';
+import {
+  buildFixPack,
+  catalog,
+  type CheckResult,
+  type Effort,
+  type Finding,
+  type FixPack,
+  type PerAgentFetch,
+  type ScoreDetail,
+} from '@botready/core';
 
 import { FindingsList } from './FindingsList';
+import { FixPackPreview } from './FixPackPreview';
 import { FixPackButton } from './FixPackButton';
 import { ClientPanel } from './ClientPanel';
 import { ReportHeader } from './ReportHeader';
@@ -43,6 +53,7 @@ export function ResultsView({
   const items = findings.map((finding) => ({ finding, observed: observedByKey.get(finding.key) ?? {} }));
   const { plain, tech } = summaries(results, findings, score);
   const pack = buildFixPack(domain, results);
+  const ledger = packLedger(pack);
   const errored = score.erroredChecks.length;
 
   // Two of these on the page, on two different grounds. Violet on white is the
@@ -95,33 +106,42 @@ export function ResultsView({
           <FindingsList items={items} pointsMissing={100 - score.total} />
 
           <Card surface="violet" radius="panel" shadow={5} className="mt-8 p-6 sm:p-7">
-            <div className="flex flex-wrap items-center justify-between gap-5">
-              <div className="min-w-[240px] flex-1">
-                <h2 className="display text-[22px] text-white">The fix pack for {domain}</h2>
-                <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.55] text-on-violet">
-                  {pack.files.length} files generated from this scan and a punch list ordered by effort, plus a full prompt for your coding agent.
-                  Diagnosis stays free.
+            <div className="flex flex-wrap items-start justify-between gap-5">
+              <div className="min-w-[260px] flex-1">
+                <h2 className="display text-[22px] text-white">Already written for {domain}</h2>
+                <p className="mt-2 max-w-[54ch] text-[15px] leading-[1.55] text-on-violet">
+                  {ledger.covered} of your {ledger.total} findings have a file below with your own URLs in it. The rest are a
+                  punch list ordered by effort, and a prompt that applies the lot one commit at a time.
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {pack.files.map((f, i) => (
-                    <span
-                      key={f.name}
-                      className={cx('anim-rise edge rounded-[9px] bg-white px-[11px] py-[6px] font-mono text-[12.5px] font-medium text-ink', f.incomplete && 'opacity-70')}
-                      style={{ ['--i' as string]: i }}
-                      title={f.purpose}
-                    >
-                      {f.name}
-                    </span>
-                  ))}
-                  <span className="anim-rise edge rounded-[9px] bg-white px-[11px] py-[6px] font-mono text-[12.5px] font-medium text-ink" style={{ ['--i' as string]: pack.files.length }}>
-                    botready-fixes.md
-                  </span>
-                </div>
+                <dl className="mt-4 flex flex-wrap gap-x-7 gap-y-3">
+                  <div>
+                    <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-on-violet-2">By hand</dt>
+                    <dd className="m-0 display text-[19px] text-white">{ledger.byHand}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-on-violet-2">In the pack</dt>
+                    <dd className="m-0 display text-[19px] text-white">
+                      {pack.files.length + 2} files, {ledger.lines} lines
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-mono text-[11px] uppercase tracking-[0.12em] text-on-violet-2">Points it addresses</dt>
+                    <dd className="m-0 display text-[19px] text-white">{ledger.pointsLabel(100 - score.total)}</dd>
+                  </div>
+                </dl>
               </div>
               <div className="grid min-w-[240px] gap-3">
                 <TerminalLine>$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
                 {panelAction}
               </div>
+            </div>
+
+            {/* The files themselves. The page has always generated these and
+                shown only their names, which is why the price read as vague:
+                everything above argues the problem is real and nothing showed
+                that the answer is already written. */}
+            <div className="mt-6">
+              <FixPackPreview files={pack.files} domain={domain} />
             </div>
           </Card>
 
@@ -132,6 +152,55 @@ export function ResultsView({
       </div>
     </Container>
   );
+}
+
+/**
+ * What the pack is worth, in the three units a reader actually weighs: how much
+ * of their own list it covers, what doing it by hand costs, and how much of the
+ * missing score it addresses.
+ *
+ * Every number comes from the punch list the pack already carries. The effort
+ * words are the punch list's own — minutes, hours, days — rather than an
+ * invented hour count, because we know which bucket each job is in and we do
+ * not know how fast anyone works.
+ */
+function packLedger(pack: FixPack): {
+  total: number;
+  covered: number;
+  byHand: string;
+  lines: number;
+  points: number;
+  pointsLabel: (missing: number) => string;
+} {
+  const items = pack.punchList;
+  const covered = items.filter((i) => i.file).length;
+  const counts: Record<Effort, number> = { minutes: 0, hours: 0, days: 0 };
+  for (const item of items) counts[item.effort] += 1;
+
+  const parts = (['days', 'hours', 'minutes'] as const)
+    .filter((e) => counts[e] > 0)
+    .map((e) => `${counts[e]} × ${e}`);
+
+  const lines =
+    pack.files.reduce((n, f) => n + f.content.split('\n').length, 0) + pack.agentPrompt.split('\n').length;
+
+  const points = Math.round(items.reduce((n, i) => n + i.pointsRecovered, 0));
+
+  return {
+    total: items.length,
+    covered,
+    byHand: parts.join(', ') || 'nothing outstanding',
+    lines,
+    points,
+    /**
+     * The punch list covers every check that did not pass, so its points can
+     * round to slightly more than the score is missing — a warn earns half and
+     * the item offers the whole. Printing "51 of 50" on the panel that has to
+     * look trustworthy is worse than printing the true ceiling, which is that
+     * it addresses all of it.
+     */
+    pointsLabel: (missing: number) => (points >= missing ? `all ${missing}` : `${points} of ${missing}`),
+  };
 }
 
 /**
