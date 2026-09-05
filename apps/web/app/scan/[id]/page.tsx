@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ResultsView, UnscoredView } from '@/components/results/ResultsView';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
-import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
+import { currentUser, hasFixpackFor, ownsAnyFixpack } from '@/lib/auth';
 import { loadScanView } from '@/lib/scan-data';
 import { absoluteUrl } from '@/lib/site';
 import { relativeTime } from '@/lib/theme';
@@ -55,7 +55,10 @@ export default async function ScanPage({ params }: PageProps) {
 
   const checkedLabel = `scanned ${relativeTime(scan.finished_at ?? scan.created_at)}`;
   const user = await currentUser();
-  const owned = user ? await hasFixpackEntitlement(user.id) : false;
+  const owned = user ? await hasFixpackFor(user.id, view.site.domain) : false;
+  // Owns a pack, but not this one: the button offers to add this domain at the
+  // repeat price, and says which price before the click.
+  const repeat = Boolean(user) && !owned && (user ? await ownsAnyFixpack(user.id) : false);
 
   return (
     <div className="min-h-dvh bg-canvas">
@@ -73,6 +76,7 @@ export default async function ScanPage({ params }: PageProps) {
             pagesCrawled={scan.pages_crawled}
             scannerVersion={scan.scanner_version}
             owned={owned}
+            repeat={repeat}
           />
         ) : (
           <UnscoredView domain={site.domain} url={scan.url} checkedLabel={checkedLabel} status={scan.status} message={scan.error_message} results={results} />

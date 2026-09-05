@@ -28,6 +28,15 @@ export interface GrantInput {
   stripeCustomerId: string | null;
   /** For subscriptions. Null for the one-time fix pack, which never expires. */
   currentPeriodEnd: Date | null;
+  /**
+   * The domain this purchase covers.
+   *
+   * Null means every domain. That is what a fix pack bought before it became
+   * per-domain was sold as, so those rows keep working; it is not a default to
+   * reach for. A checkout that knows its domain must say so, or it gives away
+   * the catalogue.
+   */
+  domain: string | null;
 }
 
 export interface GrantOutcome {
@@ -54,6 +63,7 @@ export interface EntitlementStore {
     stripe_customer_id: string | null;
     stripe_event_id: string;
     current_period_end: string | null;
+    domain: string | null;
   }): Promise<{ inserted: boolean }>;
 }
 
@@ -72,6 +82,7 @@ export async function grantEntitlement(
     stripe_customer_id: input.stripeCustomerId,
     stripe_event_id: input.eventId,
     current_period_end: input.currentPeriodEnd?.toISOString() ?? null,
+    domain: input.domain?.trim().toLowerCase() || null,
   });
 
   return { granted: inserted, duplicate: !inserted, userId };

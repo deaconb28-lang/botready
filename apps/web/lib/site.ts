@@ -27,8 +27,20 @@ export const LIMITS = {
   cacheHours: 24,
 } as const;
 
+/**
+ * What things cost.
+ *
+ * `fixpack` is the first domain. `fixpackExtra` is every domain after it, for
+ * somebody who already owns one — a pack is generated per domain from that
+ * domain's own pages, so a second one is real work, but almost none of it is
+ * work they are paying for twice.
+ *
+ * The cadence strings are the words on the page, not a Stripe interval. The
+ * fix pack is a one-off charge either way.
+ */
 export const PRICING = {
   fixpack: { amount: 15, currency: 'usd', label: '$15', cadence: 'one time' },
+  fixpackExtra: { amount: 5, currency: 'usd', label: '$5', cadence: 'per extra domain' },
   monitor: { amount: 5, currency: 'usd', label: '$5', cadence: 'per month' },
 } as const;
 

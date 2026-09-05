@@ -100,10 +100,14 @@ create table entitlements (
   stripe_customer_id   text,
   stripe_event_id      text unique,             -- idempotency key for the webhook
   current_period_end   timestamptz,
+  -- Which domain this covers. NULL means every domain, which is what the rows
+  -- written before the fix pack became per-domain were sold as.
+  domain               text,
   created_at           timestamptz not null default now()
 );
 
 create index entitlements_user_idx on entitlements (user_id);
+create index entitlements_user_domain_idx on entitlements (user_id, plan, domain);
 
 -- ---------------------------------------------------------------- monitoring
 

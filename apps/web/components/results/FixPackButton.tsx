@@ -21,16 +21,25 @@ export function FixPackButton({
   scanId,
   owned,
   on = 'light',
+  repeat = false,
 }: {
   scanId: string;
   owned: boolean;
   /** `violet` is inside the fix pack panel, where a violet button vanishes. */
   on?: 'light' | 'violet';
+  /**
+   * They already own a pack for some other domain, so this one is the repeat
+   * price. The chip has to say so before the click: a button that reads $15
+   * and charges $5 is a nice surprise, but a price on a button is a promise
+   * and the two should match.
+   */
+  repeat?: boolean;
 }) {
   const [pending, setPending] = useState(false);
 
   const href = owned ? `/api/fixpack/${scanId}` : `/api/checkout/${scanId}`;
-  const label = owned ? 'Download the fix pack' : 'Get the fix pack';
+  const label = owned ? 'Download the fix pack' : repeat ? 'Add this domain' : 'Get the fix pack';
+  const price = repeat ? PRICING.fixpackExtra.label : PRICING.fixpack.label;
   const waiting = owned ? 'Generating the files' : 'Opening checkout';
 
   const tone = owned
@@ -66,7 +75,7 @@ export function FixPackButton({
                 on === 'violet' ? 'bg-ink text-lime' : 'bg-lime text-ink',
               )}
             >
-              {PRICING.fixpack.label}
+              {price}
             </span>
           )}
         </>

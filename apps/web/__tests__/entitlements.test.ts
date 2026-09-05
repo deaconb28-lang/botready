@@ -11,7 +11,7 @@ import { grantEntitlement, type EntitlementStore, type Plan } from '../lib/entit
 /** Behaves like Postgres with a unique index on stripe_event_id. */
 function fakeStore() {
   const users = new Map<string, string>();
-  const rows: Array<{ user_id: string; plan: Plan; stripe_event_id: string }> = [];
+  const rows: Array<{ user_id: string; plan: Plan; stripe_event_id: string; domain: string | null }> = [];
   let created = 0;
 
   const store: EntitlementStore = {
@@ -28,7 +28,7 @@ function fakeStore() {
       if (rows.some((r) => r.stripe_event_id === row.stripe_event_id)) {
         return { inserted: false };
       }
-      rows.push({ user_id: row.user_id, plan: row.plan, stripe_event_id: row.stripe_event_id });
+      rows.push({ user_id: row.user_id, plan: row.plan, stripe_event_id: row.stripe_event_id, domain: row.domain });
       return { inserted: true };
     },
   };
@@ -42,6 +42,7 @@ const purchase = {
   plan: 'fixpack' as const,
   stripeCustomerId: 'cus_1',
   currentPeriodEnd: null,
+  domain: 'example.com',
 };
 
 describe('grantEntitlement', () => {
@@ -120,5 +121,37 @@ describe('grantEntitlement', () => {
     });
 
     expect(seen).toEqual([null, '2026-10-01T00:00:00.000Z']);
+  });
+});
+
+describe('what a purchase covers', () => {
+  it('records the domain it was bought for, lowercased', async () => {
+    const db = fakeStore();
+    await grantEntitlement(db.store, { ...purchase, domain: 'Example.COM ' });
+    expect(db.rows[0]?.domain).toBe('example.com');
+  });
+
+  it('records null when the checkout could not name a domain', async () => {
+    const db = fakeStore();
+    // A payment link with nothing attached. Null means every domain, which is
+    // what these were sold as before the fix pack became per-domain.
+    await grantEntitlement(db.store, { ...purchase, domain: null });
+    expect(db.rows[0]?.domain).toBeNull();
+  });
+
+  it('an empty string is null rather than a domain nobody owns', async () => {
+    const db = fakeStore();
+    await grantEntitlement(db.store, { ...purchase, domain: '   ' });
+    expect(db.rows[0]?.domain).toBeNull();
+  });
+
+  it('two domains for one buyer are two rows against one user', async () => {
+    const db = fakeStore();
+    await grantEntitlement(db.store, { ...purchase, eventId: 'evt_a', domain: 'one.com' });
+    const second = await grantEntitlement(db.store, { ...purchase, eventId: 'evt_b', domain: 'two.com' });
+
+    expect(second.userId).toBe('user-1');
+    expect(db.created).toBe(1);
+    expect(db.rows.map((r) => r.domain)).toEqual(['one.com', 'two.com']);
   });
 });

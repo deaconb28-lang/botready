@@ -19,7 +19,7 @@ export default async function EditorPage({ params }: { params: Promise<{ domain:
   const { domain: raw } = await params;
   const domain = normaliseDomain(decodeURIComponent(raw));
   const user = await requireUser(`/app/${domain}/editor`);
-  const [p, owned] = await Promise.all([propertyFor(domain, user.id), ownsFixpack(user.id)]);
+  const [p, owned] = await Promise.all([propertyFor(domain, user.id), ownsFixpack(user.id, domain)]);
   if (!p) notFound();
 
   const files: EditorFile[] = [];

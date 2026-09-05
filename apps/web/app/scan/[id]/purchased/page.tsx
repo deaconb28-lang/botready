@@ -7,7 +7,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { PromptPanel } from '@/components/results/PromptPanel';
 import { MailNote } from '@/components/site/MailNote';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
-import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
+import { currentUser, hasFixpackFor } from '@/lib/auth';
 import { assembleFixPack } from '@/lib/fixpack';
 import { verifiedPurchase } from '@/lib/purchase';
 import { loadScanView } from '@/lib/scan-data';
@@ -53,7 +53,7 @@ export default async function PurchasedPage({
   // one the person standing here almost certainly has.
   const purchase = await verifiedPurchase(sessionId);
   const paid = purchase?.scanId === id;
-  const entitled = paid || (user ? await hasFixpackEntitlement(user.id) : false);
+  const entitled = paid || (user ? await hasFixpackFor(user.id, view.site.domain) : false);
   const domain = view.site.domain;
   // Stripe knows the address the receipt went to; it is often not the address
   // the person is signed in with, and naming it is half of "check your spam".

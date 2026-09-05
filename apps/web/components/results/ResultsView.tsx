@@ -40,6 +40,7 @@ export function ResultsView({
   pagesCrawled,
   scannerVersion,
   owned,
+  repeat = false,
   fixture = false,
 }: {
   scanId: string;
@@ -52,6 +53,8 @@ export function ResultsView({
   pagesCrawled: number;
   scannerVersion: string | null;
   owned: boolean;
+  /** Owns a pack for another domain, so this one is the extra-domain price. */
+  repeat?: boolean;
   fixture?: boolean;
 }) {
   const observedByKey = new Map(results.map((r) => [r.key, r.observed]));
@@ -70,7 +73,7 @@ export function ResultsView({
       Get the fix pack — {PRICING.fixpack.label}
     </Button>
   ) : (
-    <FixPackButton scanId={scanId} owned={owned} />
+    <FixPackButton scanId={scanId} owned={owned} repeat={repeat} />
   );
 
   const panelAction = fixture ? (
@@ -78,7 +81,7 @@ export function ResultsView({
       Get the fix pack — {PRICING.fixpack.label}
     </Button>
   ) : (
-    <FixPackButton scanId={scanId} owned={owned} on="violet" />
+    <FixPackButton scanId={scanId} owned={owned} on="violet" repeat={repeat} />
   );
 
   return (
@@ -141,6 +144,15 @@ export function ResultsView({
               <div className="grid min-w-[240px] gap-3">
                 <TerminalLine>$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
                 {panelAction}
+                {/* A pack covers one domain, and somebody about to pay should
+                    know that before they pay rather than at the next domain. */}
+                {owned ? null : (
+                  <p className="max-w-[34ch] font-mono text-[11.5px] leading-[1.5] text-on-violet-2">
+                    {repeat
+                      ? `${PRICING.fixpackExtra.label} because you already have a pack. It covers ${domain}.`
+                      : `Covers ${domain}. Another domain later is ${PRICING.fixpackExtra.label}.`}
+                  </p>
+                )}
                 {/* Said at the button rather than after the payment, because
                     the person who thinks the email is the delivery waits for
                     something that is already on their screen. */}

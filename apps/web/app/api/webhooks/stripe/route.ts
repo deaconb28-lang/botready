@@ -4,7 +4,7 @@ import type Stripe from 'stripe';
 import { grantEntitlement, supabaseStore, type Plan } from '@/lib/entitlements';
 import { claimOnce } from '@/lib/redis';
 import { serviceClient } from '@/lib/supabase';
-import { verifyWebhook } from '@/lib/stripe';
+import { stripe, verifyWebhook } from '@/lib/stripe';
 import { sendFixpackReady, sendMonitorStarted } from '@/lib/email';
 import { assembleFixPack } from '@/lib/fixpack';
 import { loadScanView } from '@/lib/scan-data';
@@ -93,13 +93,18 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
     plan,
     stripeCustomerId: typeof session.customer === 'string' ? session.customer : (session.customer?.id ?? null),
     currentPeriodEnd: plan === 'monitor' ? periodEndFor(session) : null,
+    // What they bought it for. Null only when neither the metadata nor the
+    // reference could name a domain, which is a payment link with nothing
+    // attached; that grant is unscoped, which is the old behaviour and the
+    // generous direction to fail in.
+    domain,
   });
 
   // One line per purchase, so "did they get it?" is answerable from the logs
   // rather than from the buyer. No address and no session id: whether an email
   // was found is the fact worth keeping, not whose.
   console.info(
-    `[stripe] checkout ${plan} granted=${outcome.granted} duplicate=${outcome.duplicate} scan=${scanId ?? 'none'} reference=${reference ?? 'none'} email=yes`,
+    `[stripe] checkout ${plan} granted=${outcome.granted} duplicate=${outcome.duplicate} domain=${domain ?? 'all'} scan=${scanId ?? 'none'} reference=${reference ?? 'none'} email=yes`,
   );
 
   if (outcome.granted && scanId) {
@@ -151,6 +156,9 @@ async function handleRenewal(invoice: Stripe.Invoice, eventId: string) {
     plan: 'monitor',
     stripeCustomerId: typeof invoice.customer === 'string' ? invoice.customer : (invoice.customer?.id ?? null),
     currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
+    // A renewal has to carry the same domain the first payment did, or every
+    // month would write an unscoped row and hand the whole catalogue back.
+    domain: await subscriptionDomain(invoice),
   });
 
   return NextResponse.json({
@@ -159,6 +167,27 @@ async function handleRenewal(invoice: Stripe.Invoice, eventId: string) {
     granted: outcome.granted,
     duplicate: outcome.duplicate,
   });
+}
+
+/**
+ * The domain a subscription is for, from the metadata we hung on it at
+ * checkout.
+ *
+ * An invoice names its subscription by id, so this asks Stripe. Once a month
+ * per subscriber, and the answer decides what the renewed entitlement covers,
+ * so it is worth the call. Null when Stripe cannot say, which grants the older
+ * unscoped row rather than silently narrowing what somebody already pays for.
+ */
+async function subscriptionDomain(invoice: Stripe.Invoice): Promise<string | null> {
+  const id = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+  if (!id) return null;
+  try {
+    const subscription = await stripe().subscriptions.retrieve(id);
+    return subscription.metadata?.domain ?? null;
+  } catch (err) {
+    console.error('[stripe] could not read the subscription for a renewal', { id, err: err instanceof Error ? err.message : String(err) });
+    return null;
+  }
 }
 
 /**

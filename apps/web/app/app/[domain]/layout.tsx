@@ -10,7 +10,7 @@ export default async function PropertyLayout({ children, params }: { children: R
   const { domain: raw } = await params;
   const domain = safe(raw);
   const user = await requireUser(`/app/${domain}`);
-  const [property, properties, owned] = await Promise.all([propertyFor(domain, user.id), propertiesFor(user.id), ownsFixpack(user.id)]);
+  const [property, properties, owned] = await Promise.all([propertyFor(domain, user.id), propertiesFor(user.id), ownsFixpack(user.id, domain)]);
   if (!property) notFound();
 
   return (

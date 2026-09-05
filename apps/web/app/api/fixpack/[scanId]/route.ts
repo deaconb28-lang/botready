@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 
-import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
+import { currentUser, hasFixpackFor } from '@/lib/auth';
 import { purchaseCovers } from '@/lib/purchase';
 import { loadScanView } from '@/lib/scan-data';
 import { assembleFixPack } from '@/lib/fixpack';
@@ -40,10 +40,15 @@ export async function GET(request: Request, context: { params: Promise<{ scanId:
     );
   }
 
-  if (!(await hasFixpackEntitlement(user.id))) {
+  // The scan names the domain, and the domain is what was bought. Loading the
+  // view twice on this path is cheap next to handing over the wrong pack.
+  const view = await loadScanView(scanId);
+  if (!view) return text(404, 'No scan with that id.');
+
+  if (!(await hasFixpackFor(user.id, view.site.domain))) {
     return text(
       403,
-      `${user.email} has not bought the fix pack. If you have, and the receipt went to a different address, sign in with that one. The result page has the button.`,
+      `${user.email} has not bought the fix pack for ${view.site.domain}. A pack covers one domain; the result page has the button to add this one. If you have bought it and the receipt went to a different address, sign in with that one.`,
     );
   }
 

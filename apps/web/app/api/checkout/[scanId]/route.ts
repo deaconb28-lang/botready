@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 
-import { currentUser } from '@/lib/auth';
+import { currentUser, hasFixpackFor, ownsAnyFixpack } from '@/lib/auth';
 import { serverEnv } from '@/lib/env';
 import { loadScanView } from '@/lib/scan-data';
 import { absoluteUrl, PRICING, paymentLink } from '@/lib/site';
@@ -51,12 +51,28 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
   }
 
   const user = await currentUser();
+  const domain = view.site.domain;
 
-  const session = await createSession(scanId, view.site.domain, user?.email ?? null);
+  // Already bought for this domain. Reaching checkout anyway means a stale
+  // page, so send them back to the result, where the button reads Download.
+  if (user && (await hasFixpackFor(user.id, domain))) {
+    return NextResponse.redirect(absoluteUrl(`/scan/${scanId}`), { status: 303 });
+  }
+
+  // The second domain and every one after it is the cheaper price. Charged
+  // only to somebody signed in and holding a pack already, because that is the
+  // only case we can actually tell — a buyer with no session is a first
+  // purchase as far as this route can know, and the webhook still attaches
+  // whatever they bought to their email.
+  const tier: Tier = user && (await ownsAnyFixpack(user.id)) ? 'extra' : 'first';
+
+  const session = await createSession(scanId, domain, user?.email ?? null, tier);
   if (session?.url) return NextResponse.redirect(session.url, { status: 303 });
 
   // No session: no key, no price id, or Stripe said no. The link at least
-  // takes the money and tells the webhook which scan it was for.
+  // takes the money and tells the webhook which scan it was for. It is the
+  // full price whatever tier applies — a payment link is a fixed page in the
+  // Stripe dashboard and cannot be told about a discount from here.
   const link = paymentLink('fixpack', scanId, user?.email);
   if (link) return NextResponse.redirect(link, { status: 303 });
 
@@ -80,24 +96,37 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
  * PRICING is that source, and `apps/web/__tests__/payment-link.test.ts`
  * already holds it to what the paywall says.
  */
-function lineItem(): Stripe.Checkout.SessionCreateParams.LineItem {
-  const price = configuredPrice();
+type Tier = 'first' | 'extra';
+
+function lineItem(tier: Tier): Stripe.Checkout.SessionCreateParams.LineItem {
+  // The configured price id is the first domain only. There is no second id to
+  // reach for and the repeat price is stated on the site, so the extra domain
+  // is always an inline price.
+  const price = tier === 'first' ? configuredPrice() : null;
   if (price) return { price, quantity: 1 };
+
+  const pricing = tier === 'extra' ? PRICING.fixpackExtra : PRICING.fixpack;
 
   return {
     quantity: 1,
     price_data: {
-      currency: PRICING.fixpack.currency,
+      currency: pricing.currency,
       // Stripe counts in the currency's smallest unit.
-      unit_amount: PRICING.fixpack.amount * 100,
+      unit_amount: pricing.amount * 100,
       // Deliberately generic. Stripe creates a product per session for an
       // inline price, so naming the domain here would put one row in the
       // catalogue per customer. The domain is on the payment intent and in
       // metadata, which is where anyone would look for it.
-      product_data: {
-        name: 'BotReady fix pack',
-        description: 'Generated files and an agent prompt that fix what the scan found.',
-      },
+      product_data:
+        tier === 'extra'
+          ? {
+              name: 'BotReady fix pack, another domain',
+              description: 'The generated files and agent prompt for one more domain.',
+            }
+          : {
+              name: 'BotReady fix pack',
+              description: 'Generated files and an agent prompt that fix what the scan found.',
+            },
     },
   };
 }
@@ -117,21 +146,22 @@ function configuredPrice(): string | null {
  * Stripe's, and that is not a difference anyone should have to guess at from
  * the outside.
  */
-async function createSession(scanId: string, domain: string, email: string | null) {
+async function createSession(scanId: string, domain: string, email: string | null, tier: Tier) {
+  const pricing = tier === 'extra' ? PRICING.fixpackExtra : PRICING.fixpack;
   try {
     return await stripe().checkout.sessions.create({
       mode: 'payment',
-      line_items: [lineItem()],
+      line_items: [lineItem(tier)],
       ...(email ? { customer_email: email } : {}),
       client_reference_id: scanId,
-      metadata: { scanId, domain, plan: 'fixpack' },
+      metadata: { scanId, domain, plan: 'fixpack', tier },
       // Both pages exist whether or not the person is signed in.
       success_url: absoluteUrl(`/scan/${scanId}/purchased?session_id={CHECKOUT_SESSION_ID}`),
       cancel_url: absoluteUrl(`/scan/${scanId}`),
       allow_promotion_codes: true,
       // The receipt line says what it is, in the product's own words.
       payment_intent_data: {
-        description: `botready.dev fix pack for ${domain} (${PRICING.fixpack.label} ${PRICING.fixpack.cadence})`,
+        description: `botready.dev fix pack for ${domain} (${pricing.label} ${pricing.cadence})`,
       },
     });
   } catch (err) {

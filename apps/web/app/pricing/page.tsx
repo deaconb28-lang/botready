@@ -40,7 +40,7 @@ const TIERS: Tier[] = [
     eyebrow: 'The fix pack',
     price: PRICING.fixpack.label,
     unit: PRICING.fixpack.cadence,
-    body: 'Four generated files and a punch list, built from your scan.',
+    body: 'Four generated files and a punch list, built from your scan. Covers one domain; another is $5.',
     highlight: 'A full prompt for your coding agent. Paste it into Claude Code or Cursor and your site fixes itself.',
     items: [
       'llms.txt, from the pages we confirmed returned 200',
@@ -48,6 +48,7 @@ const TIERS: Tier[] = [
       'Link tags and negotiation notes for your top 20 URLs',
       'A JSON-LD block filled in from your own pages',
       'A punch list ordered by effort, not by points',
+      'One domain. Add another for $5, as many as you like',
     ],
     cta: { label: 'Run a check first', href: '/#check' },
     dark: true,

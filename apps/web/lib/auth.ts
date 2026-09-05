@@ -81,25 +81,82 @@ export async function currentUser(): Promise<CurrentUser | null> {
   }
 }
 
-/** Whether this user has bought the fix pack for this scan. */
-export async function hasFixpackEntitlement(userId: string): Promise<boolean> {
+export interface EntitlementRow {
+  plan: string;
+  current_period_end: string | null;
+  domain: string | null;
+}
+
+/** Every entitlement this person holds. One query; the rules are below. */
+async function entitlementsFor(userId: string): Promise<EntitlementRow[]> {
   const supabase = await routeClient();
   const { data } = await supabase
     .from('entitlements')
-    .select('plan, current_period_end')
+    .select('plan, current_period_end, domain')
     .eq('user_id', userId)
     .in('plan', ['fixpack', 'monitor']);
+  return (data ?? []) as EntitlementRow[];
+}
 
-  if (!data || data.length === 0) return false;
+/** A monitor subscription that has not lapsed. The fix pack never expires. */
+export function live(row: EntitlementRow, now: number = Date.now()): boolean {
+  if (row.plan === 'fixpack') return true;
+  if (!row.current_period_end) return false;
+  return new Date(row.current_period_end).getTime() > now;
+}
 
-  return data.some((row) => {
-    const entitlement = row as { plan: string; current_period_end: string | null };
-    // The fix pack is a one-time purchase and does not expire. A monitor
-    // subscription does, and a lapsed one does not unlock a download.
-    if (entitlement.plan === 'fixpack') return true;
-    if (!entitlement.current_period_end) return false;
-    return new Date(entitlement.current_period_end).getTime() > Date.now();
-  });
+/**
+ * The rule, with no database in it, so it can be tested as the rule.
+ *
+ * A row covers a domain when it is live and either names that domain or names
+ * none at all. Naming none is the pre-2026-09-05 grant and means everything;
+ * see the note on hasFixpackFor for why that stays.
+ */
+export function coversDomain(
+  rows: EntitlementRow[],
+  domain: string | null,
+  now: number = Date.now(),
+): boolean {
+  const target = domain?.trim().toLowerCase() ?? null;
+  return rows.some(
+    (row) => live(row, now) && (row.domain === null || (target !== null && row.domain.toLowerCase() === target)),
+  );
+}
+
+/**
+ * Whether this person may download the fix pack for this domain.
+ *
+ * A pack is bought for one domain now. This used to ask only whether they had
+ * bought anything at all, and the download route takes an arbitrary scan id,
+ * so a single $15 payment unlocked the generated files for every domain that
+ * had ever been scanned — which, with a public index of scanned domains, is
+ * the catalogue.
+ *
+ * Three ways to hold it:
+ *
+ *   - a fix pack bought for this domain, which never expires. Re-scan as often
+ *     as you like; the pack is regenerated from the latest evidence and you
+ *     bought the domain, not the snapshot.
+ *   - a fix pack with no domain on it. Those rows predate the change and were
+ *     sold as unlimited, so they stay unlimited. Nobody loses what they paid
+ *     for, and no backfill can invent a scope a purchase never had.
+ *   - a live monitor subscription for this domain, because the pricing page
+ *     says monitoring includes the pack.
+ */
+export async function hasFixpackFor(userId: string, domain: string | null): Promise<boolean> {
+  return coversDomain(await entitlementsFor(userId), domain);
+}
+
+/**
+ * Whether they hold any fix pack at all, for any domain.
+ *
+ * Two callers, and neither is an access check: the app nav, which offers a
+ * download when there is something to download, and checkout, which charges
+ * the repeat price to somebody who already owns one. Access is
+ * `hasFixpackFor`.
+ */
+export async function ownsAnyFixpack(userId: string): Promise<boolean> {
+  return (await entitlementsFor(userId)).some((row) => live(row));
 }
 
 /**

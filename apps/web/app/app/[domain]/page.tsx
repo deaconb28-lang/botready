@@ -25,7 +25,7 @@ export default async function OverviewPage({
   const { subscribed } = await searchParams;
   const domain = normaliseDomain(decodeURIComponent(raw));
   const user = await requireUser(`/app/${domain}`);
-  const [p, owned] = await Promise.all([propertyFor(domain, user.id), ownsFixpack(user.id)]);
+  const [p, owned] = await Promise.all([propertyFor(domain, user.id), ownsFixpack(user.id, domain)]);
   if (!p) notFound();
 
   const agents = p.clients.filter((c) => c.id !== 'chrome');
