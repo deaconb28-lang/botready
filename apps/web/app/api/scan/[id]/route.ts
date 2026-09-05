@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import type { PerAgentFetch } from '@botready/core';
+
 import { loadScanView, persistScore } from '@/lib/scan-data';
 
 export const runtime = 'nodejs';
@@ -65,6 +67,13 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       // Enough for the live log to show real requests with real status codes.
       // The full evidence is on the page itself rather than in the poll.
       progress: view.results.map((r) => ({ key: r.key, status: r.status })),
+      // The headline comparison, as soon as it exists. /scan/live shows the
+      // five clients resolving to their real status codes the moment the
+      // parity check lands, which is the whole finding and the reason anyone
+      // watches a scan at all. Null until then, and never a placeholder
+      // status: a fabricated 200 that later turned into a 403 would be a lie
+      // told by the loading screen.
+      clients: clientsOf(view.results),
     },
     {
       status: 200,
@@ -75,6 +84,20 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
         : { 'cache-control': 'no-store' },
     },
   );
+}
+
+/**
+ * The parity check's own observation, passed through unchanged. Null until the
+ * check has landed, and null for a scan that never got that far.
+ */
+function clientsOf(
+  results: Array<{ key: string; observed: Record<string, unknown> }>,
+): { control: string; perAgent: Record<string, PerAgentFetch> } | null {
+  const parity = results.find((r) => r.key === 'agent_status_parity');
+  if (!parity) return null;
+  const perAgent = (parity.observed.per_agent ?? {}) as Record<string, PerAgentFetch>;
+  if (Object.keys(perAgent).length === 0) return null;
+  return { control: String(parity.observed.control ?? 'chrome'), perAgent };
 }
 
 function isUuid(value: string): boolean {

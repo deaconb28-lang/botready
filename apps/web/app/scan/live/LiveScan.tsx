@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { catalog, checkDef, type CheckStatus } from '@botready/core';
+import { catalog, checkDef, type CheckStatus, type PerAgentFetch } from '@botready/core';
 
 import { BotScene } from '@/components/bot/BotScene';
-import { Container, cx } from '@/components/ui';
+import { SiteFavicon, fallbackIcon } from '@/components/results/SiteFavicon';
+import { Container, SoftChip, cx } from '@/components/ui';
+import { CLIENT_IDS, formatInt } from '@/lib/theme';
 
 /**
  * The wait is the demo.
@@ -32,6 +34,8 @@ interface Poll {
   pagesCrawled: number;
   errorMessage: string | null;
   progress: Array<{ key: string; status: CheckStatus }>;
+  /** Null until the parity check lands. Never a placeholder. */
+  clients: { control: string; perAgent: Record<string, PerAgentFetch> } | null;
   score: { total: number; grade: string } | null;
 }
 
@@ -123,9 +127,15 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
 
   return (
     <Container width={1120} className="pb-24 pt-11">
-      <div className="font-mono text-[12.5px] text-subtle-2">
-        <span className="text-ink">{poll?.domain ?? 'your site'}</span> · reading as {catalog.agents.length} clients… ·{' '}
-        <span className="tabular-nums">{elapsed}s</span>
+      {/* The site, as itself, from the first frame. A loading screen that
+          shows the reader their own icon is a loading screen about their
+          site; one that says "your site" is a loading screen about us. */}
+      <div className="flex items-center gap-[10px]">
+        <SiteFavicon src={poll ? fallbackIcon(poll.url) : ''} domain={poll?.domain ?? '?'} size={20} />
+        <div className="min-w-0 font-mono text-[12.5px] text-subtle-2">
+          <span className="text-ink">{poll?.domain ?? 'your site'}</span> · reading as {catalog.agents.length} clients… ·{' '}
+          <span className="tabular-nums">{elapsed}s</span>
+        </div>
       </div>
 
       <div className="edge relative mt-[18px] overflow-hidden rounded-[24px] bg-white">
@@ -201,7 +211,10 @@ export function LiveScan({ scanId, next }: { scanId: string; next: string | null
           )}
         </div>
 
-        <BotScene variant="scanning" shadow="shadow-hard-4" className="hidden self-start lg:block" />
+        <div className="grid content-start gap-[18px]">
+          <LiveClients clients={poll?.clients ?? null} />
+          <BotScene variant="scanning" shadow="shadow-hard-4" className="hidden lg:block" />
+        </div>
       </div>
 
       <noscript>
@@ -308,6 +321,79 @@ function Stages({ stageDone, running, queued }: { stageDone: boolean[]; running:
         );
       })}
     </ol>
+  );
+}
+
+/**
+ * The five clients, resolving.
+ *
+ * This is the same panel the result page ends with, put on the loading screen
+ * so the reader watches the one comparison the product exists to make instead
+ * of watching a progress bar. Every row sits on "waiting" until the parity
+ * check lands, and then the whole grid snaps to the real status codes at once,
+ * because that is when we actually learned them: the five requests are a
+ * second apart, but they are recorded as one observation.
+ *
+ * Nothing here counts down or fills in on a timer. A row that guessed 200 and
+ * later corrected itself to 403 would be the loading screen inventing the
+ * finding it is supposed to be reporting.
+ */
+function LiveClients({ clients }: { clients: Poll['clients'] }) {
+  const landed = clients !== null;
+  const refused = landed
+    ? catalog.agents.filter((agent) => {
+        const fact = clients.perAgent[agent.id];
+        return fact ? fact.status >= 400 || fact.status === 0 || Boolean(fact.transport_error) : false;
+      })
+    : [];
+
+  return (
+    <section className="edge overflow-hidden rounded-[16px] bg-white shadow-hard-4" aria-label="What each client got">
+      <div className="border-b border-hairline px-5 py-4 font-mono text-[11.5px] font-medium uppercase tracking-[0.1em] text-subtle-2">
+        What each client got
+      </div>
+      <ul className="m-0 list-none p-0">
+        {catalog.agents.map((agent) => {
+          const fact = landed ? clients.perAgent[agent.id] : undefined;
+          const ok = fact ? fact.status >= 200 && fact.status < 300 && !fact.transport_error : false;
+          return (
+            <li key={agent.id} className="flex items-center gap-3 border-b border-hairline-2 px-5 py-[14px]">
+              <span className={cx('min-w-0 flex-1 font-mono text-[13px] font-medium', fact ? 'text-ink' : 'text-placeholder')}>
+                {CLIENT_IDS[agent.id] ?? agent.id}
+              </span>
+              {fact ? (
+                <>
+                  <span className="anim-rise-fast font-mono text-[12px] text-placeholder">
+                    {fact.transport_error ? 'no response' : `${formatInt(fact.bytes)} B`}
+                  </span>
+                  <span className="anim-rise-fast">
+                    <SoftChip tone={ok ? 'ok' : 'bad'}>{fact.transport_error ? 'ERR' : fact.status}</SoftChip>
+                  </span>
+                </>
+              ) : (
+                <span className="flex gap-[3px]" aria-hidden="true">
+                  <i className="br-march-1 block h-[4px] w-[4px] rounded-full bg-placeholder" />
+                  <i className="br-march-2 block h-[4px] w-[4px] rounded-full bg-placeholder" />
+                  <i className="br-march-3 block h-[4px] w-[4px] rounded-full bg-placeholder" />
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="px-5 py-4 text-[13.5px] leading-[1.5]" aria-live="polite">
+        {!landed ? (
+          <span className="text-subtle-2">Same URL, same second. The Chrome request is the control.</span>
+        ) : refused.length > 0 ? (
+          <span className="font-medium text-coral-text">
+            {refused.map((a) => CLIENT_IDS[a.id] ?? a.id).join(', ')} {refused.length === 1 ? 'was' : 'were'} refused the page Chrome was
+            given.
+          </span>
+        ) : (
+          <span className="text-subtle-2">All {catalog.agents.length} clients were served. The rest of the scan is about what they could read.</span>
+        )}
+      </p>
+    </section>
   );
 }
 

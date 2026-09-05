@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * The Product Hunt badge, for launch week.
@@ -23,6 +23,16 @@ import { useState } from 'react';
  */
 export function ProductHuntBadge({ className = '' }: { className?: string }) {
   const [failed, setFailed] = useState(false);
+  const img = useRef<HTMLImageElement>(null);
+
+  // The tag is server-rendered, so a blocked request can fire its error event
+  // before React attaches the handler below. Ask the element on mount rather
+  // than leaving a broken-image icon under the URL box.
+  useEffect(() => {
+    const el = img.current;
+    if (el?.complete && el.naturalWidth === 0) setFailed(true);
+  }, []);
+
   if (failed) return null;
 
   return (
@@ -38,6 +48,7 @@ export function ProductHuntBadge({ className = '' }: { className?: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element -- third-party host with a
           cache-busting query; next/image would proxy and re-encode it for no gain. */}
       <img
+        ref={img}
         src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1241652&theme=light&t=1788568262820"
         alt="botready.dev — Make your website visible to AI | Product Hunt"
         width={250}

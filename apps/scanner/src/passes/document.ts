@@ -262,6 +262,17 @@ function titleMetaDistinctCheck(input: DocumentCheckInput): CheckResult {
     description: input.renderFailed
       ? input.rawFacts.metaDescription
       : input.renderedFacts.metaDescription,
+    // Three facts about the target page that nothing scores and the result
+    // page shows. They ride on this check because this is already the record
+    // of how the home page describes itself, and adding a check to carry them
+    // would mean a catalog version whose weights did not change.
+    //
+    // The two header values are printed as the server sent them. Whether they
+    // add up to "this page can be put in a frame" is a reading of them, and a
+    // reading is not an observation.
+    icon: input.renderFailed ? input.rawFacts.icon : input.renderedFacts.icon,
+    x_frame_options: input.rawResponse.headers['x-frame-options'] ?? '',
+    csp: input.rawResponse.headers['content-security-policy'] ?? '',
   };
   const others = input.pages
     .filter((p) => p.status >= 200 && p.status < 300)

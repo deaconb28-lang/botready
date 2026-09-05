@@ -141,6 +141,12 @@ export interface DomFacts {
   hasMain: boolean;
   title: string;
   metaDescription: string;
+  /**
+   * The icon the page declares, resolved against the document URL. Empty when
+   * the page declares none, which is not the same as having none: /favicon.ico
+   * is served by convention whether or not anyone links to it.
+   */
+  icon: string;
   canonical: string;
   ogPresent: string[];
   jsonLdTypes: string[];
@@ -177,6 +183,7 @@ export function domFacts(html: string, url: string): DomFacts {
     hasMain: false,
     title: '',
     metaDescription: '',
+    icon: '',
     canonical: '',
     ogPresent: [],
     jsonLdTypes: [],
@@ -231,6 +238,7 @@ export function domFacts(html: string, url: string): DomFacts {
       hasMain: Boolean(doc.querySelector('main, [role="main"]')),
       title: (doc.title ?? '').trim(),
       metaDescription: meta(doc, 'meta[name="description"]'),
+      icon: iconHref(doc),
       canonical: doc.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim() ?? '',
       ogPresent,
       jsonLdTypes,
@@ -252,6 +260,43 @@ export function domFacts(html: string, url: string): DomFacts {
 
 function meta(doc: Document, selector: string): string {
   return doc.querySelector(selector)?.getAttribute('content')?.trim() ?? '';
+}
+
+/**
+ * The icon a page declares for itself, absolute.
+ *
+ * Preference order is largest-first among the rels browsers honour: an Apple
+ * touch icon is at least 120px square and a plain `rel=icon` is often a 16px
+ * ICO, and the one place this is shown is a 32px tile on a hi-dpi screen. We
+ * report the href and nothing about it; whether it loads is the reader's
+ * browser's problem, not a fact we are in a position to state.
+ *
+ * `href` is resolved through the anchor element rather than by string work
+ * because a page may declare a protocol-relative or root-relative href and
+ * jsdom already knows the document's base URL.
+ */
+function iconHref(doc: Document): string {
+  const selectors = [
+    'link[rel~="apple-touch-icon"][href]',
+    'link[rel~="icon"][type="image/svg+xml"][href]',
+    'link[rel~="icon"][href]',
+    'link[rel~="shortcut"][href]',
+  ];
+  for (const selector of selectors) {
+    const href = doc.querySelector(selector)?.getAttribute('href')?.trim();
+    if (!href) continue;
+    try {
+      const anchor = doc.createElement('a');
+      anchor.href = href;
+      const resolved = anchor.href;
+      // Only http(s). A data: icon would be inlined into every result payload,
+      // and anything else is not something a browser will fetch for us.
+      if (/^https?:\/\//i.test(resolved)) return resolved;
+    } catch {
+      // An href jsdom cannot resolve is an href a browser cannot either.
+    }
+  }
+  return '';
 }
 
 function formFacts(form: Element): FormFacts {

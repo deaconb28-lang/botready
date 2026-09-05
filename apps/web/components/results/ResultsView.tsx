@@ -15,9 +15,11 @@ import { FindingsList } from './FindingsList';
 import { FixPackPreview } from './FixPackPreview';
 import { FixPackButton } from './FixPackButton';
 import { ClientPanel } from './ClientPanel';
+import { SitePanel } from './SitePanel';
 import { ReportHeader } from './ReportHeader';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
 import { PRICING } from '@/lib/site';
+import { siteIdentity } from '@/lib/site-identity';
 import { CLIENT_NAMES } from '@/lib/theme';
 
 /**
@@ -53,6 +55,7 @@ export function ResultsView({
   const items = findings.map((finding) => ({ finding, observed: observedByKey.get(finding.key) ?? {} }));
   const { plain, tech } = summaries(results, findings, score);
   const pack = buildFixPack(domain, results);
+  const identity = siteIdentity(results, domain, url);
   const ledger = packLedger(pack);
   const errored = score.erroredChecks.length;
 
@@ -155,7 +158,14 @@ export function ResultsView({
           <ScanFacts url={url} pagesCrawled={pagesCrawled} scannerVersion={scannerVersion} scoringVersion={score.scoringVersion} checkCount={results.length} />
         </div>
 
-        <ClientPanel results={results} />
+        {/* The right column reads top to bottom as one argument: here is what
+            five clients received for this URL, and here is the thing they were
+            asking for. Both stick together so the comparison stays on screen
+            while the findings scroll. */}
+        <div className="grid gap-[18px] lg:sticky lg:top-[88px]">
+          <ClientPanel results={results} sticky={false} />
+          <SitePanel identity={identity} fixture={fixture} />
+        </div>
       </div>
     </Container>
   );
