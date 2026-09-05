@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg version="1.2" baseProfile="tiny-ps" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <title>botready.dev</title>
   <!--
     The sender avatar, which is the favicon with three things taken out.
@@ -19,6 +19,10 @@
       dark rim on one side of a circle.
     - The glyph is centred in the square rather than optically placed for a
       16px tab, because the safe area here is the inscribed circle.
+
+    width and height are absolute pixels and not percentages, and 512 is well
+    over the 96 Gmail asks for as a minimum. A viewBox alone scales fine in a
+    browser and is not what the requirement says.
   -->
   <rect width="512" height="512" fill="#4B44F5"/>
   <g fill="none" stroke="#C6F53C" stroke-width="54.4" stroke-linecap="round">

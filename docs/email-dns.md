@@ -57,38 +57,43 @@ the wildcard.
 
 ## The avatar
 
-Gmail draws that grey silhouette because nothing tells it what else to draw.
-There are exactly two ways to change it, and neither is a file we can commit.
+Gmail draws a grey silhouette beside our name because nothing tells it what
+else to draw. BIMI is the mechanism that would, and it has three parts. Two are
+free and ready; the third is the one that decides whether Gmail plays along.
 
-**BIMI.** The logo is built and served: `apps/web/public/bimi.svg`, which is
-`app/icon.svg` redrawn to the SVG Tiny Portable/Secure profile BIMI requires
-(version 1.2, `baseProfile="tiny-ps"`, a `<title>`, a square viewBox, no script,
-no animation, no external references). Full-bleed violet with no rounded corners
-and no border, because every client that shows it crops to a circle. Two records
-turn it on:
+**The logo is built and served.** `apps/web/public/bimi.svg` is `app/icon.svg`
+redrawn to the SVG Tiny Portable/Secure profile BIMI requires: version 1.2,
+`baseProfile="tiny-ps"`, a `<title>`, a square viewBox, absolute pixel width and
+height (Gmail asks for at least 96; ours is 512), and no script, animation or
+external reference. Full-bleed violet with no rounded corners and no border,
+because every client that shows it crops to a circle.
+
+**The two records.** Neither exists yet.
 
 ```
-_dmarc.botready.dev     TXT   v=DMARC1; p=quarantine; pct=100; rua=mailto:team@botready.dev
-default._bimi.botready.dev  TXT   v=BIMI1; l=https://botready.dev/bimi.svg; a=
+_dmarc.botready.dev          TXT   v=DMARC1; p=quarantine; pct=100; rua=mailto:team@botready.dev
+default._bimi.botready.dev   TXT   v=BIMI1; l=https://botready.dev/bimi.svg; a=
 ```
 
-DMARC must be at `p=quarantine` or `p=reject` first: BIMI is ignored at
-`p=none`. Moving to quarantine is worth doing on its own merits, but publish it
-only once Stripe's sending from this domain is finished and passing, or Stripe's
-mail starts going to junk.
+DMARC must move off `p=none` first: BIMI is ignored at none, and quarantine with
+`pct=100` is what the spec asks for. Publish it only once Stripe's sending from
+this domain is finished and passing, or Stripe's mail starts going to junk.
 
-The catch is `a=`. **Gmail will not show a BIMI logo without a Verified Mark
-Certificate**, and a VMC needs a registered trademark and runs about $1,000 a
-year from DigiCert or Entrust. The cheaper Common Mark Certificate wants the
-mark in continuous use for a year, which rules us out until 2027. So the record
-above with an empty `a=` gets the avatar into Apple Mail and Fastmail and
-nothing in Gmail.
+While publishing, delete the stray Stripe DKIM TXT record sitting at `_dmarc`
+and remove the Porkbun wildcard, or the BIMI lookup keeps resolving to a parking
+host instead of returning NXDOMAIN.
 
-**A Google Workspace mailbox.** Make `team@botready.dev` a real Google account
-and give it a profile photo. Gmail shows a sender's Google profile picture
-regardless of BIMI, and this costs about $7 a month. Resend keeps sending the
-mail; the account exists so Google has a face to look up.
+**The certificate is the open question.** Google's own documentation now says a
+VMC is "recommended but not strictly required" and names a CMC as an
+alternative, which is softer than the position everyone repeats. What is not in
+doubt is that a VMC earns a checkmark beside the sender and that neither
+certificate is available to us cheaply: a VMC needs a registered trademark and
+runs about a thousand dollars a year, and a CMC needs the mark in continuous use
+for twelve months, which rules us out until 2027.
 
-That second one is the answer for now. The BIMI asset and this note are here so
-the first one is a DNS edit rather than a project, on the day a trademark makes
-it worth $1,000.
+So publish the two records with an empty `a=` and see. They cost nothing, Apple
+Mail and Fastmail render a certificate-free BIMI logo today, and if Gmail turns
+out to render it too we have the avatar for free. If it does not after a few
+days, the cheap fallback is a Google Workspace mailbox on `team@botready.dev`
+with a profile photo — about seven dollars a month, Resend keeps sending the
+mail, and Google simply has a face to look up.
