@@ -49,7 +49,9 @@ export const LIMITS = {
  */
 export const PROMO = {
   active: true,
-  code: 'LAUNCHDAY',
+  /** The words before the code. Data, so the banner is one edit end to end. */
+  lead: 'Launch week.',
+  code: 'LAUNCHWEEK',
   off: '50% off',
 } as const;
 

@@ -24,7 +24,7 @@ export function PromoBar() {
       href="/pricing"
       className="block border-b-2 border-ink bg-lime px-4 py-[7px] text-center font-mono text-[12.5px] text-ink no-underline hover:bg-white"
     >
-      Launch day. Use code{' '}
+      {PROMO.lead} Use code{' '}
       <span className="mx-[2px] rounded-[6px] border-2 border-ink bg-ink px-[7px] py-[1px] font-bold text-lime">
         {PROMO.code}
       </span>{' '}
