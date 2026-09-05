@@ -1,7 +1,20 @@
 /**
- * Resend. Two emails in the whole product: the fix pack is ready, and a monitor
- * alert. Neither is optional, but both degrade: if RESEND_API_KEY is unset the
- * send is logged and skipped rather than throwing, because the purchase already
+ * Resend, and nothing else. This file is the only place in the product that
+ * sends mail, and both callers are server-side: the Stripe webhook and the
+ * monitor cron.
+ *
+ * There was briefly a Supabase edge function that also called Resend. It is
+ * gone. Mail belongs where the key and the fix pack generator already are —
+ * `packages/core` builds the pack and Deno could not import it, so the function
+ * could only ever send a link to files it was unable to attach. One sender is
+ * also one place to look when a customer says an email did not arrive.
+ *
+ * Supabase's own mailer is a separate thing and is not used: sign-in is Google
+ * only, so nothing in the app asks Supabase to send anything.
+ *
+ * Two emails in the whole product: the fix pack is ready, and a monitor alert.
+ * Neither is optional, but both degrade — if RESEND_API_KEY is unset the send
+ * is logged and skipped rather than throwing, because the purchase already
  * happened and the entitlement is already granted by the time this runs.
  */
 
