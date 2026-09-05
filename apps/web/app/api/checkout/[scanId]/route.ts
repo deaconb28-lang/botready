@@ -65,7 +65,13 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
   );
 }
 
-/** Null rather than a throw when Stripe is not configured, so the caller can fall back. */
+/**
+ * Null rather than a throw when Stripe is not configured, so the caller can
+ * fall back — but never silently. A swallowed error here is the difference
+ * between a buyer landing on our confirmation screen and a buyer landing on
+ * Stripe's, and that is not a difference anyone should have to guess at from
+ * the outside.
+ */
 async function createSession(scanId: string, domain: string, email: string | null) {
   try {
     return await stripe().checkout.sessions.create({
@@ -83,7 +89,8 @@ async function createSession(scanId: string, domain: string, email: string | nul
         description: `botready.dev fix pack for ${domain} (${PRICING.fixpack.label} ${PRICING.fixpack.cadence})`,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error('[checkout] no Stripe session for the fix pack; falling back to the payment link', err);
     return null;
   }
 }

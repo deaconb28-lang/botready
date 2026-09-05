@@ -95,6 +95,13 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
     currentPeriodEnd: plan === 'monitor' ? periodEndFor(session) : null,
   });
 
+  // One line per purchase, so "did they get it?" is answerable from the logs
+  // rather than from the buyer. No address and no session id: whether an email
+  // was found is the fact worth keeping, not whose.
+  console.info(
+    `[stripe] checkout ${plan} granted=${outcome.granted} duplicate=${outcome.duplicate} scan=${scanId ?? 'none'} reference=${reference ?? 'none'} email=yes`,
+  );
+
   if (outcome.granted && scanId) {
     // Best effort. A missing email is a support ticket; a failed webhook is a
     // retry that grants nothing and confuses everyone.
@@ -103,9 +110,15 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
     // must not swallow the email: they paid, and a confirmation that never
     // arrives is worse than one without its attachment.
     const pack = await assembleForEmail(scanId);
-    await sendFixpackReady({ to: email, scanId, domain, pack }).catch((err) => {
-      console.error('[stripe] fix pack email failed', err);
-    });
+    await sendFixpackReady({ to: email, scanId, domain, pack })
+      .then(() => console.info(`[stripe] fix pack email sent for scan ${scanId} (${pack ? pack.entries.length : 0} files)`))
+      .catch((err) => {
+        console.error('[stripe] fix pack email failed', err);
+      });
+  } else if (outcome.granted) {
+    // Granted but nothing to send: a monitoring subscription, or a fix pack
+    // whose payment link came back without the scan it was for.
+    console.warn(`[stripe] ${plan} granted with no scan to send; reference=${reference ?? 'none'}`);
   }
 
   return NextResponse.json({

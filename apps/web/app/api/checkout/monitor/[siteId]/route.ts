@@ -64,7 +64,8 @@ async function createSession(siteId: string, domain: string, email: string) {
       // the kind of thing you find out about from the person it failed for.
       allow_promotion_codes: true,
     });
-  } catch {
+  } catch (err) {
+    console.error('[checkout] no Stripe session for monitoring; falling back to the payment link', err);
     return null;
   }
 }
