@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { SiteFooter } from '@/components/site/SiteFooter';
@@ -11,7 +10,7 @@ import { currentUser, hasFixpackFor } from '@/lib/auth';
 import { assembleFixPack } from '@/lib/fixpack';
 import { verifiedPurchase } from '@/lib/purchase';
 import { loadScanView } from '@/lib/scan-data';
-import { CONTACT_EMAIL } from '@/lib/site';
+import { PRICING } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Purchase complete',
@@ -64,22 +63,28 @@ export default async function PurchasedPage({
   const pack = entitled ? assembleFixPack(view, id) : null;
   const downloadHref = paid && sessionId ? `/api/fixpack/${id}?session_id=${encodeURIComponent(sessionId)}` : `/api/fixpack/${id}`;
 
+  // Where the next step goes. Their own claimed property opens the app; anyone
+  // else is one DNS record away from having one.
+  const claimedByThem = view.site.claimed_by !== null && view.site.claimed_by === user?.id;
+  const nextHref = claimedByThem ? `/app/${domain}` : `/claim/${domain}`;
+  const nextLabel = claimedByThem ? 'Open your dashboard' : `Claim ${domain}`;
+
   return (
     <div className="min-h-dvh bg-canvas">
       <SiteHeader />
       <Container as="main" id="main" width={760} className="pb-24 pt-14">
         <span className="eyebrow text-subtle-2">Fix pack</span>
-        <h1 className="display-tight mt-3 text-[clamp(34px,5vw,56px)]">{entitled ? 'Your files are ready.' : 'Thanks. One more step.'}</h1>
-        <p className="mt-4 max-w-[56ch] text-[17px] leading-[1.6] text-muted">
+        <h1 className="display-tight mt-3 text-[clamp(34px,5vw,56px)]">
+          {entitled ? 'Your site is now BotReady!' : 'Thanks. One more step.'}
+        </h1>
+        <p className="mt-4 max-w-[52ch] text-[17px] leading-[1.6] text-muted">
           {entitled
-            ? `Every value in the pack for ${domain} came out of this scan, and all of it is on this page. Download the files, or copy the prompt below straight into your coding agent.`
-            : `Stripe is still confirming the payment. Give it a minute and reload this page, or sign in with the address you paid with and the download unlocks here.`}
+            ? `Everything for ${domain} is on this page.`
+            : 'Stripe is still confirming. Reload in a minute, or sign in with the address you paid with.'}
         </p>
+
         <Card surface="ink" radius="panel" shadow="violet-5" className="mt-8 p-6">
           <TerminalLine className="border-0 bg-transparent px-0 py-0">$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
-          <p className="mt-3 text-[14.5px] leading-[1.55] text-on-ink-soft">
-            The pack includes botready-fixes.md, a full prompt for your coding agent. Paste it into Claude Code or Cursor and your site fixes itself.
-          </p>
           <div className="mt-5 flex flex-wrap gap-3">
             {entitled ? (
               <a href={downloadHref} className="edge inline-flex items-center rounded-[12px] bg-lime px-[22px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 hover:bg-white">
@@ -96,10 +101,28 @@ export default async function PurchasedPage({
           </div>
         </Card>
 
-        {/* Said here as well as in the mail itself, because the person who
-            cannot find the mail is by definition not reading the mail. */}
+        {/* The next thing worth doing, and the only thing on this page that is
+            still for sale. Applying the pack is a one-off; a firewall rule
+            changing under them next month is not, and they will not think to
+            come back and check. */}
+        {entitled ? (
+          <Card surface="lime" radius="panel" shadow={5} className="mt-6 p-6">
+            <h2 className="display text-[20px]">Keep it that way</h2>
+            <p className="mt-2 max-w-[46ch] text-[15px] leading-[1.55] text-ink">
+              Claim the domain and we re-check it weekly, then write to you the day a client that could read it stops being
+              able to. {PRICING.monitor.label} {PRICING.monitor.cadence}.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <a href={nextHref} className="edge inline-flex items-center rounded-[12px] bg-ink px-[22px] py-[14px] font-body text-[15px] font-bold text-white no-underline shadow-hard-3 hover:bg-violet">
+                {nextLabel}
+              </a>
+              <span className="font-mono text-[12px] text-ink">Two minutes, one DNS record</span>
+            </div>
+          </Card>
+        ) : null}
+
         <div className="mt-6">
-          <MailNote to={buyerEmail} subject={`Your fix pack for ${domain}`} />
+          <MailNote to={buyerEmail} />
         </div>
 
         {pack ? <PromptPanel prompt={pack.agentPrompt} filename="botready-fixes.md" /> : null}
@@ -119,16 +142,8 @@ export default async function PurchasedPage({
                 ))}
               </ul>
             </Card>
-            <p className="mt-3 text-[14px] leading-[1.6] text-muted">
-              Every one of these is attached to the email too, each file on its own, so you can open any of them without
-              unzipping anything.
-            </p>
           </section>
         ) : null}
-
-        <p className="mt-6 text-[14px] leading-[1.6] text-muted">
-          Something not right? Write to <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link> with the domain and we will sort it out.
-        </p>
       </Container>
       <SiteFooter />
     </div>
