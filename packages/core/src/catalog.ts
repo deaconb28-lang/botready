@@ -14,6 +14,7 @@
  */
 
 import rawCatalog from '../checks.json';
+import v12 from '../catalogs/v1.2.json';
 import type { AgentDef, Catalog, CategoryDef, CategoryKey, CheckDef } from './types';
 
 export const catalog = rawCatalog as unknown as Catalog;
@@ -21,6 +22,9 @@ export const catalog = rawCatalog as unknown as Catalog;
 /** Every catalog version this build can score against, newest first. */
 export const CATALOGS: Record<string, Catalog> = {
   [catalog.scoringVersion]: catalog,
+  // 1.2 had no sector profiles, so anything scored under it is scored against
+  // every check, which is what those rows meant when they were written.
+  '1.2': v12 as unknown as Catalog,
 };
 
 export const CURRENT_SCORING_VERSION = catalog.scoringVersion;

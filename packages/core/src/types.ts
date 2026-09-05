@@ -72,6 +72,32 @@ export interface AgentDef {
   role: AgentRole;
 }
 
+/**
+ * A sector, and what it is measured on.
+ *
+ * A plumber has no API to document and no agent manifest to publish, and
+ * scoring one against those is scoring it against somebody else's business.
+ * `exempt` drops those checks out of the denominator entirely — not a zero, an
+ * absence — and `weights` lets the categories that are left carry what the
+ * exempt ones gave up.
+ *
+ * `match` holds schema.org types. The profile is earned by a site declaring
+ * what it is, never inferred from the absence of the thing being exempted:
+ * "you have no API docs, so you need none" is circular and would hand every
+ * site a free pass.
+ */
+export interface ProfileDef {
+  key: string;
+  label: string;
+  /** schema.org @type values that select this profile. */
+  match: string[];
+  /** Check keys this sector is not measured on. */
+  exempt: string[];
+  /** Optional replacement category weights. Must still sum to 100. */
+  weights?: Record<CategoryKey, number>;
+  rationale?: string;
+}
+
 export interface CheckDef {
   key: string;
   category: CategoryKey;
@@ -87,6 +113,12 @@ export interface CheckDef {
   fails_when?: string;
   warns_when?: string;
   observed_shape?: Record<string, unknown>;
+  /**
+   * A failure here makes the rest of the report moot rather than merely worse:
+   * the page could not be retrieved, or could not be read once retrieved. The
+   * result page hoists these above the score.
+   */
+  critical?: boolean;
   /** Key into the remedy generators. Absent when there is nothing to generate. */
   remedy?: string;
 }
@@ -97,6 +129,8 @@ export interface Catalog {
   categories: CategoryDef[];
   agents: AgentDef[];
   checks: CheckDef[];
+  /** Absent in catalogs archived before 1.3, which had no sector profiles. */
+  profiles?: ProfileDef[];
 }
 
 // ------------------------------------------------------------------ evidence

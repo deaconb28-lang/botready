@@ -100,7 +100,31 @@ function score(results: CheckResult[], version?: string): ScanScore;  // pure, n
 
 ## Categories and weights
 
-Live in `checks.json`. Current v1.2 weights: retrievability 25, discovery 20, representation 20, structure 15, actionability 15, freshness 5. Weights are published on the site, so changing them is a versioned event, not a tweak.
+Live in `checks.json`. Current v1.3 weights: retrievability 25, discovery 20, representation 20, structure 15, actionability 15, freshness 5. Weights are published on the site, so changing them is a versioned event, not a tweak. v1.2 is archived under `packages/core/catalogs/` and still scorable, because rows written under it recorded that version.
+
+## Sector profiles
+
+Also data in `checks.json`, under `profiles`. A profile names a sector, the
+checks that sector is not measured on, and optionally a replacement set of
+category weights. An exemption is a **skip**, which the arithmetic already
+removes from the denominator — not a zero and not a free pass.
+
+A profile is selected by a site declaring what it is, in JSON-LD, using
+schema.org's own vocabulary. Two rules, both enforced by tests:
+
+1. **Never infer an exemption from the absence of the thing exempted.** "No API
+   docs, therefore exempt from API docs" makes the score a tautology.
+2. **Match only on types that name the kind of business.** `Product`, `Offer`
+   and `WebPage` are not: a SaaS company declares all three, and matching on
+   them filed every site with a price on it as a shop.
+
+A site that declares nothing recognised is `general` and is measured on
+everything. Silence is not a claim.
+
+Checks marked `critical` in the catalog are the ones whose failure makes the
+rest of the report moot. They are hoisted above the score on the result page,
+because the total is an average and an average cannot say that the thing which
+failed is the thing everything else was measured on top of.
 
 ## Design tokens
 

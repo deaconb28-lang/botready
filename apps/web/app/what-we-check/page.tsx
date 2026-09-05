@@ -56,6 +56,36 @@ export default function WhatWeCheckPage() {
           </p>
         </div>
 
+        {/* Sector profiles. Published for the same reason the weights are:
+            a number that moves for reasons the reader cannot see is a number
+            they have no reason to believe. */}
+        <section className="edge mt-9 rounded-[18px] bg-white p-[22px] shadow-hard-3">
+          <h2 className="display text-[19px]">Not every check is asked of every site</h2>
+          <p className="mt-2 max-w-[62ch] text-[15px] leading-[1.6] text-muted">
+            A plumber has no API to document and no agent manifest to publish, and scoring one against those is scoring it
+            against somebody else&rsquo;s business. So a site that says what kind of business it is, in its own JSON-LD, is
+            measured on the checks that apply to it. The rest are not failed; they are not asked, and the categories that
+            remain carry the weight the exempt ones gave up.
+          </p>
+          <p className="mt-3 max-w-[62ch] text-[15px] leading-[1.6] text-muted">
+            A profile is only ever earned by a site declaring what it is. It is never inferred from the absence of the
+            thing being exempted, because &ldquo;no API docs, so none needed&rdquo; would hand every site a free pass. A
+            site that declares nothing is measured on all {catalog.checks.length}.
+          </p>
+          <ul className="m-0 mt-4 grid list-none gap-[10px] p-0">
+            {(catalog.profiles ?? [])
+              .filter((p) => p.exempt.length > 0)
+              .map((p) => (
+                <li key={p.key} className="edge rounded-[12px] bg-canvas px-[14px] py-[11px]">
+                  <span className="display text-[15px] font-semibold">{p.label}</span>
+                  <span className="ml-2 font-mono text-[12px] text-subtle-2">
+                    not measured on {p.exempt.join(', ')}
+                  </span>
+                </li>
+              ))}
+          </ul>
+        </section>
+
         {/* The weights, as a bar chart. */}
         <figure id="weights" className="m-0 mt-9">
           <div className="edge flex h-[150px] items-end gap-[10px] rounded-[18px] bg-ink p-[22px] shadow-violet-5" role="img" aria-label={`Category weights: ${catalog.categories.map((c) => `${c.label} ${c.weight}%`).join(', ')}`}>

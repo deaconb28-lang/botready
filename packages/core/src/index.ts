@@ -15,4 +15,5 @@ export * from './domain';
 export * from './addresses';
 export * from './findings';
 export * from './segment';
+export * from './profiles';
 export * from './remedies';

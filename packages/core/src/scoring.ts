@@ -26,6 +26,7 @@
  */
 
 import { CURRENT_SCORING_VERSION, catalogFor } from './catalog';
+import { inferProfile, profileFor, weightsFor } from './profiles';
 import type {
   CategoryKey,
   CheckResult,
@@ -59,14 +60,20 @@ export interface CategoryBreakdown {
 
 export interface ScoreDetail extends ScanScore {
   categories: CategoryBreakdown[];
+  /** The sector this was measured as, and what that let it skip. */
+  profile: { key: string; label: string };
+  /** Checks this sector is not measured on. Skipped, not failed. */
+  exemptChecks: string[];
 }
 
 /**
  * The contract function. Same input, same output, forever, for a given version.
  */
-export function score(results: CheckResult[], version?: string): ScanScore {
-  const { categories, ...rest } = scoreDetail(results, version);
+export function score(results: CheckResult[], version?: string, profileKey?: string): ScanScore {
+  const { categories, profile, exemptChecks, ...rest } = scoreDetail(results, version, profileKey);
   void categories;
+  void profile;
+  void exemptChecks;
   return rest;
 }
 
@@ -74,9 +81,16 @@ export function score(results: CheckResult[], version?: string): ScanScore {
  * Everything `score` returns, plus the per-category arithmetic the result page
  * needs to draw the ten-segment meters and the findings list.
  */
-export function scoreDetail(results: CheckResult[], version?: string): ScoreDetail {
+export function scoreDetail(results: CheckResult[], version?: string, profileKey?: string): ScoreDetail {
   const cat = catalogFor(version);
   const scoringVersion = version ?? cat.scoringVersion ?? CURRENT_SCORING_VERSION;
+
+  // The sector, from what the site declared about itself. Passing a key
+  // overrides the inference, which is what re-scoring an archived result with
+  // the profile it was scored under needs.
+  const profile = profileKey ? profileFor(profileKey, version) : inferProfile(results, version);
+  const exempt = new Set(profile.exempt);
+  const weights = weightsFor(profile, cat);
 
   // Last result wins if a key somehow appears twice. Evidence has a unique
   // (scan_id, check_key) constraint, so this only bites on synthetic input.
@@ -95,7 +109,10 @@ export function scoreDetail(results: CheckResult[], version?: string): ScoreDeta
 
     for (const def of checks) {
       const result = byKey.get(def.key);
-      const status: CheckStatus = result?.status ?? 'skip';
+      // An exemption is a skip, which is already how the arithmetic removes a
+      // check from the denominator. Not a zero and not a pass: the check was
+      // not asked, so it is not in the sum either way.
+      const status: CheckStatus = exempt.has(def.key) ? 'skip' : (result?.status ?? 'skip');
       seen.push({ key: def.key, status, points: def.points });
 
       if (status === 'skip') continue;
@@ -106,7 +123,7 @@ export function scoreDetail(results: CheckResult[], version?: string): ScoreDeta
     return {
       key: category.key,
       label: category.label,
-      weight: category.weight,
+      weight: weights[category.key] ?? category.weight,
       score: available === 0 ? 0 : round(percent(earned, available)),
       earned,
       available,
@@ -117,7 +134,7 @@ export function scoreDetail(results: CheckResult[], version?: string): ScoreDeta
   // Classify once, over the whole catalog, so the lists are stable in catalog
   // order rather than in whatever order the worker happened to emit.
   for (const def of cat.checks) {
-    const status = byKey.get(def.key)?.status ?? 'skip';
+    const status = exempt.has(def.key) ? 'skip' : (byKey.get(def.key)?.status ?? 'skip');
     if (status === 'fail') failedChecks.push(def.key);
     else if (status === 'error') erroredChecks.push(def.key);
     else if (status === 'skip') skippedChecks.push(def.key);
@@ -151,6 +168,8 @@ export function scoreDetail(results: CheckResult[], version?: string): ScoreDeta
     skippedChecks,
     scoringVersion,
     categories: breakdowns,
+    profile: { key: profile.key, label: profile.label },
+    exemptChecks: cat.checks.filter((c) => exempt.has(c.key)).map((c) => c.key),
   };
 }
 
@@ -208,4 +227,32 @@ function percent(earned: number, available: number): number {
 function round(n: number): number {
   const r = Math.round(Math.abs(n) * 1e6) / 1e6;
   return Math.sign(n) * Math.round(r);
+}
+
+/**
+ * The failures that make the rest of the report moot.
+ *
+ * Marked `critical` in the catalog, so which ones they are is data like
+ * everything else. A site can score respectably while failing one of these —
+ * the arithmetic averages, and a 403 to two clients out of five still leaves
+ * three categories intact — which is exactly why they need hoisting above the
+ * number instead of being left to argue their case from position fourteen of a
+ * findings list.
+ *
+ * An exempt check can never be critical: a sector is not warned about a thing
+ * it was not measured on.
+ */
+export function criticalFailures(results: CheckResult[], version?: string, profileKey?: string): string[] {
+  const cat = catalogFor(version);
+  const detail = scoreDetail(results, version, profileKey);
+  const exempt = new Set(detail.exemptChecks);
+  const byKey = new Map(results.map((r) => [r.key, r]));
+
+  return cat.checks
+    .filter((def) => def.critical && !exempt.has(def.key))
+    .filter((def) => {
+      const status = byKey.get(def.key)?.status;
+      return status === 'fail' || status === 'error';
+    })
+    .map((def) => def.key);
 }

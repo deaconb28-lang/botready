@@ -24,6 +24,7 @@ export function ReportHeader({
   grade,
   scoringVersion,
   summary,
+  profileNote,
   verdict,
   categories,
   action,
@@ -33,6 +34,8 @@ export function ReportHeader({
   grade: string;
   scoringVersion: string;
   summary: string;
+  /** "Scored as a local service. 4 checks not counted." Null when nothing was. */
+  profileNote?: string | null;
   /** For anything below an A: what it costs, revealed as the number lands. */
   verdict?: string | null;
   categories: CategoryCell[];
@@ -100,6 +103,14 @@ export function ReportHeader({
               Grade {grade}
             </SoftChip>
             <span className="font-mono text-[12.5px] text-subtle-2">scoring v{scoringVersion}</span>
+            {profileNote ? (
+              <span
+                className="edge rounded-[99px] bg-canvas px-[9px] py-[2px] font-mono text-[11px] text-ink"
+                title="Some checks are not asked of every kind of site."
+              >
+                {profileNote}
+              </span>
+            ) : null}
           </div>
           <p className="mt-[10px] max-w-[46ch] text-[15.5px] leading-[1.5] text-muted">{summary}</p>
           {verdict && showVerdict ? (

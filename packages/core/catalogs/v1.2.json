@@ -1,5 +1,5 @@
 {
-  "scoringVersion": "1.3",
+  "scoringVersion": "1.2",
   "grades": [
     {
       "grade": "A",
@@ -104,8 +104,7 @@
           }
         }
       },
-      "remedy": "waf_allow_agents",
-      "critical": true
+      "remedy": "waf_allow_agents"
     },
     {
       "key": "js_dependency_ratio",
@@ -120,8 +119,7 @@
         "rendered_chars": 0,
         "ratio": 0
       },
-      "remedy": "prerender_key_pages",
-      "critical": true
+      "remedy": "prerender_key_pages"
     },
     {
       "key": "raw_fetch_latency",
@@ -174,8 +172,7 @@
           }
         }
       },
-      "remedy": "robots_block",
-      "critical": true
+      "remedy": "robots_block"
     },
     {
       "key": "sitemap_present",
@@ -347,132 +344,6 @@
         "distinct_dates": 0,
         "future_dates": 0
       }
-    }
-  ],
-  "profiles": [
-    {
-      "key": "general",
-      "label": "General",
-      "match": [],
-      "exempt": [],
-      "rationale": "The default. Nothing is exempt, and the published weights apply. A site that has not said what kind of business it is gets measured against everything, because the alternative is guessing in its favour."
-    },
-    {
-      "key": "local-service",
-      "label": "Local service",
-      "match": [
-        "LocalBusiness",
-        "Plumber",
-        "HVACBusiness",
-        "Electrician",
-        "RoofingContractor",
-        "GeneralContractor",
-        "HomeAndConstructionBusiness",
-        "MovingCompany",
-        "AutoRepair",
-        "Dentist",
-        "Physician",
-        "MedicalBusiness",
-        "LegalService",
-        "Attorney",
-        "RealEstateAgent",
-        "Restaurant",
-        "FoodEstablishment",
-        "HealthAndBeautyBusiness",
-        "ProfessionalService",
-        "EmergencyService"
-      ],
-      "exempt": [
-        "api_docs_reachable",
-        "agent_manifest",
-        "no_wall_on_docs",
-        "pricing_structured"
-      ],
-      "weights": {
-        "retrievability": 30,
-        "discovery": 22,
-        "representation": 22,
-        "structure": 14,
-        "actionability": 7,
-        "freshness": 5
-      },
-      "rationale": "A plumber has no API, no agent manifest and no developer documentation to leave unwalled, and quoted work is not a published price list. Scoring them against those four is scoring them against somebody else\u2019s business. What is left matters more, not less: whether a client can reach the page and read who you are and where you work, so retrievability and discovery carry the weight the exempt checks gave up. A profile is selected only by a type that names the kind of business. Product, Offer and WebPage are not: a SaaS company declares all three, and matching on them filed every site with a price on it as a shop."
-    },
-    {
-      "key": "ecommerce",
-      "label": "Ecommerce",
-      "match": [
-        "OnlineStore",
-        "Store",
-        "ClothingStore",
-        "GroceryStore",
-        "ElectronicsStore",
-        "DepartmentStore",
-        "ShoppingCenter",
-        "HardwareStore",
-        "BookStore"
-      ],
-      "exempt": [
-        "api_docs_reachable",
-        "agent_manifest",
-        "no_wall_on_docs"
-      ],
-      "weights": {
-        "retrievability": 27,
-        "discovery": 20,
-        "representation": 20,
-        "structure": 20,
-        "actionability": 8,
-        "freshness": 5
-      },
-      "rationale": "A shop needs no developer documentation, but structured pricing is the whole point rather than an exemption: an assistant asked what something costs is reading Offer nodes or it is reading nothing. Structure gains the weight. A profile is selected only by a type that names the kind of business. Product, Offer and WebPage are not: a SaaS company declares all three, and matching on them filed every site with a price on it as a shop."
-    },
-    {
-      "key": "media",
-      "label": "Media",
-      "match": [
-        "NewsMediaOrganization",
-        "Blog",
-        "NewsArticle",
-        "Periodical",
-        "PublicationIssue"
-      ],
-      "exempt": [
-        "api_docs_reachable",
-        "agent_manifest",
-        "no_wall_on_docs",
-        "pricing_structured"
-      ],
-      "weights": {
-        "retrievability": 28,
-        "discovery": 22,
-        "representation": 22,
-        "structure": 12,
-        "actionability": 6,
-        "freshness": 10
-      },
-      "rationale": "A publisher sells nothing and documents nothing, and the thing that makes its pages worth retrieving is that they are current. Freshness doubles. A profile is selected only by a type that names the kind of business. Product, Offer and WebPage are not: a SaaS company declares all three, and matching on them filed every site with a price on it as a shop."
-    },
-    {
-      "key": "software",
-      "label": "Software",
-      "match": [
-        "SoftwareApplication",
-        "WebApplication",
-        "MobileApplication",
-        "SoftwareSourceCode",
-        "APIReference"
-      ],
-      "exempt": [],
-      "weights": {
-        "retrievability": 25,
-        "discovery": 18,
-        "representation": 18,
-        "structure": 14,
-        "actionability": 20,
-        "freshness": 5
-      },
-      "rationale": "Nothing is exempt, and actionability is worth more. A product an agent is expected to use is judged on whether it says what it can do and lets a client reach the documentation that explains it. A profile is selected only by a type that names the kind of business. Product, Offer and WebPage are not: a SaaS company declares all three, and matching on them filed every site with a price on it as a shop."
     }
   ]
 }

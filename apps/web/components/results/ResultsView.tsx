@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {
   buildFixPack,
   catalog,
+  criticalFailures,
   type CheckResult,
   type Effort,
   type Finding,
@@ -19,6 +20,7 @@ import { DeliveryNote } from './DeliveryNote';
 import { ClientPanel } from './ClientPanel';
 import { SitePanel } from './SitePanel';
 import { SitePanelAsync, SitePanelSkeleton } from './SitePanelAsync';
+import { CriticalAlert } from './CriticalAlert';
 import { ReportHeader } from './ReportHeader';
 import { ScoreReveal } from './ScoreReveal';
 import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
@@ -70,6 +72,16 @@ export function ResultsView({
   // fact that most of it is already written. A grade B used to be drawn in the
   // healthy green and left at that, which reads as a pass to somebody whose
   // site three clients cannot open.
+  // Above the number, because the number is an average and an average cannot
+  // say that the thing which failed is the thing everything else was measured
+  // on top of.
+  const critical = criticalFailures(results);
+  // Said out loud, because an exemption that changes a number silently is a
+  // number nobody can check. Only when it actually changed something.
+  const profileNote =
+    score.exemptChecks.length > 0
+      ? `${score.profile.label} · ${score.exemptChecks.length} not counted`
+      : null;
   const missing = 100 - score.total;
   const verdict =
     score.grade === 'A' || findings.length === 0
@@ -106,12 +118,15 @@ export function ResultsView({
 
       <ScoreReveal grade={score.grade} scanId={scanId} />
 
+      <CriticalAlert keys={critical} findings={findings} />
+
       <ReportHeader
         total={score.total}
         grade={score.grade}
         scoringVersion={score.scoringVersion}
         summary={summary}
         categories={score.categories.map((c) => ({ key: c.key, label: c.label, pct: c.score }))}
+        profileNote={profileNote}
         verdict={verdict}
         action={action}
       />
