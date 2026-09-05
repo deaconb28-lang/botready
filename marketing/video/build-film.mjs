@@ -254,10 +254,17 @@ for (const target of wanted) {
         + `Drop a beat from CUTDOWNS in marketing/video/script.mjs.`,
       );
     }
-    overrides = natural.map((d, i) => ({
-      silent: target.silent,
-      seconds: i === natural.length - 1 ? d + (target.target - sum) : d,
-    }));
+    // Spread the slack across the beats in proportion to their length rather
+    // than dumping it all on the last one. On a short cut that otherwise leaves
+    // the end card holding for two thirds of the slot.
+    const scale = target.target / sum;
+    let spent = 0;
+    overrides = natural.map((d, i) => {
+      const last = i === natural.length - 1;
+      const seconds = last ? target.target - spent : Number((d * scale).toFixed(3));
+      spent += seconds;
+      return { silent: target.silent, seconds };
+    });
   }
 
   // Walk the beats so a run on one source plays through continuously.
