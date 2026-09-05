@@ -18,10 +18,14 @@ That is not squeamishness. A product that sells a measurement cannot advertise
 with a picture of a measurement it did not take, and the first person to notice
 would be exactly the engineer we are trying to convince.
 
-The one thing that is synthesised is the narration, which is text-to-speech and
-sounds like it. If you would rather read the script yourself, drop your takes
-into `vo/` as `<beat-id>.mp3` and re-run step 3 — nothing else changes, and the
-credit cost of the whole directory goes to zero.
+The one thing that is synthesised is the narration. It is `text2speech_v2` on
+its `elevenlabs` engine, voice preset Emmett, and the choice is recorded as
+`VOICE` in `script.mjs` rather than living in somebody's shell history — a line
+regenerated on a different engine would not match the other eleven.
+
+If you would rather read the script yourself, drop your takes into `vo/` as
+`<beat-id>.mp3` and re-run the build. Nothing else changes, the edit re-times
+itself off your durations, and the credit cost of this directory goes to zero.
 
 ## What is in here
 
@@ -57,19 +61,20 @@ encoders at all.
 
 | File | | |
 |---|---|---|
-| `launch-film-16x9.mp4` | 74.7s | The film. Narrated |
+| `launch-film-16x9.mp4` | 70.3s | The film. Narrated |
 | `launch-30-16x9.mp4` | 30.0s | Paid social. **Not** the Product Hunt asset — see below |
 | `launch-15-16x9.mp4` | 15.0s | |
 | `launch-06-16x9.mp4` | 6.0s | Bumper. Silent by design; it is watched sound-off |
-| `launch-film-9x16.mp4` | 74.7s | Vertical, laid out natively, captions burned in Public Sans |
+| `launch-film-9x16.mp4` | 70.3s | Vertical, laid out natively, captions burned in Public Sans |
 | `launch-cover.png` | | Poster, pulled from the real cut at 12s |
 | `reel-1-split.mp4` | 14.2s | Reel 1. Silent, real time |
 | `reel-3-fixpack.mp4` | 9.3s | Reel 3. Silent, real time |
 
-A cutdown names a hard `target` in `script.mjs` and the builder holds the last
-beat to land exactly on it. If the beats already overrun, it refuses to build and
-tells you to drop one. Speeding the read up to fit is not an option the tool
-offers, on purpose.
+A cutdown names a hard `target` in `script.mjs`. The builder spreads whatever
+slack is left across its beats in proportion to their length — dumping it all on
+the last beat left the end card holding for two thirds of a short spot — and
+refuses to build a cutdown whose beats already overrun, telling you to drop one.
+Speeding the read up to fit is not an option the tool offers, on purpose.
 
 The cutdowns are re-cuts from the same beats, never a trim of the master — a trim
 lands mid-sentence and mid-animation.

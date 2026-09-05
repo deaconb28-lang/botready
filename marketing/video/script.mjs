@@ -10,6 +10,30 @@
  * tools/capture-footage.mjs, or a card name from marketing/video/titles.mjs.
  */
 
+/** The narration voice.
+ *
+ *  Recorded here because regenerating one line has to match the other ten, and
+ *  until this constant existed the choice lived nowhere but the shell history
+ *  of whoever ran it last.
+ *
+ *  `text2speech_v2` picks its engine with `variant`; ElevenLabs is the least
+ *  synthetic of the five it offers, and the engine matters more than the
+ *  casting for that. It is also cheaper per line than the seed_audio the first
+ *  cut used (0.3 credits against 0.5) and reads about 20% faster.
+ *
+ *  To change the voice: swap `voice_id` for one from `list_voices`, regenerate
+ *  the ten narrated beats, and re-run build-film.mjs. The edit re-times itself
+ *  off the new durations. To use a human read instead, ignore this entirely and
+ *  drop takes into vo/ as <beat-id>.mp3.
+ */
+export const VOICE = {
+  model: 'text2speech_v2',
+  variant: 'elevenlabs',
+  voice_type: 'preset',
+  voice_id: '3c7d32be-0182-5c5e-aa6a-663409bfbb26',
+  name: 'Emmett',
+};
+
 export const BEATS = [
   {
     id: 'open',
@@ -18,16 +42,32 @@ export const BEATS = [
     note: 'The AgentRace panel, which labels itself an example on screen.',
   },
   {
-    id: 'codes',
-    // The race loops every 4.96s (eight steps at 620ms, AgentRace.tsx), so a
-    // beat that simply continues from the previous one lands this line while
-    // the Claude row still reads pending. Entering at 3.0s puts the finished
-    // set of five on screen exactly as the codes are said. The script's rule is
-    // that a number said out loud is a number visible in the same frame.
-    startAt: 3.0,
+    id: 'codes-chrome',
+    // Measured, not reasoned about. Sampling the ClaudeBot status chip across
+    // footage/split.mp4 every 200ms puts its 403 on screen during 4.0-7.0s and
+    // 8.8-12.8s, and pending the rest: the rows land over five 620ms steps,
+    // rest for two, then the whole set resets.
+    //
+    // The line this replaced ran 4.83s against a 4.0s window, so its last
+    // second — the word "four-oh-three" itself — played over rows reading
+    // pending. Splitting it in two lets each half sit wholly inside a window.
+    // The cut between them lands where the animation resets anyway, so it
+    // reads as the loop rather than as an edit.
+    //
+    // Re-measure if either line is re-recorded at a different length:
+    //   for t in $(seq 0 0.2 14); do ffmpeg -ss $t -i split.mp4 -frames:v 1 \
+    //     -vf "crop=40:20:182:168,scale=1:1" -f rawvideo -pix_fmt rgb24 -; done
+    startAt: 4.0,
     source: { kind: 'shot', name: 'split' },
-    vo: 'Chrome got two hundred. Claude got four-oh-three.',
-    note: 'Both status codes are in frame while the line is read.',
+    vo: 'Chrome got two hundred.',
+    note: 'The 200 is in frame for the whole line.',
+  },
+  {
+    id: 'codes-claude',
+    startAt: 8.55,
+    source: { kind: 'shot', name: 'split' },
+    vo: 'Claude got four-oh-three.',
+    note: 'The 403 is in frame for the whole line. See codes-chrome for the measurement.',
   },
   {
     id: 'statement',
@@ -93,15 +133,15 @@ export const BEATS = [
  *  trim lands mid-sentence and mid-animation.
  *
  *  `target` is a hard duration, because a thirty-second slot is thirty seconds.
- *  build-film.mjs holds the last beat to land exactly on it, and refuses to
- *  build a cutdown whose beats already overrun: the fix for that is to drop a
- *  beat here, not to speed the read up.
+ *  build-film.mjs spreads whatever slack is left across the beats in proportion
+ *  to their length, and refuses to build a cutdown whose beats already overrun:
+ *  the fix for that is to drop a beat here, not to speed the read up.
  *
  *  The six-second bumper carries no narration. It is watched sound-off in a
  *  feed, and the two status codes do not need saying out loud.
  */
 export const CUTDOWNS = [
-  { name: 'launch-30-16x9', target: 30, beats: ['codes', 'statement', 'finding', 'close'] },
+  { name: 'launch-30-16x9', target: 30, beats: ['codes-claude', 'statement', 'finding', 'offer', 'close'] },
   { name: 'launch-15-16x9', target: 15, beats: ['statement', 'close'] },
   { name: 'launch-06-16x9', target: 6,  beats: ['statement'], silent: true },
 ];
