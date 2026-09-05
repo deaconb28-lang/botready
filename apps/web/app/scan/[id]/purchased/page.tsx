@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { SiteFooter } from '@/components/site/SiteFooter';
@@ -74,9 +75,25 @@ export default async function PurchasedPage({
       <SiteHeader />
       <Container as="main" id="main" width={760} className="pb-24 pt-14">
         <span className="eyebrow text-subtle-2">Fix pack</span>
-        <h1 className="display-tight mt-3 text-[clamp(34px,5vw,56px)]">
-          {entitled ? 'Your site is now BotReady!' : 'Thanks. One more step.'}
-        </h1>
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+          <h1 className="display-tight min-w-0 flex-1 text-[clamp(34px,5vw,56px)]">
+            {entitled ? 'Your site is now BotReady!' : 'Thanks. One more step.'}
+          </h1>
+          {/* Tilted, and the only thing on the site that is. It sits beside a
+              headline with an exclamation mark in it, which is the one moment
+              this product is allowed to be pleased with itself; a button
+              squared up next to that reads like navigation and gets skimmed
+              past. It straightens on hover so the target is square under the
+              cursor. */}
+          {entitled ? (
+            <Link
+              href="/app"
+              className="edge mt-2 inline-flex shrink-0 -rotate-3 items-center rounded-[12px] bg-violet px-[20px] py-[12px] font-body text-[15px] font-bold text-white no-underline shadow-hard-4 transition-transform duration-150 hover:rotate-0 sm:mt-4"
+            >
+              Go to app
+            </Link>
+          ) : null}
+        </div>
         <p className="mt-4 max-w-[52ch] text-[17px] leading-[1.6] text-muted">
           {entitled
             ? `Everything for ${domain} is on this page.`
@@ -138,9 +155,9 @@ export default async function PurchasedPage({
               able to. {PRICING.monitor.label} {PRICING.monitor.cadence}.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
-              <a href={nextHref} className="edge inline-flex items-center rounded-[12px] bg-ink px-[22px] py-[14px] font-body text-[15px] font-bold text-white no-underline shadow-hard-3 hover:bg-violet">
+              <Link href={nextHref} className="edge inline-flex items-center rounded-[12px] bg-ink px-[22px] py-[14px] font-body text-[15px] font-bold text-white no-underline shadow-hard-3 hover:bg-violet">
                 {nextLabel}
-              </a>
+              </Link>
               <span className="font-mono text-[12px] text-ink">Two minutes, one DNS record</span>
             </div>
           </Card>
