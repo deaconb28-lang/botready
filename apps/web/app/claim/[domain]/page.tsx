@@ -24,15 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
  * The claim flow. Claiming is the conversion moment on the index, and it is
  * verified by DNS TXT or a meta tag rather than by knowing the domain name.
  */
-export default async function ClaimPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ domain: string }>;
-  searchParams: Promise<{ subscribed?: string }>;
-}) {
+export default async function ClaimPage({ params }: { params: Promise<{ domain: string }> }) {
   const { domain: raw } = await params;
-  const { subscribed } = await searchParams;
   const domain = normaliseDomain(raw);
   const user = await currentUser();
 
@@ -53,18 +46,6 @@ export default async function ClaimPage({
           <PageTitle eyebrow="Claim" size="md" className="[&_h1]:break-all">
             {domain}
           </PageTitle>
-
-          {subscribed ? (
-            <div role="status" className="edge mt-8 rounded-[14px] bg-green-tint px-[22px] py-[18px] shadow-hard-3">
-              <Eyebrow as="p" tone="ink">
-                Monitoring is on
-              </Eyebrow>
-              <p className="mt-2 text-[15px] leading-[1.6] text-body">
-                We re-check {domain} weekly and email you the day a category drops or a client that could read the site
-                cannot.
-              </p>
-            </div>
-          ) : null}
 
           <div className="mt-10">
             {!site ? (
@@ -93,10 +74,13 @@ export default async function ClaimPage({
                     Claimed
                   </Eyebrow>
                   <h2 className="display mt-2 text-[24px]">You have proven control of {domain}</h2>
-                  <p className="mt-2 text-[15px] leading-[1.6] text-body">It shows as claimed on the index.</p>
+                  <p className="mt-2 text-[15px] leading-[1.6] text-body">
+                    {PUBLIC_INDEX_LISTED
+                      ? 'It shows as claimed on the index.'
+                      : 'Open the app to see its history, its competitors and the files it generates.'}
+                  </p>
                 </div>
-                {!subscribed ? (
-                  <div className="mt-10">
+                <div className="mt-10">
                     <Section kicker={`Monitoring · ${PRICING.monitor.label} ${PRICING.monitor.cadence}`}>
                       Know the day a WAF rule changes under you
                     </Section>
@@ -110,9 +94,8 @@ export default async function ClaimPage({
                       className="edge mt-6 inline-flex items-center justify-center rounded-[10px] bg-ink px-4 py-[10px] font-body text-[14px] font-semibold text-white no-underline shadow-hard-3 transition-colors duration-150 hover:bg-violet hover:text-white"
                     >
                       Start monitoring — {PRICING.monitor.label} {PRICING.monitor.cadence}
-                    </a>
-                  </div>
-                ) : null}
+                  </a>
+                </div>
               </>
             ) : site.is_claimed ? (
               <>

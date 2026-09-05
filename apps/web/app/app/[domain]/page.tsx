@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { normaliseDomain, type CategoryBreakdown } from '@botready/core';
 
 import { RerunButton } from '@/components/app/RerunButton';
+import { SubscribedToast } from '@/components/app/SubscribedToast';
 import { Bar, Card, DashConnector, cx } from '@/components/ui';
 import { propertyFor, requireUser, ownsFixpack } from '@/lib/app-context';
 import { PRICING } from '@/lib/site';
@@ -11,8 +12,15 @@ import { CLIENT_NAMES, relativeTime } from '@/lib/theme';
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Overview', robots: { index: false, follow: false } };
 
-export default async function OverviewPage({ params }: { params: Promise<{ domain: string }> }) {
+export default async function OverviewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ domain: string }>;
+  searchParams: Promise<{ subscribed?: string }>;
+}) {
   const { domain: raw } = await params;
+  const { subscribed } = await searchParams;
   const domain = normaliseDomain(decodeURIComponent(raw));
   const user = await requireUser(`/app/${domain}`);
   const [p, owned] = await Promise.all([propertyFor(domain, user.id), ownsFixpack(user.id)]);
@@ -50,6 +58,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ domai
 
   return (
     <div>
+      {subscribed ? <SubscribedToast domain={p.domain} /> : null}
       <div className="flex flex-wrap items-start gap-6">
         <div className="min-w-[300px] flex-1">
           <h1 className="display-tight text-[clamp(28px,3.6vw,42px)] leading-[1.05]">{headline}</h1>

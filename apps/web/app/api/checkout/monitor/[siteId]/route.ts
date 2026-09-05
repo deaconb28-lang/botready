@@ -90,7 +90,11 @@ async function createSession(siteId: string, domain: string, email: string) {
       client_reference_id: siteId,
       metadata: { plan: 'monitor', siteId, domain },
       subscription_data: { metadata: { plan: 'monitor', siteId, domain } },
-      success_url: absoluteUrl(`/claim/${domain}?subscribed=1`),
+      // Into the app, not back to the claim page they started on. The claim
+      // page is where somebody goes to prove a domain is theirs; landing there
+      // after paying says nothing about what they just bought. `subscribed=1`
+      // is what raises the thank-you, and the toast strips it once shown.
+      success_url: absoluteUrl(`/app/${domain}?subscribed=1`),
       cancel_url: absoluteUrl(`/claim/${domain}`),
       // Same as the fix pack. A code that works on one and not the other is
       // the kind of thing you find out about from the person it failed for.
