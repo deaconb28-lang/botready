@@ -130,8 +130,13 @@ export function ReportHeader({
             ) : null}
           </div>
           <p className="mt-[10px] max-w-[46ch] text-[15.5px] leading-[1.5] text-muted">{summary}</p>
+          {/* Plain text, not a box. It was a bordered, tinted panel sitting
+              inside a bordered, tinted card, restating numbers the sentence
+              above it had just given — two frames around one thought. The card
+              already carries the grade's colour; the verdict only has to be
+              read. */}
           {verdict && showVerdict ? (
-            <p className="anim-rise-fast mt-[10px] inline-block rounded-[9px] border-2 border-ink bg-coral-tint px-[11px] py-[6px] font-mono text-[12.5px] leading-[1.45] text-ink">
+            <p className="anim-rise-fast mt-[7px] max-w-[52ch] font-mono text-[12.5px] leading-[1.5] text-ink/75">
               {verdict}
             </p>
           ) : null}

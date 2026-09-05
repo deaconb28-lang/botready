@@ -12,11 +12,15 @@ import { cx } from '@/components/ui';
  * pressure worth applying. It cuts both ways on purpose. A D is worse for
  * being fortieth, and an A is worth more for being one of three.
  *
- * Three rows, and the third is the one that matters. A rank on its own is a
- * scolding about the past; "four points clears three sites" is the same fact
- * pointed at something the reader can do this afternoon, with the name of the
- * site they would pass. That is the whole difference between loss aversion
- * that works and loss aversion that just feels bad.
+ * Two rows and a base. The second row is the one that matters: a rank on its
+ * own is a scolding about the past, while "two points clears two sites" is the
+ * same fact pointed at something the reader can do this afternoon, with the
+ * name of the site they would pass. That is the whole difference between loss
+ * aversion that works and loss aversion that just feels bad.
+ *
+ * The field runs along the card's bottom edge rather than in a row of its own.
+ * It had a track, two end labels and the padding to hold them, which is a lot
+ * of furniture for one marker.
  *
  * Nothing here is invented. Every number is a count of rows on the page this
  * links to, and the marker sits where the arithmetic puts it.
@@ -37,7 +41,7 @@ export function ScoreStanding({ standing, grade }: { standing: Standing | null; 
 
   return (
     <section className={cx('edge mt-3 overflow-hidden rounded-[14px] shadow-hard-3', ground)}>
-      <div className="flex flex-wrap items-baseline gap-x-[10px] gap-y-1 border-b-2 border-ink px-[14px] py-[10px] font-mono text-[12.5px] text-ink">
+      <div className="flex flex-wrap items-baseline gap-x-[10px] gap-y-1 px-[14px] pb-[9px] pt-[10px] font-mono text-[12.5px] text-ink">
         <span className="display text-[16px] font-bold leading-none">
           {ordinal(standing.rank)} of {standing.of}
         </span>
@@ -48,22 +52,6 @@ export function ScoreStanding({ standing, grade }: { standing: Standing | null; 
               ? 'one site reads better than yours'
               : `${ahead} sites read better than yours`}
         </span>
-      </div>
-
-      {/* The whole field, with the reader on it. A rank is a number; this is
-          the number's shape, and it is the part somebody sees before reading. */}
-      <div className="px-[14px] pb-[10px] pt-[12px]">
-        <div className="relative h-[8px] rounded-full border-2 border-ink bg-white">
-          <span
-            aria-hidden="true"
-            className="absolute -top-[4px] h-[14px] w-[10px] rounded-[3px] border-2 border-ink bg-ink"
-            style={{ left: `${clamped}%` }}
-          />
-        </div>
-        <div className="mt-[6px] flex justify-between font-mono text-[10px] uppercase tracking-[0.1em] text-ink/70">
-          <span>Best</span>
-          <span>Worst</span>
-        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t-2 border-ink bg-white/45 px-[14px] py-[9px] font-mono text-[12px] text-ink">
@@ -83,6 +71,17 @@ export function ScoreStanding({ standing, grade }: { standing: Standing | null; 
         <Link href="/chart" className="whitespace-nowrap font-bold text-ink underline underline-offset-2">
           See the chart
         </Link>
+      </div>
+
+      {/* The field, as the card's own base rather than a padded row of its
+          own. It had a track, two end labels and the vertical space to hold
+          them, which is a lot of furniture for one marker — and with the rank
+          written above it, nothing needed telling which end was which. */}
+      <div className="relative h-[9px] border-t-2 border-ink bg-white" aria-hidden="true">
+        <span
+          className="absolute -top-[1px] h-[9px] w-[12px] border-x-2 border-ink bg-ink"
+          style={{ left: `calc(${clamped}% - 6px)` }}
+        />
       </div>
     </section>
   );
