@@ -12,7 +12,16 @@ import { cx } from '@/components/ui';
  * piece they act on, so it is on the page, whole, with one button that puts it
  * on the clipboard — which is the only thing anyone actually does with it.
  */
-export function PromptPanel({ prompt, filename }: { prompt: string; filename: string }) {
+export function PromptPanel({
+  prompt,
+  filename,
+  bare = false,
+}: {
+  prompt: string;
+  filename: string;
+  /** The caller already wrote the heading. Leaves the button and the code. */
+  bare?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -32,15 +41,17 @@ export function PromptPanel({ prompt, filename }: { prompt: string; filename: st
   const lines = prompt.split('\n').length;
 
   return (
-    <section className="mt-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="display text-[22px]">The prompt</h2>
-          <p className="mt-1 max-w-[54ch] text-[15px] leading-[1.55] text-muted">
-            Paste it into Claude Code or Cursor, in the repository that serves the site. It applies the rest one commit at a
-            time and stops after each for review.
-          </p>
-        </div>
+    <section className={bare ? '' : 'mt-8'}>
+      <div className={cx('flex flex-wrap gap-4', bare ? 'justify-start' : 'items-end justify-between')}>
+        {bare ? null : (
+          <div>
+            <h2 className="display text-[22px]">The prompt</h2>
+            <p className="mt-1 max-w-[54ch] text-[15px] leading-[1.55] text-muted">
+              Paste it into Claude Code or Cursor, in the repository that serves the site. It applies the rest one commit at a
+              time and stops after each for review.
+            </p>
+          </div>
+        )}
         <button
           type="button"
           onClick={copy}

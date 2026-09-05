@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { AppShell } from '@/components/app/AppShell';
 import { NewScanForm } from '@/components/app/NewScanForm';
-import { cx } from '@/components/ui';
+import { NumberedStep as Step } from '@/components/ui';
 import { ownsFixpack, propertiesFor, requireUser } from '@/lib/app-context';
 import { PRICING } from '@/lib/site';
 
@@ -73,44 +73,5 @@ export default async function NewPropertyPage() {
         )}
       </div>
     </AppShell>
-  );
-}
-
-function Step({
-  n,
-  title,
-  children,
-  active = false,
-  last = false,
-}: {
-  n: number;
-  title: string;
-  children: React.ReactNode;
-  active?: boolean;
-  last?: boolean;
-}) {
-  return (
-    <section className={cx('grid grid-cols-[30px_minmax(0,1fr)] gap-x-[16px]', last ? '' : 'pb-7')}>
-      <div className="flex flex-col items-center gap-[6px]">
-        <span
-          aria-hidden="true"
-          className={cx(
-            'edge grid h-[30px] w-[30px] place-items-center rounded-full font-mono text-[14px] font-bold',
-            active ? 'bg-lime text-ink' : 'bg-white text-ink',
-          )}
-        >
-          {n}
-        </span>
-        {/* The line between the markers, so three sections read as one path. */}
-        {last ? null : <span aria-hidden="true" className="w-[2px] flex-1 rounded-full bg-divider" />}
-      </div>
-      <div className="pb-1">
-        <h2 className="display mt-[3px] text-[19px] font-semibold">
-          <span className="sr-only">Step {n}: </span>
-          {title}
-        </h2>
-        <div className="mt-2 text-[15px] leading-[1.6] text-muted [&_p]:m-0">{children}</div>
-      </div>
-    </section>
   );
 }

@@ -565,3 +565,54 @@ export function SeverityDot({ severity, size = 12 }: { severity: 'fail' | 'warn'
   const bg = severity === 'fail' ? 'bg-coral' : severity === 'warn' ? 'bg-amber' : severity === 'error' ? 'bg-violet' : 'bg-lime';
   return <span aria-hidden="true" className={cx('edge inline-block flex-none rounded-full', bg)} style={{ width: size, height: size }} />;
 }
+
+/**
+ * One numbered step in a sequence, with a rule joining it to the next.
+ *
+ * It began on /app/new as the three things a new account does, and the fix
+ * pack confirmation needs the same shape for a different three, so it lives
+ * here rather than twice. `active` is the one to do next, in lime; `last`
+ * drops the connecting rule so the path ends rather than trailing off.
+ *
+ * The number is decorative and hidden from a screen reader, which gets
+ * "Step 2: Copy the prompt" from the heading instead — a lone "2" read out
+ * before a title is noise.
+ */
+export function NumberedStep({
+  n,
+  title,
+  children,
+  active = false,
+  last = false,
+}: {
+  n: number;
+  title: string;
+  children: ReactNode;
+  active?: boolean;
+  last?: boolean;
+}) {
+  return (
+    <section className={cx('grid grid-cols-[30px_minmax(0,1fr)] gap-x-[16px]', last ? '' : 'pb-7')}>
+      <div className="flex flex-col items-center gap-[6px]">
+        <span
+          aria-hidden="true"
+          className={cx(
+            'edge grid h-[30px] w-[30px] place-items-center rounded-full font-mono text-[14px] font-bold',
+            active ? 'bg-lime text-ink' : 'bg-white text-ink',
+          )}
+        >
+          {n}
+        </span>
+        {/* The line between the markers, so the sections read as one path. */}
+        {last ? null : <span aria-hidden="true" className="w-[2px] flex-1 rounded-full bg-divider" />}
+      </div>
+      <div className="pb-1">
+        <h2 className="display mt-[3px] text-[19px] font-semibold">
+          <span className="sr-only">Step {n}: </span>
+          {title}
+        </h2>
+        <div className="mt-2 text-[15px] leading-[1.6] text-muted [&_p]:m-0">{children}</div>
+      </div>
+    </section>
+  );
+}

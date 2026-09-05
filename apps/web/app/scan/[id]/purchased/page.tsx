@@ -6,7 +6,7 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { PromptPanel } from '@/components/results/PromptPanel';
 import { MailNote } from '@/components/site/MailNote';
-import { Button, Card, Container, TerminalLine, cx } from '@/components/ui';
+import { Button, Card, Container, NumberedStep, TerminalLine, cx } from '@/components/ui';
 import { currentUser, hasFixpackFor } from '@/lib/auth';
 import { assembleFixPack } from '@/lib/fixpack';
 import { verifiedPurchase } from '@/lib/purchase';
@@ -100,29 +100,45 @@ export default async function PurchasedPage({
             : 'Stripe is still confirming. Reload in a minute, or sign in with the address you paid with.'}
         </p>
 
-        <Card surface="ink" radius="panel" shadow="violet-5" className="mt-8 p-6">
-          <TerminalLine className="border-0 bg-transparent px-0 py-0">$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
-          <div className="mt-5 flex flex-wrap gap-3">
-            {entitled ? (
-              <a href={downloadHref} className="edge inline-flex items-center rounded-[12px] bg-lime px-[22px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 hover:bg-white">
-                Download the fix pack
-              </a>
+        {/* Three steps, because "here are your files" was the page and what to
+            do with them was left implied. The download, the prompt and the
+            paste are one sequence and nobody arrives knowing it. */}
+        <div className="mt-9">
+          <NumberedStep n={1} title="Download the fix pack" active>
+            <Card surface="ink" radius="panel" shadow="violet-5" className="mt-3 p-6">
+              <TerminalLine className="border-0 bg-transparent px-0 py-0">$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {entitled ? (
+                  <a href={downloadHref} className="edge inline-flex items-center rounded-[12px] bg-lime px-[22px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 hover:bg-white">
+                    Download the fix pack
+                  </a>
+                ) : (
+                  <Button href={`/sign-in?next=${encodeURIComponent(`/scan/${id}/purchased`)}`} tone="lime" size="lg" shadow={3} weight={700}>
+                    Sign in to download
+                  </Button>
+                )}
+                <Button href={`/scan/${id}`} tone="outline-white" size="lg">
+                  Back to the result
+                </Button>
+              </div>
+            </Card>
+          </NumberedStep>
+
+          <NumberedStep n={2} title="Copy the prompt">
+            {pack ? (
+              <PromptPanel prompt={pack.agentPrompt} filename="botready-fixes.md" bare />
             ) : (
-              <Button href={`/sign-in?next=${encodeURIComponent(`/scan/${id}/purchased`)}`} tone="lime" size="lg" shadow={3} weight={700}>
-                Sign in to download
-              </Button>
+              <p>The prompt is botready-fixes.md, in the pack.</p>
             )}
-            <Button href={`/scan/${id}`} tone="outline-white" size="lg">
-              Back to the result
-            </Button>
-          </div>
-        </Card>
+          </NumberedStep>
 
-        <div className="mt-6">
-          <MailNote to={buyerEmail} />
+          <NumberedStep n={3} title="Paste it into your coding agent" last>
+            <p>
+              Open Claude Code or Cursor in the repository that serves {domain}, add the files from the pack, and paste the
+              prompt. It applies them one commit at a time and stops after each for review.
+            </p>
+          </NumberedStep>
         </div>
-
-        {pack ? <PromptPanel prompt={pack.agentPrompt} filename="botready-fixes.md" /> : null}
 
         {pack ? (
           <section className="mt-8">
@@ -141,6 +157,11 @@ export default async function PurchasedPage({
             </Card>
           </section>
         ) : null}
+
+        <div className="mt-6">
+          <MailNote to={buyerEmail} />
+        </div>
+
         {/* The next thing worth doing, at the foot because it is the next
             thing: above it is what they came for and just paid for, and an
             offer wedged between the download and the files reads as being
