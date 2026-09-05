@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 
 import { ChartTable } from '@/components/chart/ChartTable';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Container } from '@/components/ui';
 import { loadChart } from '@/lib/chart-data';
-import { SEGMENTS, absoluteUrl } from '@/lib/site';
+import { absoluteUrl } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'The chart',
@@ -49,21 +48,6 @@ export default async function ChartPage() {
           ) : null}
           {chart.scoringVersion ? <span>scoring v{chart.scoringVersion}</span> : null}
           {chart.lastCheckedAt ? <span>updated {relative(chart.lastCheckedAt)}</span> : null}
-        </div>
-
-        {/* Segments are a filter over the same chart rather than four separate
-            charts, because most scanned sites have no segment and a per-segment
-            view of those is four short lists and one long silence. */}
-        <div className="mt-5 flex flex-wrap gap-2">
-          {SEGMENTS.map((s) => (
-            <Link
-              key={s.key}
-              href={`/index/${s.key}`}
-              className="edge rounded-[99px] bg-white px-[13px] py-[6px] font-mono text-[12px] text-ink no-underline hover:bg-lime"
-            >
-              {s.label}
-            </Link>
-          ))}
         </div>
 
         <div className="mt-8">
