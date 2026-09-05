@@ -48,7 +48,10 @@ describe('the token', () => {
     process.env.SCANNER_SHARED_SECRET = SECRET;
     const i = instructions(alice, 'Example.com');
     expect(i.domain).toBe('example.com');
-    expect(i.dns).toEqual({ host: '_botready.example.com', type: 'TXT', value: i.token });
+    expect(i.dns).toEqual({ host: '_botready.example.com', hostShort: '_botready', type: 'TXT', value: i.token });
+    // The short form is what most DNS panels want typed, and appending the
+    // zone to it has to reproduce the fully qualified name exactly.
+    expect(`${i.dns.hostShort}.${i.domain}`).toBe(i.dns.host);
     expect(i.meta.tag).toBe(`<meta name="botready-verify" content="${i.token}">`);
   });
 });

@@ -44,7 +44,20 @@ export function claimToken(userId: string, domain: string, secret = serverEnv.sc
 export interface ClaimInstructions {
   domain: string;
   token: string;
-  dns: { host: string; type: 'TXT'; value: string };
+  dns: {
+    /** The fully qualified name: `_botready.example.com`. */
+    host: string;
+    /**
+     * The same record as most DNS panels want it typed. Cloudflare, Namecheap
+     * and Route 53 all append the zone to whatever you enter, so pasting the
+     * fully qualified name into them produces `_botready.example.com.example.com`
+     * and the check then fails for a reason nobody can see. Both forms are
+     * shown, and the page says which is which.
+     */
+    hostShort: string;
+    type: 'TXT';
+    value: string;
+  };
   meta: { tag: string };
 }
 
@@ -54,7 +67,12 @@ export function instructions(userId: string, domain: string): ClaimInstructions 
   return {
     domain: normalised,
     token,
-    dns: { host: `${TXT_HOST_PREFIX}.${normalised}`, type: 'TXT', value: token },
+    dns: {
+      host: `${TXT_HOST_PREFIX}.${normalised}`,
+      hostShort: TXT_HOST_PREFIX,
+      type: 'TXT',
+      value: token,
+    },
     meta: { tag: `<meta name="${META_NAME}" content="${token}">` },
   };
 }

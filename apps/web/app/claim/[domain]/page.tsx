@@ -125,7 +125,7 @@ export default async function ClaimPage({
               </>
             ) : (
               <>
-                <Section kicker="Prove control">Publish the token where we say</Section>
+                <Section kicker="Prove control">Show us you own {domain}</Section>
                 <ClaimForm domain={domain} instructions={instructions(user.id, domain)} />
               </>
             )}
