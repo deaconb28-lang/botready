@@ -131,8 +131,9 @@ export default function PricingPage() {
             and reputation is the one thing correct DKIM cannot buy. Better said
             before the purchase than discovered after it. */}
         <p className="mt-5 text-center text-[14px] leading-[1.6] text-muted">
-          Both arrive by email from <span className="font-mono text-[13px]">{CONTACT_EMAIL}</span>. We are a new domain, so
-          check your spam folder the first time and mark it &ldquo;not spam&rdquo; if you find it there.
+          The files open in your browser the second you pay, and stay there. We email a copy from{' '}
+          <span className="font-mono text-[13px]">{CONTACT_EMAIL}</span> as well, so check your spam folder for it: we are a new
+          domain and filters have not met us yet.
         </p>
 
         <Card surface="violet" radius="panel-lg" shadow={7} className="mt-7 grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-center gap-8 p-6 sm:p-[34px]">

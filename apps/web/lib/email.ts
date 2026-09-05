@@ -168,8 +168,6 @@ export async function sendFixpackReady(opts: {
       '',
       'If this landed in your spam folder, marking it "not spam" is the one thing that stops the next one doing the same. We are a new domain and the filters have not met us yet.',
       '',
-      `Written by a person at ${CONTACT_EMAIL}. Reply to this and it reaches us.`,
-      '',
       `— ${SITE.name}`,
     ].join('\n'),
   });

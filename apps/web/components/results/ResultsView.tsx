@@ -15,6 +15,7 @@ import {
 import { FindingsList } from './FindingsList';
 import { FixPackPreview } from './FixPackPreview';
 import { FixPackButton } from './FixPackButton';
+import { DeliveryNote } from './DeliveryNote';
 import { ClientPanel } from './ClientPanel';
 import { SitePanel } from './SitePanel';
 import { SitePanelAsync, SitePanelSkeleton } from './SitePanelAsync';
@@ -140,6 +141,10 @@ export function ResultsView({
               <div className="grid min-w-[240px] gap-3">
                 <TerminalLine>$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
                 {panelAction}
+                {/* Said at the button rather than after the payment, because
+                    the person who thinks the email is the delivery waits for
+                    something that is already on their screen. */}
+                {owned ? null : <DeliveryNote on="violet" className="max-w-[34ch]" />}
               </div>
             </div>
 

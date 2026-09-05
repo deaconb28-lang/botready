@@ -72,8 +72,8 @@ export default async function PurchasedPage({
         <h1 className="display-tight mt-3 text-[clamp(34px,5vw,56px)]">{entitled ? 'Your files are ready.' : 'Thanks. One more step.'}</h1>
         <p className="mt-4 max-w-[56ch] text-[17px] leading-[1.6] text-muted">
           {entitled
-            ? `Every value in the pack for ${domain} came out of this scan. Download it, drop the files in, and re-run the check.`
-            : `The receipt and the files went to the address you gave Stripe. If they have not arrived, give it a minute and reload, or sign in with that address to unlock the download here.`}
+            ? `Every value in the pack for ${domain} came out of this scan, and all of it is on this page. Download the files, or copy the prompt below straight into your coding agent.`
+            : `Stripe is still confirming the payment. Give it a minute and reload this page, or sign in with the address you paid with and the download unlocks here.`}
         </p>
         <Card surface="ink" radius="panel" shadow="violet-5" className="mt-8 p-6">
           <TerminalLine className="border-0 bg-transparent px-0 py-0">$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>

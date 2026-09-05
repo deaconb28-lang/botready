@@ -3,17 +3,22 @@ import Link from 'next/link';
 import { CONTACT_EMAIL } from '@/lib/site';
 
 /**
- * "Check your spam folder."
+ * "We emailed a copy too, and it may be in your spam."
  *
- * botready.dev has been sending mail for about a week, and a domain with no
- * sending history goes to spam at Gmail more often than not however correct its
- * DKIM, SPF and DMARC records are. That is our problem, but the person who just
- * paid is the one who cannot find their files, so the honest thing is to say so
- * on the page rather than let them decide the email never came.
+ * The order of the two sentences is the whole point. Our mail lands in Gmail's
+ * spam folder often enough that somebody who believes the email is the delivery
+ * will sit waiting for something already on their screen, so this says first
+ * that the page they are looking at is the delivery, and only then where the
+ * copy went.
  *
- * It names the sender and the subject line, because "check your spam" without
- * either is a search the reader has to invent. `subject` is a template the
- * caller fills in with the domain.
+ * botready.dev has been sending mail for about a week. A domain with no history
+ * gets filtered however correct its DKIM, SPF and DMARC records are, and all
+ * three of ours resolve. That is our problem to fix with time, but the person
+ * who just paid is the one who cannot find their files, so it is said on the
+ * page rather than left for them to work out.
+ *
+ * It names the sender, the subject and the address Stripe has on file, because
+ * "check your spam" without any of those is a search the reader has to invent.
  */
 export function MailNote({ to, subject }: { to?: string | null; subject: string }) {
   return (
@@ -26,9 +31,10 @@ export function MailNote({ to, subject }: { to?: string | null; subject: string 
           </svg>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="display m-0 text-[15.5px] font-semibold text-ink">Check your spam folder</p>
+          <p className="display m-0 text-[15.5px] font-semibold text-ink">We emailed a copy, and it may be in your spam</p>
           <p className="m-0 mt-[6px] text-[14px] leading-[1.6] text-ink">
-            We are a new domain, so our mail often lands there on the first try. Look for{' '}
+            You do not need it. Everything you bought is on this page, and it stays here. But if you want the email, we are a
+            new domain and it often lands in spam on the first try: look for{' '}
             <span className="font-mono text-[13px]">{CONTACT_EMAIL}</span>, subject{' '}
             <span className="font-mono text-[13px]">&ldquo;{subject}&rdquo;</span>
             {to ? (
@@ -39,11 +45,11 @@ export function MailNote({ to, subject }: { to?: string | null; subject: string 
             . Marking it &ldquo;not spam&rdquo; is what stops the next one going the same way.
           </p>
           <p className="m-0 mt-[8px] text-[13.5px] leading-[1.6] text-ink">
-            Still nothing after a few minutes? Write to{' '}
+            Something missing? Write to{' '}
             <Link href={`mailto:${CONTACT_EMAIL}`} className="font-mono text-[13px]">
               {CONTACT_EMAIL}
             </Link>{' '}
-            and we will send it again.
+            and we will sort it out.
           </p>
         </div>
       </div>
