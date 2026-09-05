@@ -11,7 +11,7 @@ const NAV: Array<{ label: string; href: string }> = [
   { label: 'Why AEO', href: '/#aeo' },
   { label: 'What we check', href: '/what-we-check' },
   { label: 'Pricing', href: '/pricing' },
-  ...(PUBLIC_INDEX_LISTED ? [{ label: 'Index', href: '/index/saas' }] : []),
+  ...(PUBLIC_INDEX_LISTED ? [{ label: 'Chart', href: '/index' }] : []),
   { label: 'Crawler', href: '/bot' },
 ];
 

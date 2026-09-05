@@ -34,7 +34,7 @@ const OTHER_SERVED_PATHS = new Set([
   '/sitemap.xml',
   '/robots.txt',
   '/logo.svg',
-  '/index/saas',
+  '/index',
   '/index/devtools',
   '/index/ecommerce',
   '/index/media',

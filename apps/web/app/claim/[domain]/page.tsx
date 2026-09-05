@@ -115,7 +115,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ domain: 
           </div>
 
           <p className="mt-12 text-[14.5px] text-muted">
-            {PUBLIC_INDEX_LISTED ? <Link href="/index/saas">Back to the index</Link> : <Link href="/account">Back to your domains</Link>}
+            {PUBLIC_INDEX_LISTED ? <Link href="/index">Back to the index</Link> : <Link href="/account">Back to your domains</Link>}
           </p>
         </Container>
       </main>

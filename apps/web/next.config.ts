@@ -20,6 +20,7 @@ const config: NextConfig = {
   // keeps the URL and the redirect keeps it the only one.
   async rewrites() {
     return [
+      { source: '/index', destination: '/ranking' },
       { source: '/index/:segment', destination: '/ranking/:segment' },
       // The manifests an agent looks for before it looks at the HTML. They are
       // rewrites rather than routes because the App Router will not build a
@@ -39,7 +40,10 @@ const config: NextConfig = {
     ];
   },
   async redirects() {
-    return [{ source: '/ranking/:segment', destination: '/index/:segment', permanent: true }];
+    return [
+      { source: '/ranking', destination: '/index', permanent: true },
+      { source: '/ranking/:segment', destination: '/index/:segment', permanent: true },
+    ];
   },
   async headers() {
     return [

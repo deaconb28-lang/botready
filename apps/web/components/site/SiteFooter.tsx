@@ -26,7 +26,7 @@ export function SiteFooter() {
             <span className="font-mono text-[11px] font-medium tracking-[0.12em] text-placeholder">PRODUCT</span>
             <Link href="/what-we-check">What we check</Link>
             <Link href="/pricing">Pricing</Link>
-            {PUBLIC_INDEX_LISTED ? <Link href="/index/saas">Public index</Link> : null}
+            {PUBLIC_INDEX_LISTED ? <Link href="/index">The chart</Link> : null}
           </div>
           <div className="grid content-start gap-[9px]">
             <span className="font-mono text-[11px] font-medium tracking-[0.12em] text-placeholder">FOR DEVELOPERS</span>

@@ -149,7 +149,7 @@ export default function PricingPage() {
                 Run the free check
               </Button>
               {PUBLIC_INDEX_LISTED ? (
-                <Button href="/index/saas" tone="outline-white" size="lg" className="px-[22px]">
+                <Button href="/index" tone="outline-white" size="lg" className="px-[22px]">
                   See the public index
                 </Button>
               ) : (
@@ -185,7 +185,7 @@ export default function PricingPage() {
           <p className="text-[16.5px] leading-[1.65] text-muted">
             {PUBLIC_INDEX_LISTED ? (
               <>
-                It also means every result can be a page anyone can open, which is how the <Link href="/index/saas">public index</Link> works.
+                It also means every result can be a page anyone can open, which is how the <Link href="/index">public index</Link> works.
               </>
             ) : (
               'It also means every result is a page anyone can open and link to, for as long as the address exists.'

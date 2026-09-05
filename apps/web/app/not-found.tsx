@@ -23,7 +23,7 @@ export default function NotFound() {
             Run a check
           </Button>
           {PUBLIC_INDEX_LISTED ? (
-            <Button href="/index/saas" tone="white" size="lg">
+            <Button href="/index" tone="white" size="lg">
               Browse the index
             </Button>
           ) : (

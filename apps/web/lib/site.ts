@@ -139,7 +139,7 @@ export const CREDIT = { text: 'designed with love by Deacon Brantley @ itsdeacon
  * Flip it back to true when there are enough answers to rank. That is the
  * whole change; nothing was deleted.
  */
-export const PUBLIC_INDEX_LISTED = false;
+export const PUBLIC_INDEX_LISTED = true;
 
 export const SEGMENTS = [
   { key: 'saas', label: 'SaaS' },

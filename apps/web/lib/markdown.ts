@@ -248,7 +248,7 @@ export function llmsTxt(): string {
     `- [Agent manifest](${absoluteUrl('/.well-known/agent.json')}): what this site offers a client, in JSON.`,
     '',
     ...(PUBLIC_INDEX_LISTED
-      ? ['## Optional', '', `- [Public index](${absoluteUrl('/index/saas')}): scored sites by segment.`, '']
+      ? ['## Optional', '', `- [Public index](${absoluteUrl('/index')}): scored sites by segment.`, '']
       : []),
     '## Notes',
     '',

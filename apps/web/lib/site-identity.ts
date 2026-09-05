@@ -118,7 +118,7 @@ export function withProbe(identity: SiteIdentity, probe: { icon: string; framing
  * The declared icon, then the conventional paths, with no duplicates. A site
  * that declares /favicon.ico gets one entry, not two.
  */
-function iconCandidates(declared: string, origin: string | null): string[] {
+export function iconCandidates(declared: string, origin: string | null): string[] {
   const guesses = origin
     ? [
         `${origin}/favicon.ico`,
