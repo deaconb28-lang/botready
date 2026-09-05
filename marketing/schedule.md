@@ -11,7 +11,7 @@ day 0 work; everything after it exists because day 0 is not a strategy.
 | T-12 | Publish the methodology page. Corpus definition, dates, method, raw results, and the caveats. Nothing is pitched before this is live. |
 | T-11 | Fill every `[MEASURE]` in this directory from the study. Anything still bracketed gets cut, not guessed. |
 | T-10 | Generate every graphic: `node marketing/assets/build.mjs --png`. Check each one at the size it will actually be seen. |
-| T-9 | Record the three reels and the 30-second Product Hunt demo. Real time, no music. |
+| T-9 | `pnpm video:capture && pnpm video:titles && pnpm video:build`. That builds the launch film, its cutdowns, and reels 1 and 3. **Reel 2 and the 30-second Product Hunt demo still have to be recorded by hand against a live backend** — see `video/README.md`, "The one gap". Real time, no music. |
 | T-8 | Build `/press` and the announcement bar. Ship both behind the launch date. |
 
 ## T-7 to T-1: the quiet week

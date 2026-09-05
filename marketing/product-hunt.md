@@ -53,6 +53,10 @@ A 30-second screen recording goes in slot 2 if it is ready: type a URL, watch
 the live page, land on the result. No music, no captions, real time — the scan
 takes thirty seconds and pretending otherwise is a lie the first user catches.
 
+It is not built yet and `video/out/launch-30-16x9.mp4` is **not** it. That file
+is a narrated advert for paid social. Slot 2 needs a real scan recorded end to
+end; `video/README.md` explains what is missing and how to finish it.
+
 ## First comment
 
 Post it within a minute of the listing going live.
