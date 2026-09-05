@@ -39,6 +39,20 @@ function prefersMarkdown(accept: string): boolean {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // An OAuth code that landed somewhere other than /auth/callback. This happens
+  // when Supabase drops the redirect_to we asked for — an empty redirect allow
+  // list on the project makes it fall back to the site URL — and the person
+  // arrives at "/?code=…" with a valid code and no session. The code is only
+  // ever consumed by one route, so send it there rather than showing them a
+  // home page and losing the sign-in they just completed.
+  const code = request.nextUrl.searchParams.get('code');
+  if (code && pathname !== '/auth/callback') {
+    const callback = new URL(request.nextUrl);
+    callback.pathname = '/auth/callback';
+    return NextResponse.redirect(callback);
+  }
+
   const page = pageFor(pathname);
   if (!page) return NextResponse.next();
 
@@ -57,6 +71,11 @@ export function middleware(request: NextRequest) {
   return NextResponse.next({ headers });
 }
 
+/**
+ * The public pages. `/` is load-bearing twice over: it is a page with a
+ * markdown representation, and it is where a dropped OAuth redirect lands, so
+ * the rescue above only runs because this list contains it.
+ */
 export const config = {
   matcher: ['/', '/what-we-check', '/pricing', '/docs', '/bot', '/sign-in'],
 };
