@@ -119,12 +119,12 @@ export default async function OverviewPage({
           {p.clients.length === 0 ? (
             <p className="mt-3 text-[14px] leading-[1.5] text-quiet">We did not get far enough to compare the clients.</p>
           ) : (
-            <div className="mt-[14px] flex items-center gap-[14px]">
+            <div className="@container mt-[14px] flex items-center gap-[14px]">
               <div className="edge flex-none rounded-[11px] bg-violet px-[11px] py-[13px] text-center font-mono text-[12.5px] font-medium leading-[1.5] text-white shadow-hard-2">
                 GET /<br />×{p.clients.length}
               </div>
               <DashConnector color="#111318" width={26} />
-              <ul className="m-0 grid min-w-0 flex-1 list-none gap-[9px] p-0">
+              <ul className="m-0 grid min-w-0 flex-1 list-none grid-cols-[minmax(0,1fr)] gap-[9px] p-0">
                 {p.clients.map((c) => {
                   const tone = c.ok ? (jsRatio > 0.7 && c.id !== 'chrome' ? 'warn' : 'ok') : 'bad';
                   return (
@@ -133,7 +133,7 @@ export default async function OverviewPage({
                         {c.status === 0 ? 'ERR' : c.status}
                       </span>
                       <span className="min-w-0 flex-1 truncate font-mono text-[14px] font-medium">{CLIENT_NAMES[c.id] ?? c.id}</span>
-                      <span className={cx('truncate font-mono text-[12.5px]', tone === 'ok' ? 'text-quiet' : tone === 'warn' ? 'text-amber-text' : 'text-coral-text')}>{c.note}</span>
+                      <span className={cx('hidden min-w-0 shrink truncate font-mono text-[12.5px] @[390px]:inline', tone === 'ok' ? 'text-quiet' : tone === 'warn' ? 'text-amber-text' : 'text-coral-text')}>{c.note}</span>
                     </li>
                   );
                 })}
