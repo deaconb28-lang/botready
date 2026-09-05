@@ -27,7 +27,11 @@ export const SETTING_ROWS: Array<{ key: keyof UserSettings; label: string; help:
 ];
 
 export async function getSettings(userId: string): Promise<UserSettings> {
-  const { data } = await serviceClient().from('user_settings').select('*').eq('user_id', userId).maybeSingle();
+  const { data, error } = await serviceClient().from('user_settings').select('*').eq('user_id', userId).maybeSingle();
+  // Reading falls back to the defaults, which is the right degrade: the page
+  // renders a complete set of toggles either way. But a failure here is never
+  // normal, so it goes in the log rather than passing silently.
+  if (error) console.error('[settings] read failed', { userId, code: error.code, message: error.message });
   if (!data) return DEFAULT_SETTINGS;
   const row = data as Record<string, boolean>;
   return {
@@ -54,6 +58,13 @@ export async function updateSettings(userId: string, patch: Partial<UserSettings
       },
       { onConflict: 'user_id' },
     );
-  if (error) throw new Error(`Could not save settings: ${error.message}`);
+  if (error) {
+    // The raw PostgREST message is a sentence about our schema cache. It named
+    // a table and an internal mechanism in a toggle's help text, which tells
+    // the person nothing they can act on. It goes to the log, where somebody
+    // can act on it, and the reader gets what actually happened to them.
+    console.error('[settings] save failed', { userId, code: error.code, message: error.message });
+    throw new Error('We could not save that, so nothing changed.');
+  }
   return next;
 }
