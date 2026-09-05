@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { normaliseDomain, type CategoryBreakdown } from '@botready/core';
 
+import { BotScene, type BotVariant } from '@/components/bot/BotScene';
+import { NextActions } from '@/components/app/NextActions';
 import { RerunButton } from '@/components/app/RerunButton';
 import { SubscribedToast } from '@/components/app/SubscribedToast';
 import { Bar, Card, DashConnector, cx } from '@/components/ui';
@@ -28,13 +30,28 @@ export default async function OverviewPage({
 
   const agents = p.clients.filter((c) => c.id !== 'chrome');
   const refused = agents.filter((c) => !c.ok);
-  const control = p.clients.find((c) => c.id === 'chrome');
   const jsRatio = Number(p.results.find((r) => r.key === 'js_dependency_ratio')?.observed.ratio ?? 0);
   const reached = p.clients.filter((c) => c.ok).length;
   const emptyBodies = p.clients.filter((c) => c.ok && jsRatio > 0.7).length;
   const healthy = p.score ? /^[AB]/.test(p.score.grade) : false;
   const fileCount = p.pack ? p.pack.files.length + 2 : 0;
   const packHref = p.scanId ? (owned ? `/api/fixpack/${p.scanId}` : `/api/checkout/${p.scanId}`) : '/pricing';
+
+  /**
+   * Which bot. The scene is picked from the result rather than chosen once and
+   * left, so it says the same thing the numbers beside it say: refused at a
+   * boundary when a client was turned away, reading when there is work in the
+   * list, surfing when there is not, waiting when there is no scan yet.
+   */
+  const scene: BotVariant = !p.score
+    ? p.status === 'blocked'
+      ? 'refused'
+      : 'waiting'
+    : refused.length > 0
+      ? 'refused'
+      : p.findings.length > 0
+        ? 'reading'
+        : 'surfing';
 
   const headline = !p.score
     ? p.status === 'blocked'
@@ -80,17 +97,20 @@ export default async function OverviewPage({
               {p.score ? `${p.score.total} / 100` : p.status === 'blocked' ? 'refused' : 'no result'}
             </div>
           </div>
-          <dl className="m-0 grid gap-[9px] px-5 py-[18px] font-mono text-[13.5px] text-body">
-            <Line k="HTTP" v={control ? `${control.status === 0 ? 'no response' : control.status}` : '—'} />
-            <Line k="grade" v={p.score?.grade ?? '—'} />
-            <div className="flex items-center gap-2">
-              <span>blocked:</span>
-              <span className={cx('rounded-[5px] border-[1.5px] border-ink px-[7px] text-ink', refused.length > 0 ? 'bg-coral' : 'bg-lime')}>
+          {/* Two facts the grade above does not already carry. The mono dump
+              that used to sit here repeated the grade and the score, and put
+              the file count next to a button that also states it. */}
+          <dl className="m-0 grid gap-[10px] px-5 py-[18px] font-mono text-[13px]">
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-subtle-2">agents blocked</dt>
+              <dd className={cx('edge m-0 rounded-[6px] px-[8px] py-[1px] font-medium text-ink', refused.length > 0 ? 'bg-coral' : 'bg-lime')}>
                 {refused.length} of {agents.length || '—'}
-              </span>
+              </dd>
             </div>
-            <Line k="fixes" v={String(fileCount)} />
-            <div className="text-subtle">prev: {p.previous ? `${p.previous.grade} (${p.previous.total})` : 'first run'}</div>
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-subtle-2">last run</dt>
+              <dd className="m-0 text-body">{p.previous ? `was ${p.previous.grade} (${p.previous.total})` : 'first one'}</dd>
+            </div>
           </dl>
         </div>
 
@@ -123,12 +143,30 @@ export default async function OverviewPage({
         </Card>
       </div>
 
+      <div className="mt-[18px] grid items-start gap-[18px] lg:grid-cols-[minmax(0,1fr)_300px]">
+        <NextActions
+          domain={p.domain}
+          punchList={p.pack?.punchList ?? []}
+          projected={p.projected}
+          total={p.score?.total ?? null}
+        />
+        <BotScene variant={scene} shadow="shadow-hard-4" className="hidden lg:block" />
+      </div>
+
+      {/* Six cards saying "all 4 checks pass" is six times the furniture for
+          one fact. One card, six rows: the bar carries the shape and the note
+          is only worth reading where something failed. */}
       {p.score ? (
-        <div className="mt-[18px] grid grid-cols-[repeat(auto-fit,minmax(290px,1fr))] gap-4">
-          {p.score.categories.map((c) => (
-            <CategoryCard key={c.key} category={c} note={noteFor(c, p.findings)} />
-          ))}
-        </div>
+        <section className="edge mt-[18px] overflow-hidden rounded-[16px] bg-white shadow-hard-4">
+          <h2 className="border-b-2 border-ink bg-surface-alt px-[22px] py-[13px] font-mono text-[11.5px] font-medium uppercase tracking-[0.1em] text-subtle-2">
+            Where the points are
+          </h2>
+          <ul className="m-0 list-none p-0">
+            {p.score.categories.map((c, i) => (
+              <CategoryRow key={c.key} category={c} note={noteFor(c, p.findings)} first={i === 0} />
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       <Card surface="violet" radius="card" shadow={4} className="mt-[18px] flex flex-wrap items-center justify-between gap-[22px] px-7 py-[26px]">
@@ -143,31 +181,28 @@ export default async function OverviewPage({
   );
 }
 
-function Line({ k, v }: { k: string; v: string }) {
-  return (
-    <div>
-      {k === 'HTTP' ? `HTTP/2 ${v}` : `${k}: ${v}`}
-    </div>
-  );
-}
-
-function CategoryCard({ category, note }: { category: CategoryBreakdown; note: string }) {
-  const solid = category.available > 0 && category.earned === 0;
+function CategoryRow({ category, note, first }: { category: CategoryBreakdown; note: string; first: boolean }) {
+  const clear = category.earned === category.available;
   const tone = category.score < 50 ? 'bad' : category.score < 75 ? 'warn' : 'ok';
-  const bar = solid ? '#FFFFFF' : tone === 'bad' ? '#FF6B5A' : tone === 'warn' ? '#FFCF5C' : '#C6F53C';
+  const bar = tone === 'bad' ? '#FF6B5A' : tone === 'warn' ? '#FFCF5C' : '#C6F53C';
   return (
-    <div className={cx('edge rounded-[14px] px-5 py-[18px] shadow-hard-3', solid ? 'bg-coral' : 'bg-white')}>
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="font-body text-[16px] font-bold">{category.label}</span>
-        <span className={cx('font-mono text-[13.5px] font-medium', solid ? 'text-ink' : tone === 'bad' ? 'text-coral-text' : 'text-body')}>
-          {category.earned}/{category.available}
-        </span>
-      </div>
-      <Bar pct={category.score} color={bar} track={solid ? 'bg-white' : 'bg-canvas'} className="mb-[11px] mt-[13px]" label={`${category.label} ${category.score}%`} />
-      <div className={cx('truncate font-mono text-[13px]', solid ? 'text-ink' : 'text-body')} title={note}>
-        {note}
-      </div>
-    </div>
+    <li className={cx('grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-[6px] px-[22px] py-[13px] sm:grid-cols-[170px_1fr_auto]', first ? '' : 'border-t border-hairline-2')}>
+      <span className="font-body text-[15px] font-semibold">{category.label}</span>
+      <Bar
+        pct={category.score}
+        color={bar}
+        track="bg-canvas"
+        className="col-span-2 sm:col-span-1 sm:order-none"
+        label={`${category.label} ${category.score}%`}
+      />
+      <span className={cx('text-right font-mono text-[13px] font-medium', clear ? 'text-subtle-2' : tone === 'bad' ? 'text-coral-text' : 'text-body')}>
+        {category.earned}/{category.available}
+      </span>
+      {/* The note earns its line only where something did not pass. */}
+      {clear ? null : (
+        <span className="col-span-2 font-mono text-[12.5px] text-body sm:col-start-2 sm:col-end-4">{note}</span>
+      )}
+    </li>
   );
 }
 
