@@ -5,9 +5,13 @@ out/
 .turbo/
 coverage/
 *.tsbuildinfo
-.env
-.env.local
-.env*.local
+# Every env file, at any depth, whatever it is called. The three patterns here
+# before covered .env and .env.local but not .env.production, .env.development
+# or .env.test — which Next.js reads natively, so they are files people really
+# create and really fill with real values. One catch-all and one exception is
+# the only form of this rule that cannot be outgrown.
+.env*
+!.env.example
 .DS_Store
 .vercel
 test-results/
