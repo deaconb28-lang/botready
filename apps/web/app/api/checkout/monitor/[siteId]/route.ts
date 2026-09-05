@@ -36,22 +36,35 @@ export async function GET(_request: Request, context: { params: Promise<{ siteId
     return NextResponse.json({ error: `Claim ${row.domain} first. Monitoring is for a site you have proven you control.` }, { status: 403 });
   }
 
+  // Session first, link second, for the reason spelled out in the fix pack's
+  // route: a payment link's redirect lives in the Stripe dashboard and this
+  // one's `success_url` lives here.
+  const session = await createSession(siteId, row.domain, user.email);
+  if (session?.url) return NextResponse.redirect(session.url, { status: 303 });
+
   const link = paymentLink('monitor', siteId, user.email);
   if (link) return NextResponse.redirect(link, { status: 303 });
 
-  const session = await stripe().checkout.sessions.create({
-    mode: 'subscription',
-    line_items: [{ price: serverEnv.stripePriceMonitor(), quantity: 1 }],
-    customer_email: user.email,
-    client_reference_id: siteId,
-    metadata: { plan: 'monitor', siteId, domain: row.domain },
-    subscription_data: { metadata: { plan: 'monitor', siteId, domain: row.domain } },
-    success_url: absoluteUrl(`/claim/${row.domain}?subscribed=1`),
-    cancel_url: absoluteUrl(`/claim/${row.domain}`),
-  });
+  return NextResponse.json({ error: 'Checkout is not configured right now. Nothing was charged.' }, { status: 502 });
+}
 
-  if (!session.url) {
-    return NextResponse.json({ error: 'Stripe did not return a checkout URL. Nothing was charged.' }, { status: 502 });
+/** Null rather than a throw when Stripe is not configured, so the caller can fall back. */
+async function createSession(siteId: string, domain: string, email: string) {
+  try {
+    return await stripe().checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: serverEnv.stripePriceMonitor(), quantity: 1 }],
+      customer_email: email,
+      client_reference_id: siteId,
+      metadata: { plan: 'monitor', siteId, domain },
+      subscription_data: { metadata: { plan: 'monitor', siteId, domain } },
+      success_url: absoluteUrl(`/claim/${domain}?subscribed=1`),
+      cancel_url: absoluteUrl(`/claim/${domain}`),
+      // Same as the fix pack. A code that works on one and not the other is
+      // the kind of thing you find out about from the person it failed for.
+      allow_promotion_codes: true,
+    });
+  } catch {
+    return null;
   }
-  return NextResponse.redirect(session.url, { status: 303 });
 }

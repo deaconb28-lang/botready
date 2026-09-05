@@ -41,6 +41,11 @@ export const PRICING = {
  * rather than in the environment, and an env var overrides it when the same
  * build is pointed at a test-mode link.
  *
+ * The checkout routes reach for a Checkout Session first and only fall back to
+ * these, because where a payment link sends someone after paying is a field in
+ * the Stripe dashboard rather than a line in this repository. Pasting one into
+ * an email is still exactly what they are for.
+ *
  * What the link cannot carry, we carry ourselves: `client_reference_id` holds
  * the scan or site the purchase is for, and the webhook reads it back. That is
  * the whole reason these are not raw URLs in a template.
