@@ -101,26 +101,6 @@ export default async function PurchasedPage({
           </div>
         </Card>
 
-        {/* The next thing worth doing, and the only thing on this page that is
-            still for sale. Applying the pack is a one-off; a firewall rule
-            changing under them next month is not, and they will not think to
-            come back and check. */}
-        {entitled ? (
-          <Card surface="lime" radius="panel" shadow={5} className="mt-6 p-6">
-            <h2 className="display text-[20px]">Keep it that way</h2>
-            <p className="mt-2 max-w-[46ch] text-[15px] leading-[1.55] text-ink">
-              Claim the domain and we re-check it weekly, then write to you the day a client that could read it stops being
-              able to. {PRICING.monitor.label} {PRICING.monitor.cadence}.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <a href={nextHref} className="edge inline-flex items-center rounded-[12px] bg-ink px-[22px] py-[14px] font-body text-[15px] font-bold text-white no-underline shadow-hard-3 hover:bg-violet">
-                {nextLabel}
-              </a>
-              <span className="font-mono text-[12px] text-ink">Two minutes, one DNS record</span>
-            </div>
-          </Card>
-        ) : null}
-
         <div className="mt-6">
           <MailNote to={buyerEmail} />
         </div>
@@ -143,6 +123,27 @@ export default async function PurchasedPage({
               </ul>
             </Card>
           </section>
+        ) : null}
+        {/* The next thing worth doing, at the foot because it is the next
+            thing: above it is what they came for and just paid for, and an
+            offer wedged between the download and the files reads as being
+            sold to twice. Applying a pack is a one-off; a firewall rule
+            changing under them in November is not, and nobody thinks to come
+            back and check. So it waits until the page is done. */}
+        {entitled ? (
+          <Card surface="lime" radius="panel" shadow={5} className="mt-10 p-6">
+            <h2 className="display text-[20px]">Keep it that way</h2>
+            <p className="mt-2 max-w-[46ch] text-[15px] leading-[1.55] text-ink">
+              Claim the domain and we re-check it weekly, then write to you the day a client that could read it stops being
+              able to. {PRICING.monitor.label} {PRICING.monitor.cadence}.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <a href={nextHref} className="edge inline-flex items-center rounded-[12px] bg-ink px-[22px] py-[14px] font-body text-[15px] font-bold text-white no-underline shadow-hard-3 hover:bg-violet">
+                {nextLabel}
+              </a>
+              <span className="font-mono text-[12px] text-ink">Two minutes, one DNS record</span>
+            </div>
+          </Card>
         ) : null}
       </Container>
       <SiteFooter />
