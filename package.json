@@ -17,7 +17,10 @@
     "db:migrate": "node scripts/db-migrate.mjs",
     "seed:index": "node scripts/seed-index.mjs",
     "icons": "node scripts/build-icons.mjs",
-    "audit:ui": "pnpm --filter @botready/tools audit:ui"
+    "audit:ui": "pnpm --filter @botready/tools audit:ui",
+    "video:capture": "pnpm --filter @botready/tools capture",
+    "video:titles": "node marketing/video/titles.mjs",
+    "video:build": "node marketing/video/build-film.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

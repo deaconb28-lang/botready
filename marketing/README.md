@@ -96,6 +96,7 @@ Two things we never say:
 | `schedule.md` | The fourteen days, hour by hour on the day itself |
 | `measurement.md` | What we count, and what we refuse to count |
 | `assets/build.mjs` | Generates every graphic in this campaign as SVG |
+| `video/` | The launch film, its cutdowns and the reels, and how they are built |
 
 ## The graphics
 

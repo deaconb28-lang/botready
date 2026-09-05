@@ -6,10 +6,12 @@
   "description": "Checks that need a real browser pointed at a running app: accessibility, focus, reduced motion, and the share card.",
   "scripts": {
     "audit:ui": "node audit-ui.mjs",
-    "typecheck": "echo 'no TypeScript in tools'"
+    "typecheck": "echo 'no TypeScript in tools'",
+    "capture": "node capture-footage.mjs"
   },
   "dependencies": {
     "axe-core": "^4.13.0",
+    "ffmpeg-static": "^5.3.0",
     "playwright": "1.56.0"
   }
 }

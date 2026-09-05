@@ -4,6 +4,7 @@ packages:
   - 'tools'
 
 onlyBuiltDependencies:
+  - ffmpeg-static
   - '@tailwindcss/oxide'
   - esbuild
   - sharp

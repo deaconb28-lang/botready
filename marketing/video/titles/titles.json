@@ -1,0 +1,96 @@
+{
+  "fps": 30,
+  "tokens": {
+    "canvas": "#EDEBFB",
+    "surface": "#FFFFFF",
+    "surface-alt": "#F6F5FE",
+    "paper": "#FCFCFA",
+    "chip-bg": "#F1F1EC",
+    "header": "#F7F7F4",
+    "ink": "#111318",
+    "ink-2": "#2A2D38",
+    "ink-3": "#1B2027",
+    "ink-4": "#262C34",
+    "body": "#3F4450",
+    "muted": "#5A646F",
+    "subtle": "#666B7A",
+    "subtle-2": "#646978",
+    "placeholder": "#646978",
+    "quiet": "#5F6474",
+    "violet": "#4B44F5",
+    "violet-tint": "#EFEEFE",
+    "violet-chip": "#E8E6FE",
+    "violet-rule": "#6A64F7",
+    "on-violet": "#E4E2FE",
+    "on-violet-2": "#C9C6FB",
+    "lime": "#C6F53C",
+    "lime-tint": "#F6FDE6",
+    "coral": "#FF6B5A",
+    "coral-tint": "#FFE3DE",
+    "coral-text": "#B23C1F",
+    "coral-dark": "#FF8A6B",
+    "amber": "#FFCF5C",
+    "amber-tint": "#FFF9EA",
+    "amber-text": "#8A6D1F",
+    "green": "#1F7A47",
+    "green-tint": "#E9FBD2",
+    "green-text": "#357A19",
+    "teal": "#7ED9C3",
+    "teal-tint": "#EFFAF7",
+    "pink": "#F2A0D8",
+    "pink-tint": "#FDF0F9",
+    "coral-tint-2": "#FFF1EF",
+    "rule": "#EFEEFA",
+    "hairline": "#EFEFEA",
+    "hairline-2": "#F3F3EE",
+    "hairline-3": "#E9E9E3",
+    "hairline-4": "#E4E4DE",
+    "divider": "#D9D6F4",
+    "dashed": "#A6A2E8",
+    "on-ink": "#C9D1DA",
+    "on-ink-2": "#D9DEE5",
+    "on-ink-3": "#D7D5FD",
+    "on-ink-muted": "#7E8894",
+    "on-ink-soft": "#A7B0BA",
+    "on-ink-label": "#8A929B",
+    "on-ink-light": "#F2F4F7"
+  },
+  "cards": [
+    {
+      "name": "split-statement",
+      "file": "split-statement.mp4",
+      "seconds": 5,
+      "note": "The nine words the campaign is built on. taglines.md, headline slot 1."
+    },
+    {
+      "name": "analytics",
+      "file": "analytics.mp4",
+      "seconds": 5,
+      "note": "copy.ts whyPoints[0], said the way marketing/README.md says it."
+    },
+    {
+      "name": "published",
+      "file": "published.mp4",
+      "seconds": 5,
+      "note": "The moat, stated plainly. marketing/README.md, \"two things we say in every register\"."
+    },
+    {
+      "name": "refusal",
+      "file": "refusal.mp4",
+      "seconds": 5,
+      "note": "The other half of the moat. Coral, because it is the refusal."
+    },
+    {
+      "name": "offer",
+      "file": "offer.mp4",
+      "seconds": 5,
+      "note": "taglines.md, cleared sub-line. The only card that names a price."
+    },
+    {
+      "name": "endcard",
+      "file": "endcard.mp4",
+      "seconds": 6,
+      "note": "The house line, and the only call to action the campaign allows: a URL box."
+    }
+  ]
+}

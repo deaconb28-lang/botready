@@ -15,3 +15,12 @@ playwright-report/
 
 # Intermediate frames from scripts/build-icons.mjs; the packed .ico is committed.
 apps/web/assets/icon/.ico-*.png
+
+# Launch video. The renders and the raw captures are build output, like
+# marketing/assets/out: `pnpm video:capture && video:titles && video:build`
+# regenerates them from the app. The shot manifests are kept, because they
+# record the framing decisions, and vo/ is kept because regenerating it spends
+# credits at a text-to-speech API rather than CPU.
+marketing/video/out/
+marketing/video/footage/*.mp4
+marketing/video/titles/*.mp4
