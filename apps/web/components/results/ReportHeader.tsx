@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { SoftChip, ThinBar, cx } from '@/components/ui';
+import { GradeBot } from './GradeBot';
 import { barColorFor } from '@/lib/theme';
 
 export interface CategoryCell {
@@ -101,12 +102,17 @@ export function ReportHeader({
   return (
     <div className="edge mt-[18px] overflow-hidden rounded-[24px] bg-white">
       <div className={cx('flex flex-wrap items-center gap-8 border-b-2 border-ink px-6 py-[30px] sm:px-8', ground)}>
-        <div className="flex items-baseline gap-3">
-          <span className="display-tight text-[64px] leading-none tracking-[-0.04em] tabular-nums" aria-live="off">
-            {Math.round(fill)}
-          </span>
-          <span className="font-mono text-[14px] text-subtle-2">/ 100</span>
-          <span className="sr-only">{total} out of 100</span>
+        {/* The face and the number, together. A grade is a letter somebody has
+            to convert into a feeling; nobody has to convert a frown. */}
+        <div className="flex items-center gap-4">
+          <GradeBot grade={grade} size={72} className="hidden sm:block" />
+          <div className="flex items-baseline gap-3">
+            <span className="display-tight text-[64px] leading-none tracking-[-0.04em] tabular-nums" aria-live="off">
+              {Math.round(fill)}
+            </span>
+            <span className="font-mono text-[14px] text-subtle-2">/ 100</span>
+            <span className="sr-only">{total} out of 100</span>
+          </div>
         </div>
         <div className="min-w-[200px] flex-1">
           <div className="flex flex-wrap items-center gap-[10px]">
