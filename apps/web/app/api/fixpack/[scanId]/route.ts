@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 
 import { currentUser, hasFixpackEntitlement } from '@/lib/auth';
+import { purchaseCovers } from '@/lib/purchase';
 import { loadScanView } from '@/lib/scan-data';
 import { assembleFixPack } from '@/lib/fixpack';
 
@@ -19,13 +20,22 @@ export const dynamic = 'force-dynamic';
  * Every response here is a plain sentence about what to do next. A 401 from a
  * download link with a JSON blob behind it is a dead end.
  */
-export async function GET(_request: Request, context: { params: Promise<{ scanId: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ scanId: string }> }) {
   const { scanId } = await context.params;
+
+  // Two proofs, either one enough. The checkout session is what somebody who
+  // has just paid actually has — a payment link creates no session here, so
+  // requiring an account made the download unreachable at the exact moment it
+  // mattered most. The entitlement is for everyone coming back later.
+  const sessionId = new URL(request.url).searchParams.get('session_id');
+  if (await purchaseCovers(sessionId, scanId)) {
+    return await deliver(scanId);
+  }
 
   const user = await currentUser();
   if (!user) {
     return NextResponse.redirect(
-      new URL(`/sign-in?next=${encodeURIComponent(`/api/fixpack/${scanId}`)}`, _request.url),
+      new URL(`/sign-in?next=${encodeURIComponent(`/api/fixpack/${scanId}`)}`, request.url),
       { status: 303 },
     );
   }
@@ -36,6 +46,12 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
       `${user.email} has not bought the fix pack. If you have, and the receipt went to a different address, sign in with that one. The result page has the button.`,
     );
   }
+
+  return await deliver(scanId);
+}
+
+/** The archive itself, once the caller has proved they may have it. */
+async function deliver(scanId: string): Promise<Response> {
 
   const view = await loadScanView(scanId);
   if (!view) return text(404, 'No scan with that id.');
