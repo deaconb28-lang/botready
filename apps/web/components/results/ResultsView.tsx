@@ -55,7 +55,7 @@ export function ResultsView({
 }) {
   const observedByKey = new Map(results.map((r) => [r.key, r.observed]));
   const items = findings.map((finding) => ({ finding, observed: observedByKey.get(finding.key) ?? {} }));
-  const { plain, tech } = summaries(results, findings, score);
+  const summary = summarise(results, findings, score);
   const pack = buildFixPack(domain, results);
   const identity = siteIdentity(results, domain, url);
   const ledger = packLedger(pack);
@@ -93,8 +93,7 @@ export function ResultsView({
         total={score.total}
         grade={score.grade}
         scoringVersion={score.scoringVersion}
-        summaryPlain={plain}
-        summaryTech={tech}
+        summary={summary}
         categories={score.categories.map((c) => ({ key: c.key, label: c.label, pct: c.score }))}
         action={action}
       />
@@ -231,11 +230,10 @@ function packLedger(pack: FixPack): {
 }
 
 /**
- * One sentence of fact for the header, in each register. Drawn from the parity
- * check when it failed, and from the worst finding otherwise. Never a summary
- * judgement.
+ * One sentence of fact for the header. Drawn from the parity check when it
+ * failed, and from the worst finding otherwise. Never a summary judgement.
  */
-function summaries(results: CheckResult[], findings: Finding[], score: ScoreDetail): { plain: string; tech: string } {
+function summarise(results: CheckResult[], findings: Finding[], score: ScoreDetail): string {
   const parity = results.find((r) => r.key === 'agent_status_parity');
   const perAgent = (parity?.observed.per_agent ?? {}) as Record<string, PerAgentFetch>;
   const control = String(parity?.observed.control ?? 'chrome');
@@ -246,25 +244,16 @@ function summaries(results: CheckResult[], findings: Finding[], score: ScoreDeta
 
   if (refused.length > 0) {
     const most = missing > 0 && parityLost / missing >= 0.5;
-    return {
-      plain: `${wordNumber(refused.length)} of the ${wordNumber(agents.length + 1)} AI clients can't read this page at all.${most ? " That's most of the missing points." : ''}`,
-      tech: `${refused.length} of ${agents.length} declared agent clients receive a non-200 status class from the Chrome-control URL.`,
-    };
+    return `${wordNumber(refused.length)} of the ${wordNumber(agents.length + 1)} AI clients can't read this page at all.${most ? " That's most of the missing points." : ''}`;
   }
   const worst = findings[0];
   if (!worst) {
-    return {
-      plain: `Every one of the ${catalog.checks.length} checks passed. The assistants your customers ask can read this page.`,
-      tech: `${results.length} checks emitted, none failing, at scoring v${score.scoringVersion}.`,
-    };
+    return `Every one of the ${catalog.checks.length} checks passed. The assistants your customers ask can read this page.`;
   }
-  return {
-    // The headlines in finding-copy.ts are written without terminal
-    // punctuation, because most of the places they appear are their own line.
-    // Here one runs into the next sentence.
-    plain: `${sentence(worst.headline)} That is the biggest thing between you and a better grade.`,
-    tech: `${worst.key} — ${worst.status}, costing ${worst.pointsLost} points. ${findings.length} ${findings.length === 1 ? 'check' : 'checks'} did not pass.`,
-  };
+  // The headlines in finding-copy.ts are written without terminal punctuation,
+  // because most of the places they appear are their own line. Here one runs
+  // into the next sentence.
+  return `${sentence(worst.headline)} That is the biggest thing between you and a better grade.`;
 }
 
 /** End a headline so the sentence after it does not run into it. */

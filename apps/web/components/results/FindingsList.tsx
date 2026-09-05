@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { CATEGORY_KEYS, categoryDef, type CategoryKey, type Finding } from '@botready/core';
 
 import { copyFor } from '@/lib/finding-copy';
-import { useMode } from '@/lib/mode';
 import { COPY } from '@/lib/copy';
 import { CATEGORY_PAINT } from '@/lib/theme';
 import { SeverityDot, cx } from '@/components/ui';
@@ -47,8 +46,7 @@ export function FindingsList({
   pointsMissing: number;
   variant?: 'site' | 'app';
 }) {
-  const { mode } = useMode();
-  const copy = COPY[mode];
+  const copy = COPY;
   const [open, setOpen] = useState('');
 
   if (items.length === 0) {
@@ -70,11 +68,9 @@ export function FindingsList({
         <>
           <h2 className="display mb-[6px] text-[26px] tracking-[-0.025em]">{copy.findingsTitle}</h2>
           <p className="mb-[18px] text-[15.5px] leading-[1.55] text-muted">
-            {mode === 'tech'
-              ? `${pointsMissing} points unearned across ${items.length} ${items.length === 1 ? 'check' : 'checks'} in ${groups.length} ${groups.length === 1 ? 'category' : 'categories'}, grouped by category and ordered by points.`
-              : groups.length === 1
-                ? `${countWord(items.length)} in one place. Open any line to see what we measured.`
-                : `${worst.label} is costing you the most — ${worst.points} of the ${pointsMissing} points you're missing. Open any line to see what we measured.`}
+            {groups.length === 1
+              ? `${countWord(items.length)} in one place. Open any line to see what we measured.`
+              : `${worst.label} is costing you the most — ${worst.points} of the ${pointsMissing} points you're missing. Open any line to see what we measured.`}
           </p>
         </>
       ) : null}
@@ -139,8 +135,7 @@ function FindingRow({
   onToggle: () => void;
   variant: 'site' | 'app';
 }) {
-  const { mode } = useMode();
-  const c = copyFor(item.finding, item.observed, mode);
+  const c = copyFor(item.finding, item.observed);
   const severity = item.finding.status === 'error' ? 'error' : item.finding.status === 'warn' ? 'warn' : 'fail';
   const panelId = `finding-${item.finding.key}`;
 

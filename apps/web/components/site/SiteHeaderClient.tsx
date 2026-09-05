@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-import { useMode } from '@/lib/mode';
 import { Button, Wordmark, cx } from '@/components/ui';
 import { PUBLIC_INDEX_LISTED } from '@/lib/site';
 
@@ -24,7 +23,6 @@ const HEADER_OFFSET = 80;
  * offset for the sticky header, and navigates there from anywhere else.
  */
 export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
-  const { mode, toggle } = useMode();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -52,19 +50,6 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
     <header className="sticky top-0 z-[60] border-b-2 border-ink bg-[rgba(247,247,244,.88)] backdrop-blur-[14px]">
       <div className="mx-auto flex max-w-[1200px] items-center gap-5 px-6 py-[14px] sm:px-[26px]">
         <Wordmark />
-
-        {/* Beside the wordmark rather than in the account cluster on the right.
-            This switches the register the whole site is written in — it belongs
-            with what you are reading, not with signing in and running a check. */}
-        <button
-          type="button"
-          onClick={toggle}
-          aria-pressed={mode === 'tech'}
-          aria-label={mode === 'plain' ? 'Switch to technical language' : 'Switch to plain language'}
-          className="edge hidden cursor-pointer whitespace-nowrap rounded-[9px] bg-white px-3 py-2 font-body text-[13px] font-medium text-muted hover:text-ink sm:inline-block"
-        >
-          {mode === 'plain' ? 'Plain ⇄' : 'Technical ⇄'}
-        </button>
 
         <nav aria-label="Site" className="mx-auto hidden min-w-0 gap-5 lg:flex">
           {NAV.map((item) => (
@@ -135,13 +120,6 @@ export function SiteHeaderClient({ signedIn }: { signedIn: boolean }) {
           <Link href={signedIn ? '/app' : '/sign-in'} className="rounded-[9px] px-2 py-2 font-body text-[15px] font-medium text-ink no-underline hover:bg-surface-alt">
             {signedIn ? 'Go to app' : 'Log in'}
           </Link>
-          <button
-            type="button"
-            onClick={toggle}
-            className="edge mt-1 w-fit cursor-pointer rounded-[9px] bg-white px-3 py-2 font-body text-[13px] font-medium text-muted"
-          >
-            {mode === 'plain' ? 'Plain ⇄ switch to technical' : 'Technical ⇄ switch to plain'}
-          </button>
         </nav>
       </div>
     </header>

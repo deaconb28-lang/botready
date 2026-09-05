@@ -137,14 +137,18 @@ marquee, the agent race and the cursors are all continuous.
 The primitives live in `apps/web/components/ui.tsx` and every surface is built
 from them. Reference designs are in `docs/design/`.
 
-## Language: plain and technical
+## Language: plain, and only plain
 
-The header carries a two-state switch that swaps about forty strings across the
-site. It is not a translation layer: plain speaks to a solo founder, technical
-speaks to an engineer, and the two registers say different things. The copy
-lives in two parallel dictionaries in `apps/web/lib/copy.ts` and
-`apps/web/lib/finding-copy.ts`; neither side is derived from the other. The mode
-is one value in `apps/web/lib/mode.tsx`, persisted to localStorage.
+One register, aimed at the person who owns the site rather than the person who
+deploys it. The copy lives in `apps/web/lib/copy.ts` for the marketing pages and
+`apps/web/lib/finding-copy.ts` for a finding on the result page.
+
+There was a second, technical register and a Plain ⇄ Technical switch in the
+header, chosen from `apps/web/lib/mode.tsx` and persisted to localStorage. All
+three are gone. Every string had to be written twice and kept true twice, both
+halves went stale independently, and the switch put a control about *reading*
+next to the controls for signing in. If a technical register comes back it
+should be a separate page, not a second copy of every sentence on this one.
 
 ## Voice
 

@@ -1,16 +1,17 @@
 /**
- * A finding in two registers.
+ * A finding, in the words a founder would use.
  *
  * The core `findings()` function turns evidence into one factual headline and
- * body per check. Plain mode speaks to a founder; technical mode names the
- * check, its status and the numbers. Both read the same observed facts, and
- * neither invents one: every number below came out of `observed`.
+ * body per check; this dresses it for the page. Every number below came out of
+ * `observed` — none of it is invented here.
+ *
+ * There was a second, technical register alongside this one, chosen by a switch
+ * in the header. The switch is gone and so is that register: two voices meant
+ * every sentence had to be written twice and only one of them was ever read.
  */
 
 import type { Finding, PerAgentFetch } from '@botready/core';
 
-import type { Mode } from './mode';
-import { CLIENT_NAMES } from './theme';
 
 export interface FindingCopy {
   title: string;
@@ -22,38 +23,24 @@ export interface FindingCopy {
   points: string;
 }
 
-/** The fix chip per remedy key, in both registers. */
-const FIX_CHIP: Record<string, { plain: string; tech: string }> = {
-  waf_allow_agents: { plain: 'one rule change', tech: 'WAF rule' },
-  prerender_key_pages: { plain: 'pre-render or add llms.txt', tech: 'pre-render' },
-  robots_block: { plain: 'two lines in robots.txt', tech: 'robots.txt block' },
-  llms_txt: { plain: 'included in the pack', tech: 'generated file' },
-  markdown_alternate_tags: { plain: 'link tags included', tech: 'Link tags' },
-  jsonld_block: { plain: 'JSON-LD block included', tech: 'JSON-LD block' },
+/** The fix chip per remedy key. */
+const FIX_CHIP: Record<string, string> = {
+  waf_allow_agents: 'one rule change',
+  prerender_key_pages: 'pre-render or add llms.txt',
+  robots_block: 'two lines in robots.txt',
+  llms_txt: 'included in the pack',
+  markdown_alternate_tags: 'link tags included',
+  jsonld_block: 'JSON-LD block included',
 };
 
-export function copyFor(finding: Finding, observed: Record<string, unknown>, mode: Mode): FindingCopy {
-  const points = `${finding.pointsLost} pts`;
+export function copyFor(finding: Finding, observed: Record<string, unknown>): FindingCopy {
   const chip = finding.remedy ? FIX_CHIP[finding.remedy] : undefined;
-  const fix = chip ? (mode === 'tech' ? `${finding.pointsLost} points · ${chip.tech}` : chip.plain) : mode === 'tech' ? `${finding.pointsLost} points · manual` : 'a manual fix';
-  const detail = `${finding.evidence}\n\ncheck: ${finding.key} — ${finding.status}`;
-
-  if (mode === 'tech') {
-    return {
-      title: techTitle(finding, observed),
-      body: techBody(finding, observed),
-      fix,
-      detail,
-      points,
-    };
-  }
-
   return {
     title: plainTitle(finding, observed),
     body: finding.body || finding.headline,
-    fix,
-    detail,
-    points,
+    fix: chip ?? 'a manual fix',
+    detail: `${finding.evidence}\n\ncheck: ${finding.key} — ${finding.status}`,
+    points: `${finding.pointsLost} pts`,
   };
 }
 
@@ -99,61 +86,6 @@ function plainTitle(f: Finding, o: Record<string, unknown>): string {
   }
 }
 
-// ------------------------------------------------------------------ technical
-
-function techTitle(f: Finding, o: Record<string, unknown>): string {
-  const suffix = f.status === 'warn' ? 'warn' : f.status === 'error' ? 'error' : 'fail';
-  switch (f.key) {
-    case 'js_dependency_ratio': {
-      const ratio = Number(o.ratio ?? 0);
-      return `${f.key} — ${suffix} (${ratio.toFixed(2)})`;
-    }
-    case 'raw_fetch_latency': {
-      const ttfb = Number(o.ttfb_ms ?? o.control_ttfb_ms ?? 0);
-      return ttfb ? `${f.key} — ${suffix} (${ttfb} ms)` : `${f.key} — ${suffix}`;
-    }
-    case 'redirect_depth': {
-      const hops = Number(o.hops ?? o.redirects ?? 0);
-      return hops ? `${f.key} — ${suffix} (${hops} hops)` : `${f.key} — ${suffix}`;
-    }
-    default:
-      return `${f.key} — ${suffix}`;
-  }
-}
-
-function techBody(f: Finding, o: Record<string, unknown>): string {
-  switch (f.key) {
-    case 'agent_status_parity': {
-      const perAgent = (o.per_agent ?? {}) as Record<string, PerAgentFetch>;
-      const control = String(o.control ?? 'chrome');
-      const controlStatus = perAgent[control]?.status ?? 0;
-      const refused = Object.entries(perAgent).filter(([id, v]) => id !== control && statusClass(v.status) !== statusClass(controlStatus));
-      if (refused.length === 0) return f.body;
-      const list = refused.map(([id, v]) => `${CLIENT_NAMES[id] ?? id} ${v.transport_error ? 'no response' : v.status}`).join(', ');
-      return `${list} from the same URL that returns ${controlStatus} to the Chrome control, in the same second.`;
-    }
-    case 'js_dependency_ratio': {
-      const raw = Number(o.raw_chars ?? 0);
-      const rendered = Number(o.rendered_chars ?? 0);
-      return `Extractable text from the raw response is ${raw.toLocaleString('en-US')} characters against ${rendered.toLocaleString('en-US')} from the headless render.`;
-    }
-    case 'llms_txt_present': {
-      const status = Number(o.status ?? 0);
-      return `GET /llms.txt returned ${status || 'no response'}${o.served_html ? ' with the HTML shell rather than a text file' : ''}. The fix pack generates it from the pages that returned 200.`;
-    }
-    case 'pricing_structured': {
-      const nodes = Number(o.offer_nodes ?? 0);
-      return nodes === 0 ? 'No ld+json Offer node on the pricing page. Prices are present in the DOM as markup only.' : f.body;
-    }
-    case 'jsonld_present': {
-      const types = Array.isArray(o.types) ? (o.types as string[]) : [];
-      return types.length === 0 ? 'No ld+json block on the target page.' : `ld+json types present: ${types.join(', ')}. ${f.body}`;
-    }
-    default:
-      return f.body || f.headline;
-  }
-}
-
 // ------------------------------------------------------------------ helpers
 
 function refusedAgents(o: Record<string, unknown>): string[] {
@@ -168,6 +100,3 @@ function shortName(id: string): string {
   return { chrome: 'Chrome', claudebot: 'Claude', gptbot: 'GPT', perplexity: 'Perplexity', googleext: 'Google' }[id] ?? id;
 }
 
-function statusClass(status: number): number {
-  return Math.floor(status / 100);
-}

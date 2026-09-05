@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Familjen_Grotesk, JetBrains_Mono, Public_Sans } from 'next/font/google';
 
-import { ModeProvider } from '@/lib/mode';
 import { SITE } from '@/lib/site';
 import './globals.css';
 
@@ -87,7 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        <ModeProvider>{children}</ModeProvider>
+        {children}
       </body>
     </html>
   );

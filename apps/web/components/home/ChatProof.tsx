@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { COPY } from '@/lib/copy';
-import { useMode } from '@/lib/mode';
 import { cx } from '@/components/ui';
 
 const CHAR_MS = 16;
@@ -17,8 +16,7 @@ const CHAR_MS = 16;
  * This is an example, and the card says so: the names in it are made up.
  */
 export function ChatProof() {
-  const { mode } = useMode();
-  const copy = COPY[mode];
+  const copy = COPY;
   const [fixed, setFixed] = useState(false);
   const [typed, setTyped] = useState('');
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);

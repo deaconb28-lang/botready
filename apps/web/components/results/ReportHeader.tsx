@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { useMode } from '@/lib/mode';
 import { SoftChip, ThinBar, cx } from '@/components/ui';
 import { barColorFor } from '@/lib/theme';
 
@@ -24,8 +23,7 @@ export function ReportHeader({
   total,
   grade,
   scoringVersion,
-  summaryPlain,
-  summaryTech,
+  summary,
   categories,
   action,
   animate = true,
@@ -33,13 +31,11 @@ export function ReportHeader({
   total: number;
   grade: string;
   scoringVersion: string;
-  summaryPlain: string;
-  summaryTech: string;
+  summary: string;
   categories: CategoryCell[];
   action: React.ReactNode;
   animate?: boolean;
 }) {
-  const { mode } = useMode();
   const [fill, setFill] = useState(animate ? 0 : total);
   const raf = useRef<number | null>(null);
 
@@ -91,7 +87,7 @@ export function ReportHeader({
             </SoftChip>
             <span className="font-mono text-[12.5px] text-subtle-2">scoring v{scoringVersion}</span>
           </div>
-          <p className="mt-[10px] max-w-[46ch] text-[15.5px] leading-[1.5] text-muted">{mode === 'tech' ? summaryTech : summaryPlain}</p>
+          <p className="mt-[10px] max-w-[46ch] text-[15.5px] leading-[1.5] text-muted">{summary}</p>
         </div>
         {action}
       </div>
