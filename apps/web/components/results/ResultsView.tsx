@@ -15,7 +15,6 @@ import {
 
 import { FindingsList } from './FindingsList';
 import { FixPackPreview } from './FixPackPreview';
-import { PackBot } from './PackBot';
 import { FixPackButton } from './FixPackButton';
 import { DeliveryNote } from './DeliveryNote';
 import { ClientPanel } from './ClientPanel';
@@ -181,10 +180,6 @@ export function ResultsView({
               <div className="grid min-w-[240px] gap-3">
                 <TerminalLine>$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
                 {panelAction}
-                {/* The only thing on this panel that is pleased rather than
-                    correct. Everything above it argues from counts, and the
-                    page above that has just finished listing what is wrong. */}
-                <PackBot className="-my-1" />
                 {/* A pack covers one domain, and somebody about to pay should
                     know that before they pay rather than at the next domain. */}
                 {owned ? null : (
