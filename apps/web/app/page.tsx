@@ -9,6 +9,7 @@ import { ChatProof } from '@/components/home/ChatProof';
 import { HeroScanCard } from '@/components/home/HeroScanCard';
 import { Copy, CopyItem } from '@/components/ModeText';
 import { SiteFooter } from '@/components/site/SiteFooter';
+import { TwelveToolsBadge } from '@/components/site/TwelveToolsBadge';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, Eyebrow, PillEyebrow, TerminalCard, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
@@ -61,6 +62,11 @@ function Hero() {
             <HeroScanCard className="ml-0" />
           </div>
 
+          {/* Under the box, never above it. Social proof belongs at the moment
+              somebody is deciding whether to type their URL in, and the one
+              thing the home page is for is the thing nothing gets to push
+              down. */}
+          <TwelveToolsBadge className="mt-6 inline-block" />
         </div>
 
         {/* Decorative, and the first thing to go: below the two-column
