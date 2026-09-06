@@ -87,7 +87,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         {children}
+        {analytics ? (
+          // The vendor's own tag, rather than next/script. next/script's
+          // afterInteractive strategy emits only a preload link server-side and
+          // injects the real element once React has hydrated, so the pageview
+          // ends up depending on hydration finishing. A plain deferred tag is in
+          // the HTML the moment the document is, which is what you want from the
+          // one script whose whole job is to notice that somebody arrived.
+          <script
+            defer
+            src="https://datafa.st/js/script.js"
+            data-website-id="dfid_Ql9zHILfNWAueJUsfzAdD"
+            data-domain="botready.dev"
+          />
+        ) : null}
       </body>
     </html>
   );
 }
+
+/**
+ * Whether to load the analytics script at all.
+ *
+ * Not a privacy switch — DataFast is cookieless and there is nothing here to
+ * consent to. It is about the numbers being worth reading. Every preview
+ * deployment and every `pnpm dev` session would otherwise report itself as
+ * traffic to botready.dev, and the first thing anyone wants from analytics on a
+ * launch day is to trust the count.
+ *
+ * Deliberately failing open: it loads unless we can see a reason not to. A
+ * stray hit from a preview is a smaller problem than discovering at noon on
+ * launch day that the tag never fired because an environment variable was not
+ * what this expected.
+ *
+ * The website id is not a secret. It is what the script announces itself with
+ * on every page load of every site that uses it, so it belongs in the source
+ * rather than in an env var pretending otherwise.
+ */
+const analytics = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview';
