@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { coversDomain, live, type EntitlementRow } from '../lib/auth';
+import { UNLIMITED, claimable, coversDomain, live, type EntitlementRow } from '../lib/auth';
 
 const NOW = Date.parse('2026-09-05T12:00:00Z');
 const NEXT_MONTH = '2026-10-05T12:00:00Z';
@@ -55,17 +55,18 @@ describe('a fix pack covers the domain it was bought for', () => {
   });
 });
 
-describe('a purchase with no domain on it', () => {
+describe('a purchase written before the pack was scoped', () => {
+  // These used to be null and are now marked UNLIMITED by migration 0009.
+  // Nobody who has already paid loses what they paid for, and no backfill could
+  // invent a scope the purchase never had. What changed is that null stopped
+  // meaning the same thing, because null is also what a failed lookup writes.
   it('covers everything, because that is what it was sold as', () => {
-    // Rows written before the fix pack became per-domain. Nobody who has
-    // already paid loses what they paid for, and no backfill could invent a
-    // scope the purchase never had.
-    expect(coversDomain([fixpack(null)], 'anything.com', NOW)).toBe(true);
-    expect(coversDomain([fixpack(null)], 'anything-else.com', NOW)).toBe(true);
+    expect(coversDomain([fixpack(UNLIMITED)], 'anything.com', NOW)).toBe(true);
+    expect(coversDomain([fixpack(UNLIMITED)], 'anything-else.com', NOW)).toBe(true);
   });
 
   it('still covers everything when the caller cannot name a domain either', () => {
-    expect(coversDomain([fixpack(null)], null, NOW)).toBe(true);
+    expect(coversDomain([fixpack(UNLIMITED)], null, NOW)).toBe(true);
   });
 });
 
@@ -102,5 +103,50 @@ describe('holding nothing', () => {
     // A download that cannot say which domain it is for must not be answered
     // by a purchase that names one.
     expect(coversDomain([fixpack('example.com')], null, NOW)).toBe(false);
+  });
+});
+
+describe('a grant with no domain on it yet', () => {
+  // Null used to mean every domain, which is also what a grant looks like when
+  // the webhook could not name one — so a payment link with nothing attached
+  // bought the whole index. Null now means one pack that has not been spent.
+  it('covers the first domain it is asked for', () => {
+    expect(coversDomain([fixpack(null)], 'one.com', NOW)).toBe(true);
+  });
+
+  it('is reported as claimable, so the caller stamps it', () => {
+    expect(claimable([fixpack(null)], 'one.com', NOW)).toBe(true);
+  });
+
+  it('is not claimable once it names that domain, which is the spent state', () => {
+    expect(claimable([fixpack('one.com')], 'one.com', NOW)).toBe(false);
+    expect(coversDomain([fixpack('one.com')], 'two.com', NOW)).toBe(false);
+  });
+
+  it('is not claimable when something else already covers the domain', () => {
+    // The unlimited grant answers for it, so the unspent one stays unspent.
+    const rows = [fixpack(UNLIMITED), fixpack(null)];
+    expect(claimable(rows, 'one.com', NOW)).toBe(false);
+  });
+
+  it('cannot be spent by a caller that cannot name a domain', () => {
+    expect(coversDomain([fixpack(null)], null, NOW)).toBe(false);
+    expect(claimable([fixpack(null)], null, NOW)).toBe(false);
+  });
+});
+
+describe('the explicit unlimited grant', () => {
+  it('covers everything, because that is what it was sold as', () => {
+    expect(coversDomain([fixpack(UNLIMITED)], 'one.com', NOW)).toBe(true);
+    expect(coversDomain([fixpack(UNLIMITED)], 'two.com', NOW)).toBe(true);
+  });
+
+  it('covers everything even when the caller cannot name a domain', () => {
+    expect(coversDomain([fixpack(UNLIMITED)], null, NOW)).toBe(true);
+  });
+
+  it('is the only thing that unlocks a second domain', () => {
+    // The whole point: one $15 pack is one domain, and the second is $5.
+    expect(coversDomain([fixpack('one.com')], 'two.com', NOW)).toBe(false);
   });
 });

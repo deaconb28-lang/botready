@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 
-import { currentUser, hasFixpackFor } from '@/lib/auth';
+import { claimEntitlement, claimable, coversDomain, currentUser, entitlementsFor } from '@/lib/auth';
 import { purchaseCovers } from '@/lib/purchase';
 import { loadScanView } from '@/lib/scan-data';
 import { assembleFixPack } from '@/lib/fixpack';
@@ -45,11 +45,20 @@ export async function GET(request: Request, context: { params: Promise<{ scanId:
   const view = await loadScanView(scanId);
   if (!view) return text(404, 'No scan with that id.');
 
-  if (!(await hasFixpackFor(user.id, view.site.domain))) {
+  const held = await entitlementsFor(user.id);
+  if (!coversDomain(held, view.site.domain)) {
     return text(
       403,
       `${user.email} has not bought the fix pack for ${view.site.domain}. A pack covers one domain; the result page has the button to add this one. If you have bought it and the receipt went to a different address, sign in with that one.`,
     );
+  }
+
+  // Spend an unclaimed grant on this domain. A purchase the webhook could not
+  // tie to a site arrives with no domain on it, and it is worth one pack — this
+  // is the moment the buyer says which one, by asking for it. Stamped before
+  // the files go out so a second domain gets the paywall rather than a race.
+  if (claimable(held, view.site.domain)) {
+    await claimEntitlement(user.id, view.site.domain);
   }
 
   return await deliver(scanId);
