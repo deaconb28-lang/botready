@@ -1,6 +1,6 @@
 # Vendored fonts
 
-Three static instances, checked in so that the share card does not depend on a
+Four static instances, checked in so that the share card does not depend on a
 third-party fetch at request time. The card is the unit that travels, and a
 missing card is a broken distribution model, so it renders from disk.
 
@@ -13,6 +13,7 @@ were instantiated from their variable masters with `fontTools.varLib.instancer`.
 |---|---|---|---|
 | `FamiljenGrotesk-Bold.ttf` | Familjen Grotesk | wght 700 | the grade, the score, the wordmark |
 | `PublicSans-Regular.ttf` | Public Sans | wght 400 | the headline and the supporting line |
+| `PublicSans-Bold.ttf` | Public Sans | wght 700 | the button on the brand card |
 | `JetBrainsMono-Regular.ttf` | JetBrains Mono | wght 400 | the domain and the metadata |
 
 All three are licensed under the SIL Open Font License 1.1, which permits

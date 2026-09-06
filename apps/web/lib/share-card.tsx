@@ -5,7 +5,7 @@ import { ImageResponse } from 'next/og';
 
 import type { CheckStatus, Finding, Grade } from '@botready/core';
 
-import { RACE } from './copy';
+import { SITE } from './site';
 
 /**
  * The share card. One grade, one fact, one domain.
@@ -29,22 +29,7 @@ export const CARD_SIZE = { width: 1200, height: 630 } as const;
 
 export interface CardData {
   domain: string;
-  /** Empty on a brand card: nothing was checked, so nothing is dated. */
   checkedAt: string;
-  /**
-   * What this card is a card *of*.
-   *
-   * 'scan' is a measurement of somebody's site. 'brand' is a marketing page,
-   * where there is no site under test and therefore no verdict to report.
-   *
-   * This used to be inferred from `grade === null`, and that overload is the
-   * bug this field exists to make impossible: a null grade meant both "the
-   * scanner could not read this site" and "this is not a scan", so every
-   * marketing page unfurled as a coral NOT READ tile dated with the page's own
-   * last-edited date. The homepage link told everyone who saw it that
-   * botready.dev had failed botready.dev.
-   */
-  variant?: 'scan' | 'brand';
   /** Null for a blocked or errored scan, which still gets a card. */
   grade: Grade | null;
   total: number | null;
@@ -71,14 +56,16 @@ const C = {
 
 const PANEL = { inset: 44, shadow: 8, border: 2, pad: 44 } as const;
 
-export async function renderShareCard(data: CardData): Promise<ImageResponse> {
-  const [display, body, mono] = await Promise.all([
+/** The four faces, registered for next/og. Shared by both cards. */
+async function faces() {
+  const [display, body, bold, mono] = await Promise.all([
     loadFont('FamiljenGrotesk-Bold.ttf'),
     loadFont('PublicSans-Regular.ttf'),
+    loadFont('PublicSans-Bold.ttf'),
     loadFont('JetBrainsMono-Regular.ttf'),
   ]);
 
-  const fonts = [
+  return [
     ...(display
       ? [{ name: 'FamiljenGrotesk', data: display, weight: 700 as const, style: 'normal' as const }]
       : []),
@@ -86,17 +73,23 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
     ...(mono
       ? [{ name: 'JetBrainsMono', data: mono, weight: 400 as const, style: 'normal' as const }]
       : []),
+    // Last on purpose. Satori falls back through registered fonts in order for
+    // a glyph the named family lacks, and the scan card's mono metadata line
+    // gets its `·` that way. Slotting bold in ahead of mono re-resolved that
+    // one character and shifted 74 pixels on a card nothing else had touched.
+    // Nothing asks for weight 700 except the brand card's button, so bold has
+    // no business being anywhere but the end of the chain.
+    ...(bold ? [{ name: 'PublicSans', data: bold, weight: 700 as const, style: 'normal' as const }] : []),
   ];
+}
 
-  const displayFace = 'FamiljenGrotesk, sans-serif';
-  const bodyFace = 'PublicSans, sans-serif';
-  const monoFace = 'JetBrainsMono, monospace';
+const displayFace = 'FamiljenGrotesk, sans-serif';
+const bodyFace = 'PublicSans, sans-serif';
+const monoFace = 'JetBrainsMono, monospace';
 
-  const brand = data.variant === 'brand';
-  // The panel's usable width less the block on the left and the gap. The grade
-  // tile is 220 wide and the proof block is 470, so the words do not get the
-  // same room in both and a single hard-coded max overflowed one of them.
-  const textWidth = brand ? 490 : 750;
+export async function renderShareCard(data: CardData): Promise<ImageResponse> {
+  const fonts = await faces();
+
   const healthy = data.grade === 'A' || data.grade === 'B';
   const tile = tileLabel(data);
   const tileBg = healthy ? C.green : C.coral;
@@ -107,14 +100,8 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
 
   const meta = [
     data.scoringVersion ? `scoring v${data.scoringVersion}` : null,
-    // A marketing page was not checked, so it does not get a checked date.
-    // The old card dated itself with the page's last content edit, which read
-    // as a scan date for a scan that never happened.
-    brand || !data.checkedAt ? null : `checked ${data.checkedAt}`,
-    // On a scan card this names who did the measuring, beside somebody else's
-    // domain at the top. On a brand card the domain at the top is already
-    // ours, so this would just say it twice.
-    brand ? null : 'botready.dev',
+    `checked ${data.checkedAt}`,
+    'botready.dev',
   ]
     .filter(Boolean)
     .join(' · ');
@@ -205,13 +192,8 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
             </div>
           </div>
 
-          {/* Middle: the grade tile and the fact — or, on a brand card, the
-              argument the product is making instead of a verdict it has not
-              earned. */}
+          {/* Middle: the grade tile and the fact. */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
-            {brand ? (
-              <AgentProof mono={monoFace} />
-            ) : (
             <div
               style={{
                 display: 'flex',
@@ -252,7 +234,6 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
                 {data.grade ? 'Grade' : 'Not read'}
               </div>
             </div>
-            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minWidth: 0 }}>
               {data.total !== null ? (
@@ -278,7 +259,7 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
                   fontSize: data.headline.length > 48 ? 34 : 40,
                   lineHeight: 1.25,
                   color: C.ink,
-                  maxWidth: textWidth,
+                  maxWidth: 800,
                 }}
               >
                 {data.headline}
@@ -292,7 +273,7 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
                     fontSize: 22,
                     lineHeight: 1.35,
                     color: C.muted,
-                    maxWidth: textWidth,
+                    maxWidth: 800,
                   }}
                 >
                   {data.secondary}
@@ -324,106 +305,144 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
       ...CARD_SIZE,
       ...(fonts.length > 0 ? { fonts } : {}),
       headers: {
-        // A finished scan's card never changes, so it is immutable for a year.
-        // A brand card does: it is drawn from marketing copy, and an unfurler
-        // that cached it for a year would keep showing whatever the page used
-        // to say long after it stopped saying it.
-        'cache-control': brand
-          ? 'public, no-transform, max-age=3600, stale-while-revalidate=86400'
-          : 'public, immutable, no-transform, max-age=31536000',
+        // A finished scan's card never changes.
+        'cache-control': 'public, immutable, no-transform, max-age=31536000',
       },
     },
   );
 }
 
 /**
- * The five clients, on a brand card.
+ * The card for a marketing page: the homepage's own hero, at card size.
  *
- * This stands where the grade tile stands on a scan card, and it is doing the
- * same job: saying, in one glance, what the product is for. On a scan card
- * that is a measurement of your site. On a marketing page there is no site
- * under test, so it is the thing the product looks for — one URL, five
- * clients, three of them refused.
+ * This is a different card from the one above, not the same card with the
+ * score left out, and it exists because that was tried. The scan card decided
+ * its grade tile from `grade === null`, and null meant two different things —
+ * "the scanner could not read this site" and "this is not a scan". Marketing
+ * pages passed null for the second reason and got the picture of the first, so
+ * every marketing link unfurled as a coral tile reading NOT READ over the line
+ * "checked <the day the copy was last edited>". The homepage link told anyone
+ * who saw it that botready.dev had failed botready.dev.
  *
- * The rows are RACE from lib/copy.ts, the same example the homepage animates,
- * and they carry the same EXAMPLE label the homepage does. It is an
- * illustration of the finding, never a claim about anybody's site, and the
- * label is what keeps that true.
+ * A page with no verdict has nothing to put in a verdict-shaped hole, so it
+ * gets no hole. What travels instead is the thing a stranger meeting this
+ * product for the first time should see: the question, the box they type into,
+ * and what it costs them. Bare canvas, no panel — the hero is not sitting on a
+ * card on the site and it does not need one here either.
+ *
+ * The input is a still of `components/home/HeroScanCard`, down to the hard
+ * offset shadow drawn as a second rectangle, because Satori draws box-shadow
+ * badly. Nothing here is a claim about anybody's site, so there is nothing to
+ * date and nothing to be wrong about.
  */
-function AgentProof({ mono }: { mono: string }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        width: 470,
-        background: C.violet,
-        border: `2px solid ${C.ink}`,
-        borderRadius: 20,
-        padding: 18,
-      }}
-    >
+export async function renderBrandCard({ headline }: { headline: string }): Promise<ImageResponse> {
+  const fonts = await faces();
+
+  const bar = { width: 660, height: 88, shadow: 5 } as const;
+
+  return new ImageResponse(
+    (
       <div
         style={{
+          width: '100%',
+          height: '100%',
           display: 'flex',
-          fontFamily: mono,
-          fontSize: 13,
-          letterSpacing: '0.14em',
-          color: C.lime,
-          marginBottom: 12,
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: C.canvas,
+          color: C.ink,
+          fontFamily: bodyFace,
         }}
       >
-        ONE REQUEST, FIVE CLIENTS — EXAMPLE
-      </div>
-      {RACE.map((row) => (
         <div
-          key={row.name}
           style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            background: C.surface,
-            border: `2px solid ${C.ink}`,
-            borderRadius: 11,
-            padding: '7px 11px',
-            marginBottom: 7,
+            fontFamily: displayFace,
+            // Long page titles get a smaller size rather than a second line:
+            // two lines here would push the input off centre.
+            fontSize: headline.length > 22 ? 66 : 88,
+            lineHeight: 1,
+            letterSpacing: '-0.035em',
+            textAlign: 'center',
+            maxWidth: 1040,
           }}
         >
+          {headline}
+        </div>
+
+        {/* The scan box, with its shadow as a second rectangle behind it. */}
+        <div style={{ display: 'flex', position: 'relative', marginTop: 52 }}>
+          <div
+            style={{
+              position: 'absolute',
+              left: bar.shadow,
+              top: bar.shadow,
+              width: bar.width,
+              height: bar.height,
+              background: C.ink,
+              borderRadius: 16,
+            }}
+          />
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              width: 54,
-              flexShrink: 0,
-              background: row.ok ? C.lime : C.coral,
+              justifyContent: 'space-between',
+              width: bar.width,
+              height: bar.height,
+              background: C.surface,
               border: `2px solid ${C.ink}`,
-              borderRadius: 7,
-              fontFamily: mono,
-              fontSize: 15,
-              color: C.ink,
-              padding: '1px 0 3px',
+              borderRadius: 16,
+              padding: '0 11px 0 28px',
             }}
           >
-            {row.status}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              flexGrow: 1,
-              fontFamily: mono,
-              fontSize: 15,
-              color: C.ink,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-            }}
-          >
-            {row.name}
+            <div style={{ display: 'flex', fontFamily: monoFace, fontSize: 27, color: C.ink }}>
+              {SITE.name}
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: 60,
+                padding: '0 24px',
+                background: C.ink,
+                color: C.surface,
+                borderRadius: 11,
+                fontFamily: bodyFace,
+                fontWeight: 700,
+                fontSize: 23,
+              }}
+            >
+              Run the check
+            </div>
           </div>
         </div>
-      ))}
-    </div>
+
+        <div
+          style={{
+            display: 'flex',
+            marginTop: 34,
+            fontFamily: monoFace,
+            fontSize: 21,
+            color: C.subtle,
+          }}
+        >
+          free · no account · ~30 seconds
+        </div>
+      </div>
+    ),
+    {
+      ...CARD_SIZE,
+      ...(fonts.length > 0 ? { fonts } : {}),
+      headers: {
+        // Not immutable like a finished scan's card: this one is drawn from
+        // marketing copy, and an unfurler holding it for a year would keep
+        // showing whatever the page used to say.
+        'cache-control': 'public, no-transform, max-age=3600, stale-while-revalidate=86400',
+      },
+    },
   );
 }
 
