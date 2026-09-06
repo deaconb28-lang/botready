@@ -41,8 +41,9 @@ export interface ChartRow {
 }
 
 export interface ChartView {
+  /** Ranked sites only: everything in here has a score. */
   rows: ChartRow[];
-  /** Sites that refused the scanner. In the list, at the bottom, labelled. */
+  /** Sites that refused the scanner. Counted on the page, never listed. */
   blocked: number;
   lastCheckedAt: string | null;
   scoringVersion: string | null;
@@ -76,17 +77,32 @@ export async function loadChart(segment?: string): Promise<ChartView> {
   const { data, error } = await query;
   if (error) throw new Error(`Could not read the chart: ${error.message}`);
 
-  const raw = (data ?? []) as Raw[];
-  const rows = raw.map(toRow);
+  const all = (data ?? []).map((r) => toRow(r as Raw));
+
+  // Only sites that have a score. A chart is an ordering, and a site with no
+  // number has no place in one — a row reading "—" occupies a rank it did not
+  // earn and invites the reader to compare it with the rows above, which is the
+  // one thing it cannot be compared with.
+  //
+  // They are counted rather than listed. "10 refused the crawler" is true, is
+  // the product's whole argument in one line, and costs no rows; naming them
+  // would be a leaderboard of sites that never entered.
+  //
+  // Ranks survive the filter untouched. The view orders by total descending
+  // with nulls last over a unique domain, so the scored rows already hold 1..n
+  // and nothing needs renumbering.
+  const rows = all.filter((r) => r.status !== 'blocked' && r.total !== null);
 
   return {
     rows,
-    blocked: rows.filter((r) => r.status === 'blocked').length,
-    lastCheckedAt: raw.reduce<string | null>(
-      (newest, r) => (r.finished_at && (!newest || r.finished_at > newest) ? r.finished_at : newest),
+    blocked: all.filter((r) => r.status === 'blocked').length,
+    // From the rows on the page rather than from every row, so "updated 4 hours
+    // ago" describes what is being looked at.
+    lastCheckedAt: rows.reduce<string | null>(
+      (newest, r) => (r.finishedAt && (!newest || r.finishedAt > newest) ? r.finishedAt : newest),
       null,
     ),
-    scoringVersion: raw.find((r) => r.scoring_version)?.scoring_version ?? null,
+    scoringVersion: (data ?? []).map((r) => (r as Raw).scoring_version).find(Boolean) ?? null,
   };
 }
 

@@ -25,7 +25,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function ChartPage() {
   const chart = await loadChart();
-  const scored = chart.rows.filter((r) => r.status !== 'blocked').length;
+  // loadChart returns ranked sites only, so this is the whole list.
+  const scored = chart.rows.length;
 
   return (
     <div className="min-h-dvh bg-canvas">
