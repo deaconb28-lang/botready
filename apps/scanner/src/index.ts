@@ -40,6 +40,11 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       return json(res, 200, {
         status: 'ok',
         scannerVersion: SCANNER_VERSION,
+        // The gate's limit, so SCANNER_CONCURRENCY can be confirmed from
+        // outside rather than inferred from a deploy having happened. It is
+        // read at boot, and the only way to see what the running process
+        // actually got is to ask the running process.
+        concurrency: queue.limit,
         inFlight: queue.inFlight,
         queued: queue.waiting,
         uptimeSeconds: Math.round(process.uptime()),
