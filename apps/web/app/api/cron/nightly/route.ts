@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 
-import { scoreDetail, type CheckResult } from '@botready/core';
-
 import { authoriseCron } from '@/lib/cron';
 import { defaultKV } from '@/lib/kv';
 import { enqueueScan } from '@/lib/queue';
 import { rememberScan } from '@/lib/scan-gate';
-import { createScan, persistScore } from '@/lib/scan-data';
+import { createScan } from '@/lib/scan-data';
 import { LIMITS } from '@/lib/site';
+import { sweepUnscored } from '@/lib/sweep';
 import { serviceClient } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -30,8 +29,10 @@ export const maxDuration = 300;
  * a window longer than a night. Oldest-first means every site comes round, and
  * the ones nobody has looked at in longest come round first.
  *
- * Also sweeps for finished scans that have no score row yet and writes one,
- * which is what keeps the index view current if a result page was never opened.
+ * Sweeps for finished scans with no score row before it starts, which clears
+ * anything left behind since the last run. It cannot clear the scans it is
+ * about to start — those settle minutes after this function returns — so
+ * /api/cron/sweep runs half an hour later and catches them. See lib/sweep.ts.
  */
 const SPREAD_SECONDS = 20;
 const COHORT = 200;
@@ -87,45 +88,4 @@ export async function GET(request: Request) {
     scoresWritten: swept,
     windowMinutes: Math.ceil(((sites?.length ?? 0) * SPREAD_SECONDS) / 60),
   });
-}
-
-/** Finished scans with evidence but no score row. */
-async function sweepUnscored(): Promise<number> {
-  const supabase = serviceClient();
-
-  // Scans complete in the last two days, so a long-lived backlog is handled a
-  // night at a time rather than in one call that times out.
-  const since = new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString();
-  const { data: scans } = await supabase
-    .from('scans')
-    .select('id, scores(id)')
-    .eq('status', 'complete')
-    .gte('finished_at', since)
-    .limit(500);
-
-  let written = 0;
-  for (const scan of scans ?? []) {
-    const row = scan as { id: string; scores: Array<{ id: string }> | null };
-    if (row.scores && row.scores.length > 0) continue;
-
-    const { data: evidence } = await supabase
-      .from('evidence')
-      .select('check_key, status, observed, duration_ms')
-      .eq('scan_id', row.id);
-
-    const results: CheckResult[] = (evidence ?? []).map((e) => ({
-      key: String(e.check_key),
-      status: e.status as CheckResult['status'],
-      observed: (e.observed ?? {}) as Record<string, unknown>,
-      durationMs: Number(e.duration_ms ?? 0),
-    }));
-
-    if (results.length === 0) continue;
-    // scoreDetail is what persistScore runs; called here only so a scan with
-    // evidence that cannot be scored is skipped rather than half-written.
-    scoreDetail(results);
-    await persistScore(row.id, results);
-    written += 1;
-  }
-  return written;
 }
