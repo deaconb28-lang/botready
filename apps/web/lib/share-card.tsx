@@ -5,6 +5,8 @@ import { ImageResponse } from 'next/og';
 
 import type { CheckStatus, Finding, Grade } from '@botready/core';
 
+import { RACE } from './copy';
+
 /**
  * The share card. One grade, one fact, one domain.
  *
@@ -27,7 +29,22 @@ export const CARD_SIZE = { width: 1200, height: 630 } as const;
 
 export interface CardData {
   domain: string;
+  /** Empty on a brand card: nothing was checked, so nothing is dated. */
   checkedAt: string;
+  /**
+   * What this card is a card *of*.
+   *
+   * 'scan' is a measurement of somebody's site. 'brand' is a marketing page,
+   * where there is no site under test and therefore no verdict to report.
+   *
+   * This used to be inferred from `grade === null`, and that overload is the
+   * bug this field exists to make impossible: a null grade meant both "the
+   * scanner could not read this site" and "this is not a scan", so every
+   * marketing page unfurled as a coral NOT READ tile dated with the page's own
+   * last-edited date. The homepage link told everyone who saw it that
+   * botready.dev had failed botready.dev.
+   */
+  variant?: 'scan' | 'brand';
   /** Null for a blocked or errored scan, which still gets a card. */
   grade: Grade | null;
   total: number | null;
@@ -75,6 +92,11 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
   const bodyFace = 'PublicSans, sans-serif';
   const monoFace = 'JetBrainsMono, monospace';
 
+  const brand = data.variant === 'brand';
+  // The panel's usable width less the block on the left and the gap. The grade
+  // tile is 220 wide and the proof block is 470, so the words do not get the
+  // same room in both and a single hard-coded max overflowed one of them.
+  const textWidth = brand ? 490 : 750;
   const healthy = data.grade === 'A' || data.grade === 'B';
   const tile = tileLabel(data);
   const tileBg = healthy ? C.green : C.coral;
@@ -85,8 +107,14 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
 
   const meta = [
     data.scoringVersion ? `scoring v${data.scoringVersion}` : null,
-    `checked ${data.checkedAt}`,
-    'botready.dev',
+    // A marketing page was not checked, so it does not get a checked date.
+    // The old card dated itself with the page's last content edit, which read
+    // as a scan date for a scan that never happened.
+    brand || !data.checkedAt ? null : `checked ${data.checkedAt}`,
+    // On a scan card this names who did the measuring, beside somebody else's
+    // domain at the top. On a brand card the domain at the top is already
+    // ours, so this would just say it twice.
+    brand ? null : 'botready.dev',
   ]
     .filter(Boolean)
     .join(' · ');
@@ -177,8 +205,13 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
             </div>
           </div>
 
-          {/* Middle: the grade tile and the fact. */}
+          {/* Middle: the grade tile and the fact — or, on a brand card, the
+              argument the product is making instead of a verdict it has not
+              earned. */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
+            {brand ? (
+              <AgentProof mono={monoFace} />
+            ) : (
             <div
               style={{
                 display: 'flex',
@@ -219,6 +252,7 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
                 {data.grade ? 'Grade' : 'Not read'}
               </div>
             </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, minWidth: 0 }}>
               {data.total !== null ? (
@@ -244,7 +278,7 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
                   fontSize: data.headline.length > 48 ? 34 : 40,
                   lineHeight: 1.25,
                   color: C.ink,
-                  maxWidth: 800,
+                  maxWidth: textWidth,
                 }}
               >
                 {data.headline}
@@ -258,7 +292,7 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
                     fontSize: 22,
                     lineHeight: 1.35,
                     color: C.muted,
-                    maxWidth: 800,
+                    maxWidth: textWidth,
                   }}
                 >
                   {data.secondary}
@@ -290,10 +324,106 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
       ...CARD_SIZE,
       ...(fonts.length > 0 ? { fonts } : {}),
       headers: {
-        // A finished scan's card never changes.
-        'cache-control': 'public, immutable, no-transform, max-age=31536000',
+        // A finished scan's card never changes, so it is immutable for a year.
+        // A brand card does: it is drawn from marketing copy, and an unfurler
+        // that cached it for a year would keep showing whatever the page used
+        // to say long after it stopped saying it.
+        'cache-control': brand
+          ? 'public, no-transform, max-age=3600, stale-while-revalidate=86400'
+          : 'public, immutable, no-transform, max-age=31536000',
       },
     },
+  );
+}
+
+/**
+ * The five clients, on a brand card.
+ *
+ * This stands where the grade tile stands on a scan card, and it is doing the
+ * same job: saying, in one glance, what the product is for. On a scan card
+ * that is a measurement of your site. On a marketing page there is no site
+ * under test, so it is the thing the product looks for — one URL, five
+ * clients, three of them refused.
+ *
+ * The rows are RACE from lib/copy.ts, the same example the homepage animates,
+ * and they carry the same EXAMPLE label the homepage does. It is an
+ * illustration of the finding, never a claim about anybody's site, and the
+ * label is what keeps that true.
+ */
+function AgentProof({ mono }: { mono: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        width: 470,
+        background: C.violet,
+        border: `2px solid ${C.ink}`,
+        borderRadius: 20,
+        padding: 18,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          fontFamily: mono,
+          fontSize: 13,
+          letterSpacing: '0.14em',
+          color: C.lime,
+          marginBottom: 12,
+        }}
+      >
+        ONE REQUEST, FIVE CLIENTS — EXAMPLE
+      </div>
+      {RACE.map((row) => (
+        <div
+          key={row.name}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            background: C.surface,
+            border: `2px solid ${C.ink}`,
+            borderRadius: 11,
+            padding: '7px 11px',
+            marginBottom: 7,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 54,
+              flexShrink: 0,
+              background: row.ok ? C.lime : C.coral,
+              border: `2px solid ${C.ink}`,
+              borderRadius: 7,
+              fontFamily: mono,
+              fontSize: 15,
+              color: C.ink,
+              padding: '1px 0 3px',
+            }}
+          >
+            {row.status}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexGrow: 1,
+              fontFamily: mono,
+              fontSize: 15,
+              color: C.ink,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+            }}
+          >
+            {row.name}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
