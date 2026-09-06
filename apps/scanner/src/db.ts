@@ -16,8 +16,32 @@ import type { CheckResult, ScanStatus } from '@botready/core';
 import { env } from './env';
 import { SCANNER_VERSION } from './version';
 
+/**
+ * Pool size, which deliberately does not track concurrency one for one.
+ *
+ * It used to be `concurrency + 1`, on the reasonable-sounding theory that a
+ * scan in flight needs a connection. It does not: a scan runs for twenty to
+ * thirty-five seconds and touches the database twice, at `markRunning` and at
+ * `markFinished`, for something on the order of a hundred milliseconds in
+ * total. The other 99.7% of its life it is doing HTTP a second apart.
+ *
+ * Sized off concurrency it becomes the first thing to break when concurrency
+ * goes up for a launch: these are session-pooler connections, Supavisor holds
+ * a server connection for each one for as long as it is open, and the pool has
+ * a size limit well under the number of scans we would like to run at once.
+ * Exceeding it does not report itself as "too many connections" either — it
+ * surfaces as connect timeouts inside scans, which look like the scanned site
+ * being slow.
+ *
+ * Ten is far more than the arithmetic needs (ten connections serve 350
+ * connection-seconds per 35-second window against a demand of a few) and
+ * postgres.js queues anything beyond it, which is the correct behaviour for
+ * work this short.
+ */
+const POOL_MAX = 10;
+
 export const sql = postgres(env.databaseUrl, {
-  max: Math.max(2, env.concurrency + 1),
+  max: Math.min(POOL_MAX, Math.max(2, env.concurrency + 1)),
   idle_timeout: 0, // long-lived on purpose; see the note above
   connect_timeout: 15,
   prepare: true,
