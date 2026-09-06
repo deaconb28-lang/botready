@@ -24,3 +24,4 @@ apps/web/assets/icon/.ico-*.png
 marketing/video/out/
 marketing/video/footage/*.mp4
 marketing/video/titles/*.mp4
+marketing/video/cards/*.png
