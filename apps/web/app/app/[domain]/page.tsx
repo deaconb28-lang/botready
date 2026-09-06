@@ -41,7 +41,12 @@ export default async function OverviewPage({
    * Which bot. The scene is picked from the result rather than chosen once and
    * left, so it says the same thing the numbers beside it say: refused at a
    * boundary when a client was turned away, reading when there is work in the
-   * list, surfing when there is not, waiting when there is no scan yet.
+   * list, cheering at an A, waiting when there is no scan yet.
+   *
+   * The cheer is reserved for an A and read from the grade, the same rule the
+   * result page's confetti follows. A bot delighted about a B would make the
+   * delight mean nothing at an A, which is the only place it is worth
+   * anything.
    */
   const scene: BotVariant = !p.score
     ? p.status === 'blocked'
@@ -49,9 +54,11 @@ export default async function OverviewPage({
       : 'waiting'
     : refused.length > 0
       ? 'refused'
-      : p.findings.length > 0
-        ? 'reading'
-        : 'surfing';
+      : /^A/.test(p.score.grade)
+        ? 'passing'
+        : p.findings.length > 0
+          ? 'reading'
+          : 'surfing';
 
   const headline = !p.score
     ? p.status === 'blocked'

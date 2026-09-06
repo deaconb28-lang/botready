@@ -9,6 +9,16 @@ export const SITE = {
   /** Used for absolute URLs in OG tags and share cards. */
   origin: process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'https://botready.dev',
   tagline: 'Are you BotReady?',
+  /**
+   * The app's version, shown in the footer.
+   *
+   * Deliberately not the scanner's version or the scoring version — those two
+   * are recorded on every scan and score row because a reader has to be able
+   * to tell which rules produced a number. This one is only the build of the
+   * site somebody is looking at, which is a different question and a much less
+   * important one.
+   */
+  version: '1.01.01',
 } as const;
 
 /**

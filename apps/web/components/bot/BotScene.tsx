@@ -25,7 +25,7 @@
 
 import { cx } from '@/components/ui';
 
-export type BotVariant = 'surfing' | 'reading' | 'waiting' | 'refused' | 'scanning';
+export type BotVariant = 'surfing' | 'reading' | 'waiting' | 'refused' | 'scanning' | 'passing';
 
 /** House tokens, in the roles the handoff names. */
 const PALETTE = {
@@ -45,6 +45,7 @@ const LABEL: Record<BotVariant, string> = {
   waiting: 'A bot waiting between requests, one second apart',
   refused: 'A bot stopped at a boundary marked 403, not crossing it',
   scanning: 'A bot watching a radar sweep while a scan runs',
+  passing: 'A bot cheering beside a status of GOOD, with every client returning 200',
 };
 
 export function BotScene({
@@ -71,6 +72,7 @@ export function BotScene({
         {variant === 'waiting' ? <Waiting /> : null}
         {variant === 'refused' ? <Refused /> : null}
         {variant === 'scanning' ? <Scanning /> : null}
+        {variant === 'passing' ? <Passing /> : null}
       </svg>
     </div>
   );
@@ -400,6 +402,80 @@ function Waiting() {
         <circle className="br-fx br-tick-1" cx="278" cy="196" r="7" fill={PALETTE.lime} />
         <circle className="br-fx br-tick-2" cx="304" cy="196" r="7" fill={PALETTE.lime} />
         <circle className="br-fx br-tick-3" cx="330" cy="196" r="7" fill={PALETTE.lime} />
+      </g>
+    </>
+  );
+}
+
+/**
+ * An A. Every client got in, so the bot is pleased about it.
+ *
+ * The only scene where the bot has a face doing something. BotBody draws two
+ * eyes and no mouth on purpose — it is reused by five scenes and a fixed
+ * expression would be wrong in most of them — so the smile is drawn here, over
+ * the head, and belongs to this scene alone.
+ *
+ * The bubble says status GOOD! because that is what the panel beside it says
+ * in numbers, and this is the one result where the drawing gets to agree
+ * enthusiastically. It is picked from the grade rather than set by hand, so it
+ * cannot end up cheering next to a D.
+ *
+ * Both arms go up and outward from low on the torso, clearing the head and the
+ * bubble. The two 200 stickers are the reason for the celebration rather than
+ * decoration: every client got the page.
+ */
+function Passing() {
+  return (
+    <>
+      <Sticker
+        className="br-fx br-float-1"
+        x={34}
+        y={54}
+        width={66}
+        height={30}
+        radius={9}
+        fill={PALETTE.white}
+        chip={{ x: 42, y: 62, fill: PALETTE.lime }}
+        label="200"
+        labelX={62}
+        labelY={74}
+        size={11}
+      />
+      <Sticker
+        className="br-fx br-float-3"
+        x={40}
+        y={128}
+        width={66}
+        height={30}
+        radius={9}
+        fill={PALETTE.white}
+        chip={{ x: 48, y: 136, fill: PALETTE.lime }}
+        label="200"
+        labelX={68}
+        labelY={148}
+        size={11}
+      />
+      <Floor />
+
+      {/* The bubble sits outside the bob so the words stay still and legible
+          while the bot moves under them. */}
+      <g>
+        <rect x={252} y={74} width={116} height={42} rx={12} fill={PALETTE.lime} stroke={PALETTE.ink} strokeWidth="2.5" />
+        <path d="M262 116l-14 16 26-8Z" fill={PALETTE.lime} stroke={PALETTE.ink} strokeWidth="2.5" strokeLinejoin="round" />
+        <text x={264} y={101} fontFamily={MONO} fontSize="14" fontWeight="600" fill={PALETTE.ink}>
+          status GOOD!
+        </text>
+      </g>
+
+      <g className="br-fx br-bob-soft">
+        <Signal />
+        {/* Up and outward from low on the torso, which is what clears the head
+            on one side and the bubble's tail on the other. */}
+        <path d="M186 184l-26-26" stroke={PALETTE.ink} strokeWidth="7" strokeLinecap="round" />
+        <path d="M232 184l26-26" stroke={PALETTE.ink} strokeWidth="7" strokeLinecap="round" />
+        <BotBody />
+        <path d="M196 148q13 11 26 0" stroke={PALETTE.ink} strokeWidth="3" strokeLinecap="round" fill="none" />
+        <Standing />
       </g>
     </>
   );

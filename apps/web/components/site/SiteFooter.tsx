@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { CONTACT_EMAIL, CREDIT, PUBLIC_INDEX_LISTED } from '@/lib/site';
+import { CONTACT_EMAIL, CREDIT, PUBLIC_INDEX_LISTED, SITE } from '@/lib/site';
 import { ProductHuntBadge } from './ProductHuntBadge';
 
 export function SiteFooter() {
@@ -8,8 +8,11 @@ export function SiteFooter() {
     <footer className="border-t border-hairline-4 bg-paper">
       <div className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-[30px] px-6 py-9 sm:px-[26px]">
         <div>
-          <div className="display text-[18px]">
-            botready<span className="text-placeholder">.dev</span>
+          <div className="flex items-baseline gap-[9px]">
+            <span className="display text-[18px]">
+              botready<span className="text-placeholder">.dev</span>
+            </span>
+            <span className="font-mono text-[11.5px] text-placeholder">v{SITE.version}</span>
           </div>
           <p className="mt-2 max-w-[38ch] text-[14.5px] leading-[1.55] text-subtle-2">
             We ask your site the way an AI agent would, then hand you the files that fix what it found.
