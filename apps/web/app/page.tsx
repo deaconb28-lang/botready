@@ -233,8 +233,8 @@ function WhyAeo() {
               </div>
             ))}
           </div>
-          <h3 className="display mb-2 mt-[18px] text-[19px]">The fix is four files</h3>
-          <p className="text-[15px] leading-[1.55] text-muted">We write them from your own pages. Upload the four, re-run the check, and watch the number move.</p>
+          <h3 className="display mb-2 mt-[18px] text-[19px]">The fix is {FIX_FILES.length} files</h3>
+          <p className="text-[15px] leading-[1.55] text-muted">We write them from your own pages. Five are ready to upload; three carry the questions an assistant asks, with the answers left for you.</p>
         </Card>
       </div>
     </Container>

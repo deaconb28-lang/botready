@@ -25,6 +25,8 @@
  */
 
 
+import { PACK_FILES } from '@botready/core';
+
 export interface MarketingCopy {
   badge: string;
   heroSub: string;
@@ -58,14 +60,14 @@ export const COPY: MarketingCopy = {
     whyPoints: [
       'Analytics cannot show you a visit that never happened.',
       'Usually it is a Cloudflare default nobody switched on deliberately.',
-      'Four files fix it. Most people are done in ten minutes.',
+      'Eight files fix it. Five you upload, three you fill in.',
     ],
     agentNote: 'Same URL, same second, two clients. Chrome got 9,240 characters of your pitch. ClaudeBot got a challenge page and gave up.',
     stepsTitle: 'Thirty seconds, start to finish',
     steps: [
       'Paste a URL. We fetch it as Chrome, ClaudeBot, GPTBot, PerplexityBot and Google-Extended.',
       "You get a grade, six category scores, and a plain list of what is blocking you.",
-      'Four files, written from your own pages. Upload, re-run, watch the number climb.',
+      'Eight files, written from your own pages. Upload, fill in the blanks, re-run.',
     ],
     ctaBody: 'Free, and the result is a page you can send straight to whoever owns the site.',
     invisible:
@@ -106,4 +108,20 @@ export const RACE = [
   { name: 'Google-Extended', status: '200', note: 'body is client-side', ok: true },
 ] as const;
 
-export const FIX_FILES = ['llms.txt', 'robots.txt', 'waf-rule.txt', 'pricing.jsonld'] as const;
+/**
+ * The filenames the marketing pages print, straight from the generator.
+ *
+ * This used to be a hand-written list here, and it had drifted: it named
+ * `pricing.jsonld`, which no generator has ever produced, and left out
+ * `markdown-alternates.html`, which every pack contains. The site was
+ * describing a product it does not ship, and nothing could have caught it,
+ * because the two lists had no relationship. Now there is one list and a test
+ * in packages/core holds it to what buildFixPack actually emits.
+ */
+export const FIX_FILES = PACK_FILES.map((f) => f.name);
+
+/** How many arrive finished, and how many arrive as forms to fill in. */
+export const FIX_FILE_SPLIT = {
+  ready: PACK_FILES.filter((f) => !f.fills).length,
+  toFill: PACK_FILES.filter((f) => f.fills).length,
+} as const;

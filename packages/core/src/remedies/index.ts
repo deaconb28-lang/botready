@@ -23,9 +23,36 @@ import { buildJsonLd } from './jsonld';
 import { buildWafRule } from './waf-rule';
 import { buildAgentPrompt } from './agent-prompt';
 import { buildPunchList, type PunchItem } from './punchlist';
+import { buildAnswerPack } from './answer-pack';
 
 export { punchListMarkdown, type Effort, type PunchItem } from './punchlist';
 export { buildAnswerPack } from './answer-pack';
+
+/**
+ * What buildFixPack emits, in order, and the only place the marketing site is
+ * allowed to learn it from.
+ *
+ * The landing page and the pricing page both print a list of filenames, and
+ * before this existed they printed their own hand-written copy of it — which
+ * had drifted to name `pricing.jsonld`, a file no generator has ever produced,
+ * while omitting one that is. A visitor comparing the list to the zip would
+ * have found the site describing a product it does not ship.
+ *
+ * `fills` marks the ones that arrive as forms rather than finished files. The
+ * access files are paste-and-done; the two answer files carry blanks only the
+ * site's owner can fill, and saying so is the difference between a promise the
+ * pack keeps and one it does not.
+ */
+export const PACK_FILES = [
+  { name: 'llms.txt', fills: false },
+  { name: 'robots.txt', fills: false },
+  { name: 'waf-rule.txt', fills: false },
+  { name: 'markdown-alternates.html', fills: false },
+  { name: 'jsonld.html', fills: false },
+  { name: 'answers.html', fills: true },
+  { name: 'fit.html', fills: true },
+  { name: 'corroboration.md', fills: true },
+] as const;
 export { brandFrom, oneLine, pathOf } from './shared';
 
 export interface FixFile {
@@ -64,11 +91,17 @@ export function buildFixPack(domain: string, results: CheckResult[]): FixPack {
   const facts = readFacts(results);
 
   const files: FixFile[] = [
+    // Access: paste or upload these and you are done with them.
     buildLlmsTxt(domain, facts),
     buildRobotsBlock(domain, facts),
     buildWafRule(domain, facts),
     buildMarkdownAlternates(domain, facts),
     buildJsonLd(domain, facts),
+    // Recommendation: these three are forms. The first two carry the questions
+    // and the fields with the answers left blank, because a scan cannot see the
+    // sentence that answers "what does it cost" and will not invent one; the
+    // third is a checklist for the half that is not on this server at all.
+    ...buildAnswerPack(domain, results),
   ];
 
   const pack: FixPack = { domain, files, punchList: buildPunchList(results), agentPrompt: '' };

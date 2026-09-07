@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildAnswerPack } from '../src/remedies';
+import { PACK_FILES, buildAnswerPack, buildFixPack } from '../src/remedies';
 import type { CheckResult } from '../src/types';
 
 function fixture(name: string): CheckResult[] {
@@ -191,5 +191,54 @@ describe('corroboration.md', () => {
   it('says plainly what it cannot know', () => {
     const file = pack('reference-a').byName('corroboration.md');
     expect(file.content).toMatch(/will not tell you/i);
+  });
+});
+
+describe('the answer files inside the fix pack', () => {
+  it('ships all three, after the access files', () => {
+    const pack = buildFixPack(DOMAIN, fixture('reference-a'));
+    expect(pack.files.map((f) => f.name)).toEqual([
+      'llms.txt',
+      'robots.txt',
+      'waf-rule.txt',
+      'markdown-alternates.html',
+      'jsonld.html',
+      'answers.html',
+      'fit.html',
+      'corroboration.md',
+    ]);
+  });
+
+  it('matches PACK_FILES, which is what the marketing site prints', () => {
+    // The reason this test exists: the landing page used to keep its own copy
+    // of this list, and it had drifted to name `pricing.jsonld` — a file no
+    // generator has ever produced — while leaving out one that is. The site was
+    // describing a product it does not ship. Now both read PACK_FILES, and this
+    // is what stops PACK_FILES itself from going stale.
+    const pack = buildFixPack(DOMAIN, fixture('reference-a'));
+    expect(pack.files.map((f) => f.name)).toEqual(PACK_FILES.map((f) => f.name));
+  });
+
+  it('marks exactly the files that arrive as forms', () => {
+    // "Upload these and you are done" is true of the access files and false of
+    // the answer files, and the pricing page promises one of those two things.
+    expect(PACK_FILES.filter((f) => f.fills).map((f) => f.name)).toEqual([
+      'answers.html',
+      'fit.html',
+      'corroboration.md',
+    ]);
+  });
+
+  it('names the three answer files in the agent prompt', () => {
+    // Every pack file that lands in the repository is named in the prompt, so a
+    // coding agent is told where to put it. waf-rule.txt is deliberately not:
+    // targetPath renders it as "edge: WAF custom rule (not a file in the repo)"
+    // because it is a console change, and telling an agent to commit it would
+    // be telling it to do the wrong thing.
+    const pack = buildFixPack(DOMAIN, fixture('reference-a'));
+    for (const name of ['answers.html', 'fit.html', 'corroboration.md']) {
+      expect(pack.agentPrompt).toContain(name);
+    }
+    expect(pack.agentPrompt).not.toContain('waf-rule.txt');
   });
 });
