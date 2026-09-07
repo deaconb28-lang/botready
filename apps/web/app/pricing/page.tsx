@@ -76,7 +76,7 @@ export default function PricingPage() {
       <Container as="main" id="main" width={1100} className="pb-24 pt-14">
         <div className="text-center">
           <span className="eyebrow text-subtle-2">Pricing</span>
-          <h1 className="display-tight mx-auto mt-3 max-w-[26ch] text-[clamp(38px,5.2vw,64px)]">Simple, transparent pricing</h1>
+          <h1 className="display-tight mx-auto mt-3 max-w-[26ch] text-[clamp(38px,5.2vw,64px)]">The check is free. The fix is $15.</h1>
         </div>
 
         <div className="mt-11 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[18px]">
@@ -179,8 +179,8 @@ export default function PricingPage() {
         <div className="mt-[52px] max-w-[66ch] border-t border-hairline-4 pt-7">
           <h2 className="display mb-3 text-[28px] tracking-[-0.03em]">Why the score is free</h2>
           <p className="mb-3 text-[16.5px] leading-[1.65] text-muted">
-            Charging to see your score would mean charging most people to learn they are fine. We would rather show the whole thing and let
-            the files earn their own money.
+            Charging to see your score means charging most people to find out they are fine. So the whole diagnosis is free, and the files
+            earn their own money.
           </p>
           <p className="text-[16.5px] leading-[1.65] text-muted">
             {PUBLIC_INDEX_LISTED ? (

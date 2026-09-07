@@ -33,7 +33,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
     path: '/',
     title: 'Are you BotReady?',
     description:
-      'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you.',
+      'ChatGPT, Claude and Perplexity answer questions about your category daily. See what they get from your site, and the files that fix it.',
     updated: '2026-09-05',
     sources: ['apps/web/app/page.tsx', 'apps/web/components/home'],
     changeFrequency: 'weekly',
@@ -44,7 +44,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
     path: '/what-we-check',
     title: 'What we check',
     description:
-      'The full check catalog and the weights, published, so the score can be argued with rather than believed.',
+      'All 21 checks and every weight, published, so you can argue with the score instead of taking our word for it.',
     updated: '2026-09-02',
     sources: ['apps/web/app/what-we-check', 'packages/core/checks.json'],
     changeFrequency: 'monthly',
@@ -54,7 +54,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   {
     path: '/pricing',
     title: 'Pricing',
-    description: 'The diagnosis is free. The files are not. A one-time fix pack and monthly monitoring.',
+    description: 'The check is free and always will be. The fix pack is $15 once, monitoring is $5 a month.',
     updated: '2026-09-05',
     sources: ['apps/web/app/pricing'],
     changeFrequency: 'monthly',

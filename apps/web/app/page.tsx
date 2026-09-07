@@ -133,9 +133,9 @@ function BrowserVsAgent() {
                 <span>Docs</span>
               </span>
             </div>
-            <div className="display text-[22px] leading-[1.15]">Plan the week, not the backlog</div>
+            <div className="display text-[22px] leading-[1.15]">Weekly planning for small teams</div>
             <p className="mt-2 text-[12.5px] leading-[1.55] text-muted">
-              A tracker for teams of five who would rather ship than groom tickets. Free for your first five people.
+              Issues, roadmap and a weekly plan in one place. Free for your first five people.
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2">
               {[
@@ -189,8 +189,8 @@ function WhyAeo() {
     <Container as="section" id="aeo" className="pt-20">
       <div className="mx-auto max-w-[640px] text-center">
         <Eyebrow>Why AEO matters [03]</Eyebrow>
-        <h2 className="display mt-3 text-[clamp(30px,4vw,46px)] leading-[1.06] tracking-[-0.03em]">Answer engines are the new front door</h2>
-        <p className="mt-3 text-[16.5px] leading-[1.6] text-muted">Three things change for a startup the day buyers start asking instead of searching.</p>
+        <h2 className="display mt-3 text-[clamp(30px,4vw,46px)] leading-[1.06] tracking-[-0.03em]">Three ways this quietly costs you customers</h2>
+        <p className="mt-3 text-[16.5px] leading-[1.6] text-muted">None of them show up in a dashboard, which is why they run for months.</p>
       </div>
       <div className="mt-[34px] grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[18px]">
         <Card radius="panel" shadow={5} lift className="p-6">
@@ -211,7 +211,7 @@ function WhyAeo() {
           </div>
           <h3 className="display mb-2 mt-[18px] text-[19px]">The shortlist forms without you</h3>
           <p className="text-[15px] leading-[1.55] text-muted">
-            Every prompt in your category ends with three names. BotReady gets you into that list by fixing the one thing keeping you out: whether the assistant can read you at all.
+            Ask any assistant about your category and you get about three names back. We fix the one thing keeping you off that list — whether it can read your site at all.
           </p>
         </Card>
 
@@ -221,7 +221,7 @@ function WhyAeo() {
           </div>
           <h3 className="display mb-2 mt-[18px] text-[19px]">Nobody chose the block</h3>
           <p className="text-[15px] leading-[1.55] text-muted">
-            One default firewall rule shut out every AI client at once, and it has been costing you answers ever since. Thirty seconds tells you whether it is you.
+            One Cloudflare default turns away every AI client at once, and it has been running quietly since the day somebody enabled it. Thirty seconds tells you whether that is you.
           </p>
         </Card>
 
@@ -234,7 +234,7 @@ function WhyAeo() {
             ))}
           </div>
           <h3 className="display mb-2 mt-[18px] text-[19px]">The fix is four files</h3>
-          <p className="text-[15px] leading-[1.55] text-muted">No rebuild, no migration, no engineer for a week. Upload what we generate and re-run the check.</p>
+          <p className="text-[15px] leading-[1.55] text-muted">We write them from your own pages. Upload the four, re-run the check, and watch the number move.</p>
         </Card>
       </div>
     </Container>
@@ -293,7 +293,7 @@ function ClosingCta() {
   return (
     <Container as="section" className="pb-[100px] pt-20">
       <div className={cx('edge rounded-[26px] bg-white px-6 py-[52px] text-center sm:px-10')}>
-        <h2 className="display text-[clamp(30px,4.2vw,50px)] leading-[1.05] tracking-[-0.03em]">So — are you BotReady?</h2>
+        <h2 className="display text-[clamp(30px,4.2vw,50px)] leading-[1.05] tracking-[-0.03em]">Find out in thirty seconds</h2>
         <p className="mx-auto mt-[14px] max-w-[46ch] text-[16.5px] leading-[1.55] text-muted">
           <Copy k="ctaBody" />
         </p>

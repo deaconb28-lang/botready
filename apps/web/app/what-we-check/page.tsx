@@ -60,7 +60,7 @@ export default function WhatWeCheckPage() {
             a number that moves for reasons the reader cannot see is a number
             they have no reason to believe. */}
         <section className="edge mt-9 rounded-[18px] bg-white p-[22px] shadow-hard-3">
-          <h2 className="display text-[19px]">Not every check is asked of every site</h2>
+          <h2 className="display text-[19px]">Some checks do not apply to your sector</h2>
           <p className="mt-2 max-w-[62ch] text-[15px] leading-[1.6] text-muted">
             A plumber has no API to document and no agent manifest to publish, and scoring one against those is scoring it
             against somebody else&rsquo;s business. So a site that says what kind of business it is, in its own JSON-LD, is

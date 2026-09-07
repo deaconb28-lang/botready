@@ -1,10 +1,27 @@
 /**
- * The site's words, in one voice: plain, for the person who owns the site
- * rather than the person who deploys it.
+ * The site's words, in one voice: plain and direct, aimed at the person who
+ * owns the site.
  *
- * There were two dictionaries here — a technical register chosen by a switch
- * in the header — and both had to be written and kept true for every string.
- * The switch is gone and this is the register that stayed.
+ * There were two dictionaries here — a technical register chosen by a switch in
+ * the header — and both had to be written and kept true for every string. The
+ * switch is gone and this is the register that stayed.
+ *
+ * Two habits to keep out, because the copy was full of both and they are what
+ * made it read as machine-written:
+ *
+ *   The two-beat reversal. "People stopped searching. They started asking."
+ *   "Four files, not a rebuild." "Plan the week, not the backlog." One of these
+ *   is a good line. Nine of them in a row is a tic, and the reader stops
+ *   hearing the argument and starts hearing the rhythm.
+ *
+ *   The negation triad. "No engineer, no rebuild, no marketing budget." "No
+ *   account, no snippet to install." Three negatives in a row scans as filler
+ *   because it defines the product by what it isn't. Say the number, the name,
+ *   or the minutes instead.
+ *
+ * What replaced them: real nouns — Cloudflare, ClaudeBot, 9,240 characters, ten
+ * minutes — and sentences of uneven length. Specifics sell, and they are also
+ * the thing a generated sentence is least able to fake.
  */
 
 
@@ -31,26 +48,26 @@ export interface MarketingCopy {
 }
 
 export const COPY: MarketingCopy = {
-    badge: 'Your site says yes to people, no to AI',
+    badge: 'Your competitors are in the answer. Are you?',
     heroSub:
-      'Get found by AI agents. See how well your site can be seen by the assistants your customers ask, then fix what is hiding you. No engineer, no rebuild, no marketing budget.',
+      'ChatGPT, Claude and Perplexity are answering questions about your category today. We ask your site the way they do, show you exactly what they got back, and write the files that fix it. Thirty seconds, free.',
     question: "What's a good project tracker for a small team?",
-    whyTitle: 'People stopped searching. They started asking.',
+    whyTitle: 'Right now an assistant is recommending someone else',
     whyBody:
-      "When someone asks an assistant about your category, it answers from the sites it could read. If yours wasn't one of them, you're simply not in the answer.",
+      'An assistant answers from the pages it managed to fetch. If it never reached yours, your name never comes up — and there is nothing anywhere to tell you it happened.',
     whyPoints: [
-      'Nothing in your analytics shows a visit that never happened.',
-      'The block is usually a firewall rule nobody chose on purpose.',
-      'Fixing it is four files, not a rebuild.',
+      'Analytics cannot show you a visit that never happened.',
+      'Usually it is a Cloudflare default nobody switched on deliberately.',
+      'Four files fix it. Most people are done in ten minutes.',
     ],
-    agentNote: 'Both requests went out in the same second, to the same URL. One got your whole pitch. The other got a challenge page.',
-    stepsTitle: 'Three steps, about thirty seconds',
+    agentNote: 'Same URL, same second, two clients. Chrome got 9,240 characters of your pitch. ClaudeBot got a challenge page and gave up.',
+    stepsTitle: 'Thirty seconds, start to finish',
     steps: [
-      'No account, no snippet to install. We visit the page the way five different clients would.',
-      "A grade, six category scores, and a plain-English list of what's blocking you.",
-      'Four files generated from your own pages. Upload them, re-check, watch the score move.',
+      'Paste a URL. We fetch it as Chrome, ClaudeBot, GPTBot, PerplexityBot and Google-Extended.',
+      "You get a grade, six category scores, and a plain list of what is blocking you.",
+      'Four files, written from your own pages. Upload, re-run, watch the number climb.',
     ],
-    ctaBody: 'Free, no account, and the result is a page you can read and share.',
+    ctaBody: 'Free, and the result is a page you can send straight to whoever owns the site.',
     invisible:
       "For a small team, the ones that come up most are Linear, Height and Shortcut. They all handle issues and roadmaps well. I don't have much on other options.",
     fixed:
@@ -59,9 +76,9 @@ export const COPY: MarketingCopy = {
     verdictGood: 'Yoursite: cited first',
     flipToFixed: 'Fix my site',
     flipToBroken: 'Show it broken again',
-    resultLede: 'Grouped by what it affects, with the costliest area first.',
+    resultLede: 'Sorted by what it is costing you.',
     findingsTitle: 'What to fix',
-    indexLede: "Every site we've scanned in this category, ranked by how readable it is to the clients that answer questions about it.",
+    indexLede: 'Every site anyone has checked in this category, ranked by how much of it an AI client can actually read.',
 };
 
 /** The twelve real crawler user-agent strings in the marquee. */
