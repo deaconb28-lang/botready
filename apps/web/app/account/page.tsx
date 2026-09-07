@@ -79,8 +79,8 @@ export default async function AccountPage() {
             </div>
             <p className="text-[14.5px] leading-[1.5] text-quiet">
               {plan.plan === 'monitor'
-                ? `The monitoring plan watches ${inWords(plan.limits.domains)} domains. Remove one to make room.`
-                : `Monitoring watches up to ${inWords(PLAN_LIMITS.monitor.domains)} domains and re-checks them every week.`}
+                ? `The agency plan watches ${inWords(plan.limits.domains)} domains. Remove one to make room.`
+                : `The agency plan watches up to ${inWords(PLAN_LIMITS.monitor.domains)} domains and re-checks them every week.`}
             </p>
             <Link
               href="/pricing"

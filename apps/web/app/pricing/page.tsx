@@ -7,7 +7,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, DashConnector, GradeTile, PillEyebrow, TerminalLine, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
 import { pageMetadata } from '@/lib/metadata';
-import { CONTACT_EMAIL, PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
+import { CONTACT_EMAIL, PLAN_LIMITS, PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/pricing');
 
@@ -21,6 +21,17 @@ interface Tier {
   dark?: boolean;
   highlight?: string;
 }
+
+/** Everything here is something the scanner or the account area already does;
+ *  the tier is the volume and the contract around it, not new capability. */
+const ENTERPRISE_ITEMS = [
+  'Unlimited domains, and a scan cadence you choose',
+  'Every result available as JSON, on a schedule',
+  'SSO, and more than one seat on the account',
+  'A named contact, and a support commitment in writing',
+  'Invoicing, POs and annual terms',
+  'Onboarding for the first scan of every property',
+];
 
 const TIERS: Tier[] = [
   {
@@ -54,15 +65,17 @@ const TIERS: Tier[] = [
     dark: true,
   },
   {
-    eyebrow: 'Monitoring',
+    eyebrow: 'Agency',
     price: PRICING.monitor.label,
     unit: PRICING.monitor.cadence,
-    body: 'We re-check weekly and tell you the day a firewall rule changes under you.',
+    body: `Weekly re-checks of up to ${PLAN_LIMITS.monitor.domains} domains, so you hear the day a firewall rule changes under a client.`,
     items: [
-      'Weekly re-scans of the domains you claim',
+      `Weekly re-scans of up to ${PLAN_LIMITS.monitor.domains} claimed domains`,
       'An alert on any category drop, or a new refusal',
-      'Score history, with the change annotated',
-      'The fix pack included, regenerated on every scan',
+      'One alert feed across every site you watch',
+      'Score history per domain, with the change annotated',
+      'The fix pack for each domain, regenerated on every scan',
+      'One subscription and one receipt, not one per site',
     ],
     cta: { label: 'Claim a domain', href: '/account/domains/new' },
   },
@@ -125,6 +138,43 @@ export default function PricingPage() {
               </Link>
             </div>
           ))}
+        </div>
+
+        {/* Enterprise is horizontal on purpose. A fifth column would squeeze the
+            four that carry a self-serve price into something nobody can read,
+            and a plan that ends in a conversation does not belong in a row of
+            plans that end in a checkout. Its shape says which one it is. */}
+        <div className="edge mt-[18px] flex flex-col gap-6 rounded-[20px] bg-white p-[30px] shadow-hard-5 lg:flex-row lg:items-center lg:gap-10">
+          <div className="lg:w-[280px] lg:flex-none">
+            <span className="eyebrow text-placeholder">Enterprise</span>
+            <div className="mb-[2px] mt-[14px] flex items-baseline gap-2">
+              <span className="display-tight text-[38px]">{PRICING.enterprise.label}</span>
+              <span className="font-mono text-[12.5px] opacity-70">{PRICING.enterprise.cadence}</span>
+            </div>
+            <p className="mt-[10px] text-[15px] leading-[1.6] text-muted">
+              Priced on how many domains you bring, not on a tier you have to fit into.
+            </p>
+          </div>
+
+          <ul className="m-0 grid flex-1 list-none gap-[11px] p-0 sm:grid-cols-2">
+            {ENTERPRISE_ITEMS.map((item) => (
+              <li key={item} className="bullet text-[14.5px] leading-[1.5] text-muted" style={{ ['--bullet-color' as string]: '#D3D3CB' }}>
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <div className="lg:w-[210px] lg:flex-none">
+            <Link
+              href={`mailto:${CONTACT_EMAIL}?subject=Enterprise%20plan`}
+              className="block w-full rounded-[12px] border border-ink bg-transparent py-[14px] text-center font-body text-[15px] font-semibold text-ink no-underline hover:bg-ink hover:text-white"
+            >
+              Talk to us
+            </Link>
+            <p className="mt-[10px] text-center font-mono text-[12px] leading-[1.5] text-subtle-2">
+              A person answers, not a form.
+            </p>
+          </div>
         </div>
 
         {/* Both things you can buy here arrive by email, and our mail still

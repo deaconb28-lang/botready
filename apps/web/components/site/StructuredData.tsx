@@ -1,6 +1,6 @@
 import { catalog } from '@botready/core';
 
-import { CONTACT_EMAIL, PRICING, SITE, absoluteUrl } from '@/lib/site';
+import { CONTACT_EMAIL, PLAN_LIMITS, PRICING, SITE, absoluteUrl } from '@/lib/site';
 
 /**
  * JSON-LD, server-rendered so a client that does not run JavaScript sees it.
@@ -55,8 +55,8 @@ function offers() {
     },
     {
       '@type': 'Offer',
-      name: 'Monitoring',
-      description: 'Up to three claimed domains re-scanned on a schedule, with an email when a client stops being able to read you.',
+      name: 'Agency',
+      description: `Up to ${PLAN_LIMITS.monitor.domains} claimed domains re-scanned every week, with an email the day a client stops being able to read you.`,
       price: String(PRICING.monitor.amount),
       priceCurrency: PRICING.monitor.currency.toUpperCase(),
       url: absoluteUrl('/pricing'),
@@ -68,6 +68,22 @@ function offers() {
         billingDuration: 1,
         billingIncrement: 1,
         unitCode: 'MON',
+      },
+    },
+    {
+      // A floor rather than a price, so this publishes minPrice and no `price`.
+      // Stating 1000 flat would be the one claim on this page that is not the
+      // number somebody actually pays.
+      '@type': 'Offer',
+      name: 'Enterprise',
+      description: 'Unlimited domains, scheduled JSON export, SSO and multiple seats, on invoiced annual terms.',
+      priceCurrency: PRICING.enterprise.currency.toUpperCase(),
+      url: absoluteUrl('/pricing'),
+      availability: 'https://schema.org/InStock',
+      priceSpecification: {
+        '@type': 'PriceSpecification',
+        minPrice: String(PRICING.enterprise.amount),
+        priceCurrency: PRICING.enterprise.currency.toUpperCase(),
       },
     },
   ];
@@ -102,7 +118,7 @@ export function HomeStructuredData() {
   );
 }
 
-/** The pricing page: the two things you can buy, as Offers a machine can read. */
+/** The pricing page: everything you can buy, as Offers a machine can read. */
 export function PricingStructuredData() {
   return (
     <Block
@@ -116,7 +132,7 @@ export function PricingStructuredData() {
             name: 'BotReady',
             url: absoluteUrl('/pricing'),
             brand: { '@id': `${SITE.origin}/#organization` },
-            description: 'The diagnosis is free. The fix pack and the monitoring are what you can buy.',
+            description: 'The diagnosis is free. The fix pack and the agency plan are what you can buy.',
             offers: offers(),
           },
         ],

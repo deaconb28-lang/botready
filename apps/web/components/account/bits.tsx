@@ -60,7 +60,13 @@ export function capitalise(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** The plan's name as it reads in a sentence. */
+/**
+ * The plan's name as it reads in a sentence.
+ *
+ * The stored value is still `monitor` — that is what the subscription does and
+ * what plan_tier holds — but the thing somebody bought is called Agency on the
+ * pricing page, so that is the word they should see back in their account.
+ */
 export function planLabel(plan: 'free' | 'monitor'): string {
-  return plan === 'monitor' ? 'monitoring' : 'free';
+  return plan === 'monitor' ? 'agency' : 'free';
 }

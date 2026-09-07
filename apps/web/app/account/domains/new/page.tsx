@@ -48,8 +48,8 @@ export default async function NewDomainPage({ searchParams }: { searchParams: Pr
         <>
           <Lede className="mt-[9px] max-w-[60ch]">
             {plan.plan === 'monitor'
-              ? `Every slot on the monitoring plan is in use: ${inWords(usage.domains.used)} of ${inWords(usage.domains.limit)}. Remove a domain to make room for this one.`
-              : `The free plan holds one domain and yours is in it. Monitoring watches up to ${inWords(PLAN_LIMITS.monitor.domains)} domains and re-checks them every week.`}
+              ? `Every slot on the agency plan is in use: ${inWords(usage.domains.used)} of ${inWords(usage.domains.limit)}. Remove a domain to make room for this one.`
+              : `The free plan holds one domain and yours is in it. The agency plan watches up to ${inWords(PLAN_LIMITS.monitor.domains)} domains and re-checks them every week.`}
           </Lede>
           <div className="mt-6 flex flex-wrap gap-[10px]">
             {plan.plan === 'free' ? (

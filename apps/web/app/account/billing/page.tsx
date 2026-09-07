@@ -70,7 +70,7 @@ export default async function BillingPage() {
           <p className="mb-[18px] mt-2 text-[15px] leading-[1.55] text-on-violet">
             {monitor
               ? `Weekly re-scans of up to ${plan.limits.domains} domains, alerts on any drop, and the fix pack regenerated every run.`
-              : `One domain and ${PLAN_LIMITS.free.scansPerMonth} checks a month. Monitoring adds weekly re-scans of up to ${PLAN_LIMITS.monitor.domains} domains, alerts on any drop, and the fix pack regenerated every run, for ${PRICING.monitor.label} ${PRICING.monitor.cadence}.`}
+              : `One domain and ${PLAN_LIMITS.free.scansPerMonth} checks a month. The agency plan adds weekly re-scans of up to ${PLAN_LIMITS.monitor.domains} domains, alerts on any drop, and the fix pack regenerated every run, for ${PRICING.monitor.label} ${PRICING.monitor.cadence}.`}
           </p>
           <div className="flex flex-wrap gap-[10px]">
             {monitor ? (
@@ -87,7 +87,7 @@ export default async function BillingPage() {
             ) : (
               <>
                 <Link href="/pricing" className={LIME_BUTTON}>
-                  Start monitoring
+                  Start the agency plan
                 </Link>
                 {plan.stripeCustomerId ? (
                   <a href={PORTAL} className={OUTLINE_BUTTON}>

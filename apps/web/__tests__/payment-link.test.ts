@@ -27,22 +27,25 @@ describe('paymentLink', () => {
   });
 
   it('keeps the configured link intact', () => {
-    for (const plan of ['fixpack', 'monitor'] as const) {
-      const url = new URL(paymentLink(plan, 'ref') ?? '');
-      expect(`${url.origin}${url.pathname}`).toBe(PAYMENT_LINKS[plan]);
-    }
+    const url = new URL(paymentLink('fixpack', 'ref') ?? '');
+    expect(`${url.origin}${url.pathname}`).toBe(PAYMENT_LINKS.fixpack);
   });
 
-  it('points at Stripe, on https, for both plans', () => {
-    for (const link of Object.values(PAYMENT_LINKS)) {
+  it('points at Stripe, on https, for every link that is configured', () => {
+    // The monitor link has no default: it was a $5/month link and the plan is
+    // $29, so shipping it would charge a quarter of the price. Empty is the
+    // correct value until a $29 link exists, and the checkout route falls back
+    // to a clean "nothing was charged" rather than to the wrong amount.
+    for (const link of Object.values(PAYMENT_LINKS).filter(Boolean)) {
       const url = new URL(link);
       expect(url.protocol).toBe('https:');
       expect(url.hostname).toBe('buy.stripe.com');
     }
   });
 
-  it('is a different link per plan, so a subscriber is not charged the one-off', () => {
-    expect(PAYMENT_LINKS.fixpack).not.toBe(PAYMENT_LINKS.monitor);
+  it('returns null for the monitor plan until a correctly-priced link is set', () => {
+    expect(PAYMENT_LINKS.monitor).toBe('');
+    expect(paymentLink('monitor', 'ref')).toBeNull();
   });
 });
 

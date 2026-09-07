@@ -41,7 +41,20 @@ export const LIMITS = {
 export const PRICING = {
   fixpack: { amount: 15, currency: 'usd', label: '$15', cadence: 'one time' },
   fixpackExtra: { amount: 5, currency: 'usd', label: '$5', cadence: 'per extra domain' },
-  monitor: { amount: 5, currency: 'usd', label: '$5', cadence: 'per month' },
+  /**
+   * Sold as "Agency" on the pricing page. The key stays `monitor` because that
+   * is what the subscription does and what plan_tier stores — renaming the
+   * identifier would touch the cron, the webhook, the entitlements and every
+   * row already written, to change a word nobody outside this file reads.
+   */
+  monitor: { amount: 29, currency: 'usd', label: '$29', cadence: 'per month' },
+  /**
+   * Enterprise is a floor, not a price. `label` says "From $1,000" because the
+   * number on the page has to be the number somebody pays, and what they pay
+   * depends on how many domains they bring. `amount` is the floor, so the
+   * JSON-LD can publish a minimum rather than pretending there is a fixed one.
+   */
+  enterprise: { amount: 1000, currency: 'usd', label: 'From $1,000', cadence: 'per month' },
 } as const;
 
 /**
@@ -64,7 +77,14 @@ export const PRICING = {
  */
 export const PAYMENT_LINKS = {
   fixpack: process.env.STRIPE_LINK_FIXPACK ?? 'https://buy.stripe.com/fZuaEWagy9pTfzFg7D0x208',
-  monitor: process.env.STRIPE_LINK_MONITOR ?? 'https://buy.stripe.com/6oU9ASewO1Xr4V12gN0x207',
+  /**
+   * No default. The hardcoded link here was for $5 a month and the plan is now
+   * $29: reusing it would charge a quarter of the price. The checkout route
+   * builds a correctly-priced Session first and only falls back to this, and it
+   * returns a clean "nothing was charged" error when there is nothing to fall
+   * back to — which is the right behaviour until a $29 link exists in Stripe.
+   */
+  monitor: process.env.STRIPE_LINK_MONITOR ?? '',
 } as const;
 
 /**
@@ -78,9 +98,14 @@ export const PAYMENT_LINKS = {
  * redirect.
  */
 export function paymentLink(plan: keyof typeof PAYMENT_LINKS, reference: string, email?: string | null): string | null {
+  return stripeLink(PAYMENT_LINKS[plan], reference, email);
+}
+
+/** The host check, extracted so every link goes through the same one. */
+function stripeLink(raw: string, reference: string, email?: string | null): string | null {
   let url: URL;
   try {
-    url = new URL(PAYMENT_LINKS[plan]);
+    url = new URL(raw);
   } catch {
     return null;
   }
@@ -96,7 +121,13 @@ export function paymentLink(plan: keyof typeof PAYMENT_LINKS, reference: string,
  */
 export const PLAN_LIMITS = {
   free: { domains: 1, scansPerMonth: 10 },
-  monitor: { domains: 3, scansPerMonth: 30 },
+  /**
+   * Ten domains, because the plan is bought by somebody watching client sites
+   * rather than their own. 120 scans a month: ten domains re-checked weekly is
+   * about 43, and the rest is headroom for the manual re-runs somebody does
+   * after shipping a fix.
+   */
+  monitor: { domains: 10, scansPerMonth: 120 },
 } as const;
 
 /**
