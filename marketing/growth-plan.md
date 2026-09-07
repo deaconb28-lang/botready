@@ -15,56 +15,64 @@ MRR is recurring revenue, and only one of the three prices recurs.
 |---|---|---|
 | Fix pack | $15 | **one time** |
 | Extra domain | $5 | one time |
-| Monitoring | $5 | **per month** |
+| Agency — 10 domains | $29 | **per month** |
 
-So `$1,000 MRR ÷ $5 = 200 active monitoring subscribers`. Monitoring is an
-upsell after the fix pack, so reaching 200 means:
+So `$1,000 MRR ÷ $29 = 35 accounts`. That is the whole target, and it is a
+very different number from the one this file was first written against.
 
-| If this share of buyers adds monitoring | Fix packs needed | Scans needed at 3% |
+**The $29 tier changed the shape of the problem.** At $5 for three domains it
+took 200 subscribers, which needed upwards of 40,000 scans in a month — off by
+more than an order of magnitude from anything a launch produces. At $29 for ten:
+
+| | Subscribers for $1k MRR | Scans needed, at 10% attach and 3% conversion |
 |---|---|---|
-| 20% (optimistic) | 1,000 | **33,000** |
-| 15% (plausible) | 1,333 | **44,400** |
-| 10% (conservative) | 2,000 | **66,700** |
+| Old $5 plan | 200 | ~44,400 |
+| **New $29 plan** | **35** | **~11,700** |
 
-Forty thousand scans in thirty days, from a standing start, with no audience and
-no published study. A #1 Product Hunt day is a few thousand visitors. A thread
-that genuinely takes off is a few thousand clicks. This is off by more than an
-order of magnitude, and no amount of posting closes that gap.
+Still roughly five times the traffic that produces $1,000 of one-time revenue,
+but no longer in a different universe from it.
 
-**The conversion rates above are assumptions, not measurements.** We have no
-funnel data yet — `measurement.md` names the four numbers to collect and they are
-all currently zero. Every projection here should be replaced with real rates as
-soon as there are any.
+**And the funnel is no longer the only route.** 200 people had to be *found*;
+35 accounts can be *sold to*. That is the real consequence of the repricing and
+it moves outbound from a week-4 experiment to the primary MRR channel — see the
+month below.
 
-## The two targets that are real
+**Every conversion rate here is an assumption, not a measurement.** The four
+numbers in `measurement.md` are all currently zero. Replace these the moment
+there are real ones.
+
+## The two targets
 
 **Month 1 — $1,000 in total revenue.** 67 fix packs, about 2,200 scans at 3%.
-That is a good launch month and it is achievable with the channels below.
-Expect it to leave roughly **$50–100 MRR** trailing behind it, from the ~10
-buyers who also take monitoring.
+A good launch month, achievable with the channels below.
 
-**$1,000 MRR — a 60 to 90 day target, and it needs a pricing change.**
+**$1,000 MRR — 60 to 90 days, and mostly sold rather than converted.** 35
+agency accounts. Some will come up the funnel from a fix pack; most will come
+from talking to agencies directly, because an agency does not usually discover
+a tool by scanning its own marketing site.
 
-## The change that makes $1k MRR reachable
+## The gap the repricing opened
 
-`LIMITS.monitor` is already `{ domains: 3, scansPerMonth: 30 }` — monitoring is
-per-account, not per-domain. That shape is one step from the thing that actually
-gets to $1,000.
+A solo founder with one site now has nothing to buy monthly. $29 for ten
+domains is the wrong shape for them, and they were the audience every piece of
+copy in this directory is written for.
 
-**200 founders at $5 is hard. 21 agencies at $49 is not.**
+That is survivable — they buy the $15 pack and leave, which is the one-time
+revenue in target one — but it should be a deliberate position rather than an
+accident. If the monitoring attach rate for single-site owners turns out to
+matter, the answer is a cheap single-domain watch, not a discount on agency.
 
-An agency running 25 client sites has 25 reasons to care that a WAF update
-turned a client red, and a per-seat price of $2 a site. That is an easy yes for
-them and a 10× shorter path for us. `linkedin.md` already has an agency angle
-written for follow-up 3.
+## What the agency tier still needs
 
-| Route | Customers for $1k MRR | Realistic timeline |
-|---|---|---|
-| $5 individual monitoring | 200 | 6–12 months |
-| $49 agency tier, ~25 domains | **21** | 60–90 days |
+It is on the pricing page and priced in code. Two things are unfinished:
 
-This is a product decision, not a marketing one, and it is the highest-leverage
-item on this page. Everything below assumes it happens in week 3.
+1. **The $29 price does not exist in Stripe.** Checkout builds a correctly
+   priced Session from `PRICING`, but `STRIPE_LINK_MONITOR` has no value and
+   the fallback is deliberately disabled rather than pointed at the old $5
+   link. Create the price, set the variable.
+2. **Nothing in the product is agency-shaped yet.** One alert feed across ten
+   client domains is sold on the pricing page; check it behaves that way before
+   an agency is looking at it.
 
 ## Gates that must clear before any of it
 
@@ -124,12 +132,17 @@ product-led vertical cuts.
 | Mascot skit | Higgsfield, ~90 credits per 10s | 1× per week, budget permitting |
 | Reels 1 and 3 | Already built | Week 1 |
 
-### 4. Cold outbound — week 4, not week 1
+### 4. Scan-first outbound — the MRR engine, not an afterthought
 
-Covered at length already: scan-first, never spray, and only after the
-methodology page is live so the first email can cite a public method. lemlist is
-connected and its domain warmup needs starting **now** even though nothing sends
-until week 4.
+This moved up the list when the price changed. 35 agency accounts is a sales
+target, and agencies are reached by being told something specific about a client
+of theirs — not by discovering a scanner.
+
+Still never spray, and still not before the methodology page is live. The shape
+is unchanged: scan a prospect's client site, lead with what four of five clients
+got, link the public result page. lemlist is connected and its domain warmup
+needs starting **now**, because it takes three to four weeks and week 2 is when
+the first approaches should go out.
 
 ### 5. Google Ads — smallest budget, tightest intent
 
@@ -142,9 +155,9 @@ day 0, full budget only if cost-per-scan is defensible.
 |---|---|---|
 | **0** | Clear the gates | Corpus study; methodology page; fill every `[MEASURE]`; settle the handle; build the live-scan recording; start lemlist warmup |
 | **1** | Launch | PH day 0; X thread; Show HN day 2; one Reddit post per day; the small directories; reels 1 and 3 |
-| **2** | Sustain | First weekly measurement published; TikTok/IG cadence begins; remaining directories; answer everything |
-| **3** | **Ship the agency tier** | $49 / 25 domains; LinkedIn agency post; direct outreach to 30 agencies using scans from the corpus study |
-| **4** | Compound | Cold outbound opens; second measurement; Google Ads to full budget if the numbers justify it |
+| **2** | Sustain **and start selling agencies** | The tier is already shipped, so this is outreach, not building: LinkedIn agency post, and scan-first approaches to agencies using results from the corpus study; first weekly measurement published; TikTok/IG cadence begins; remaining directories |
+| **3** | Agency push | 30 direct approaches, each led with a real scan of one of their client sites; first agency calls |
+| **4** | Compound | Second measurement; Google Ads to full budget if cost-per-scan justifies it |
 
 ## What I can run, and what only you can
 
@@ -163,18 +176,23 @@ pricing decision; and anything that spends money.
 `measurement.md` already names the four numbers, and they are the only ones
 that count here. Add one:
 
-**Monitoring attach rate — subscriptions ÷ fix packs sold.** It is the single
-number that says whether $1k MRR is reachable at all, and we currently have no
-idea what it is. If it comes in under 10% after fifty sales, the agency tier is
-not an optimisation, it is the whole business.
+**Agency attach rate — subscriptions ÷ fix packs sold.** We have no idea what it
+is, and it decides how much of the 35 has to be sold rather than converted. Under
+10% after fifty fix packs means the funnel will not carry it and outbound is the
+whole motion, not half of it.
+
+Worth watching alongside it: **how many of those 35 came from a scan versus from
+a conversation.** If it is overwhelmingly conversations, the marketing in this
+directory is doing a different job — earning the credibility that makes an
+outbound email answerable — and should be judged that way rather than on scans.
 
 ## The honest summary
 
 $1,000 in revenue next month: **likely**, with a good launch.
 
-$1,000 MRR next month: **no.** The pricing cannot produce it at any traffic
-volume you can reach in thirty days.
+$1,000 MRR next month: **still no**, but it is no longer absurd. 35 accounts is
+a number you could name the customers for, which 200 never was.
 
-$1,000 MRR by month three: **yes, via 21 agencies rather than 200 founders** —
-and the sooner that tier exists, the sooner every channel above is pointed at
-someone who can actually produce it.
+$1,000 MRR by month three: **yes, and the tier now exists to carry it.** The
+work is selling to 35 agencies, which is an outbound motion starting in week 2,
+not a traffic problem waiting on virality.
