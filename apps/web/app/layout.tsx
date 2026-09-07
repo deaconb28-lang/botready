@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Familjen_Grotesk, JetBrains_Mono, Public_Sans } from 'next/font/google';
 
 import { SITE } from '@/lib/site';
+import { AffonsoSignup } from '@/components/site/AffonsoSignup';
 import './globals.css';
 
 /**
@@ -120,6 +121,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             data-cookie_duration="30"
           />
         ) : null}
+        {/* Fires once, only after the sign-in that made the account, and only
+            when app/auth/callback left a cookie saying so. Renders nothing. */}
+        {analytics ? <AffonsoSignup /> : null}
       </body>
     </html>
   );

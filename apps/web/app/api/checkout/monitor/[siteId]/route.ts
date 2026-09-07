@@ -3,6 +3,7 @@ import type Stripe from 'stripe';
 
 import { currentUser } from '@/lib/auth';
 import { serverEnv } from '@/lib/env';
+import { referral } from '@/lib/affonso-server';
 import { PRICING, absoluteUrl, paymentLink } from '@/lib/site';
 import { stripe } from '@/lib/stripe';
 import { publicClient } from '@/lib/supabase';
@@ -82,14 +83,20 @@ function configuredPrice(): string | null {
 
 /** Null rather than a throw when Stripe is not configured, so the caller can fall back. */
 async function createSession(siteId: string, domain: string, email: string) {
+  // Empty for almost everyone, which is fine: Affonso reads the key and finds
+  // nothing to credit. In metadata rather than client_reference_id because that
+  // field already carries the site — see the note in lib/site.ts.
+  const affonso_referral = await referral();
   try {
     return await stripe().checkout.sessions.create({
       mode: 'subscription',
       line_items: [lineItem()],
       customer_email: email,
       client_reference_id: siteId,
-      metadata: { plan: 'monitor', siteId, domain },
-      subscription_data: { metadata: { plan: 'monitor', siteId, domain } },
+      metadata: { plan: 'monitor', siteId, domain, affonso_referral },
+      // On the subscription too, so a renewal a year from now still names the
+      // affiliate. The checkout session is not around to ask by then.
+      subscription_data: { metadata: { plan: 'monitor', siteId, domain, affonso_referral } },
       // Into the app, not back to the claim page they started on. The claim
       // page is where somebody goes to prove a domain is theirs; landing there
       // after paying says nothing about what they just bought. `subscribed=1`

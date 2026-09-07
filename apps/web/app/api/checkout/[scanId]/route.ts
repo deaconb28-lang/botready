@@ -4,6 +4,7 @@ import type Stripe from 'stripe';
 import { currentUser, hasFixpackFor, ownsAnyFixpack } from '@/lib/auth';
 import { serverEnv } from '@/lib/env';
 import { loadScanView } from '@/lib/scan-data';
+import { referral } from '@/lib/affonso-server';
 import { absoluteUrl, PRICING, paymentLink } from '@/lib/site';
 import { stripe } from '@/lib/stripe';
 
@@ -148,13 +149,17 @@ function configuredPrice(): string | null {
  */
 async function createSession(scanId: string, domain: string, email: string | null, tier: Tier) {
   const pricing = tier === 'extra' ? PRICING.fixpackExtra : PRICING.fixpack;
+  // Empty for almost everyone, which is fine: Affonso reads the key and finds
+  // nothing to credit. It rides in metadata rather than client_reference_id
+  // because that field already carries the scan — see the note in lib/site.ts.
+  const affonso_referral = await referral();
   try {
     return await stripe().checkout.sessions.create({
       mode: 'payment',
       line_items: [lineItem(tier)],
       ...(email ? { customer_email: email } : {}),
       client_reference_id: scanId,
-      metadata: { scanId, domain, plan: 'fixpack', tier },
+      metadata: { scanId, domain, plan: 'fixpack', tier, affonso_referral },
       // Both pages exist whether or not the person is signed in.
       success_url: absoluteUrl(`/scan/${scanId}/purchased?session_id={CHECKOUT_SESSION_ID}`),
       cancel_url: absoluteUrl(`/scan/${scanId}`),
