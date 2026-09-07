@@ -76,7 +76,7 @@ export default function PricingPage() {
       <Container as="main" id="main" width={1100} className="pb-24 pt-14">
         <div className="text-center">
           <span className="eyebrow text-subtle-2">Pricing</span>
-          <h1 className="display-tight mx-auto mt-3 max-w-[26ch] text-[clamp(38px,5.2vw,64px)]">The check is free. The fix is $15.</h1>
+          <h1 className="display-tight mx-auto mt-3 max-w-[26ch] text-[clamp(38px,5.2vw,64px)]">Simple, transparent pricing</h1>
         </div>
 
         <div className="mt-11 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[18px]">
