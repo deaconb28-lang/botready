@@ -13,11 +13,48 @@ The single most important finding the product surfaces: a site that returns `200
 These are product decisions, already made. Do not redesign them, and stop and ask if a task appears to require breaking one.
 
 1. **The scanner never evades a block.** If a site refuses `BotreadyBot/1.0`, we record it as blocked and display it as blocked. No user-agent spoofing to get past a WAF, no residential proxies, no captcha solving. The scanner's own `robots.txt` compliance is checked in CI.
-2. **Evidence and scoring are separate.** Scanner code emits observations only and never a score or a grade. Scoring is a pure function in `packages/core` that takes `CheckResult[]` and returns a score. This is what lets us re-score history when weights change.
-3. **The check catalog is data, not code.** Adding, retiring or reweighting a check is an edit to `packages/core/checks.json`, never a new branch in a scoring function.
+2. **Observation and derivation are separate, on every plane.** A scanner emits `CheckResult[]`, a probe emits runs and mentions, a collector emits hits. None of them emits a number a customer reads. Every such number — the score, share of voice, a crawler count — is a pure function in `packages/core` over those observations, and carries its own version. Nothing derived is ever the only copy of anything. This is what lets us re-score history when the method changes.
+3. **Every catalog is data, not code.** `checks.json` for the checks, `engines.json` for the answer engines we ask, `agents.json` for the crawlers we recognise. Adding an engine, retiring a check, reweighting a category or learning a crawler's new IP ranges is an edit to a JSON file, never a new branch in a function.
 4. **Every score row records `scoring_version` and every scan row records `scanner_version`.** No exceptions.
 5. **Max 6 pages per scan, sequential, 1 second apart.** We are a diagnostic tool, not a load generator.
 6. **No blurred scores behind the paywall.** The diagnosis is always free and fully visible. The paid artifact is the generated fix files.
+7. **Crawler identity is verified, never asserted.** A user-agent string is a claim. Every recorded hit carries how its identity was established — forward-confirmed reverse DNS, a published IP range, or neither — and a claim with no proof is never counted as the agent it claims to be. The whole category reports UA counts as crawler counts; we do not.
+8. **A model's answer is evidence about the model.** What an engine says is stored as the engine's words, labelled as such. It never becomes a fact about a site, an input to a score, or a line in a generated file. True of prompt watch today and of everything the answer plane grows into.
+9. **Visitor data is anonymous at ingest, not anonymised later.** The moment we accept somebody else's traffic logs we are a processor. Human IPs are dropped or hashed in memory before anything is written; crawler IPs live only long enough to verify identity, and the verdict is what gets stored.
+10. **Cadence is priced.** Asking engines questions is the recurring cost of goods, and it is linear in how often we ask. No control in the interface may multiply that cost. Weekly and daily are different products at different prices, never a toggle.
+11. **We do not buy or claim a conversation corpus.** Prompt volume data is somebody else's moat, we cannot match it honestly, and inventing volume numbers would end a product whose entire argument is that it only reports what it measured. Prompt *suggestions* derived from a customer's own pages are a different and weaker thing, and are labelled as such.
+
+## Where this is going
+
+Today botready measures one thing: what a machine can retrieve and parse when
+it fetches a site. That is the supply side, and it is link one of four:
+
+```
+site legibility  ──►  crawler behaviour  ──►  citation in answers  ──►  referred traffic
+  (built)              (not built)            (half built)             (not built)
+```
+
+Profound and the rest of the category entered at link three and are working
+backwards into ours. We own link one and work forwards. Whoever closes all
+four first can say which technical fact caused which commercial outcome, and
+nobody can say that today.
+
+Four planes, in build order. `docs/platform-architecture.md` has the schema,
+the services, the volumes, the cost model and the phasing.
+
+| Plane | What it observes | State |
+|---|---|---|
+| **Site** | What each client retrieved | `apps/scanner`, done |
+| **Answer** | What engines say when asked a question in the category | `prompts` / `prompt_runs` and one engine; needs `apps/prober` |
+| **Traffic** | Which verified crawlers fetched what, and which AI surfaces referred humans | Needs `apps/collector` and log ingest |
+| **Action** | A fix, applied, and a re-scan that proves it landed | `packages/core/remedies/` generates; nothing verifies yet |
+
+Constraints 7 to 11 exist because of this. They are written for planes that
+are not built so that the first commit on each one does not have to invent
+them under deadline.
+
+Two things we deliberately will not build, both explained in the architecture:
+a conversation-volume corpus, and content-generation agents.
 
 ## Stack
 
@@ -199,10 +236,15 @@ QSTASH_TOKEN, QSTASH_CURRENT_SIGNING_KEY, QSTASH_NEXT_SIGNING_KEY
 SCANNER_URL                  https URL of the Railway worker
 SCANNER_SHARED_SECRET        worker rejects any request without this header
 STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_FIXPACK, STRIPE_PRICE_MONITOR
+STRIPE_PRICE_AGENCY          optional. Without it the agency checkout builds the
+                             price inline from PRICING, so the tier works on a
+                             Stripe account with nothing configured.
 RESEND_API_KEY
 ANTHROPIC_API_KEY            prompt watch only. Never a fact about a site: the
                              answer is stored as the model's words, labelled as
                              such, and no score or generated file reads it.
+                             Any second engine key added later inherits that
+                             rule; see constraint 8.
 ```
 
 ## Things that will bite
