@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { CONTACT_EMAIL, CREDIT, PUBLIC_INDEX_LISTED, SITE } from '@/lib/site';
 import { LaunchBuffBadge } from './LaunchBuffBadge';
+import { TwelveToolsBadge } from './TwelveToolsBadge';
 import { ProductHuntBadge } from './ProductHuntBadge';
 
 export function SiteFooter() {
@@ -24,6 +25,7 @@ export function SiteFooter() {
           <div className="mt-[18px] flex flex-wrap items-center gap-[14px]">
             <ProductHuntBadge />
             <LaunchBuffBadge />
+            <TwelveToolsBadge />
           </div>
           <p className="mt-[14px] font-mono text-[12.5px] text-subtle-2">
             <a href={CREDIT.href} className="text-subtle-2 no-underline hover:text-ink">

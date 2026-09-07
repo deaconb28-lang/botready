@@ -13,6 +13,10 @@ import { ExternalBadge } from './ExternalBadge';
  * it, and a self-hosted copy is exactly what that check is designed to miss.
  * Hotlinking also means their badge stays their badge if they redesign it.
  *
+ * Native size is 200x54, and it is shown at exactly that beside the other two
+ * badges, which are also 54 high. It sat on the landing page at 148x40 while it
+ * was alone under the scan card; in a row it has to match its neighbours.
+ *
  * Like the Product Hunt one, this is a moment rather than a fixture. It earns
  * its place while the listing is current and should come out when it stops
  * being news.
@@ -24,8 +28,8 @@ export function TwelveToolsBadge({ className = '' }: { className?: string }) {
       src="https://twelve.tools/badge3-white.svg"
       alt="botready.dev — Featured on Twelve Tools"
       label="botready.dev on Twelve Tools"
-      width={148}
-      height={40}
+      width={200}
+      height={54}
       className={className}
     />
   );
