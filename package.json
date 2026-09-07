@@ -20,7 +20,8 @@
     "audit:ui": "pnpm --filter @botready/tools audit:ui",
     "video:capture": "pnpm --filter @botready/tools capture",
     "video:titles": "node marketing/video/titles.mjs",
-    "video:build": "node marketing/video/build-film.mjs"
+    "video:build": "node marketing/video/build-film.mjs",
+    "stripe:verify": "node scripts/stripe-verify.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
