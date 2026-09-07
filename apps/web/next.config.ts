@@ -48,6 +48,13 @@ const config: NextConfig = {
     return [
       { source: '/ranking', destination: '/chart', permanent: true },
       { source: '/ranking/:segment', destination: '/index/:segment', permanent: true },
+      // The bare /scan has no page of its own: a scan is always /scan/[id] or
+      // the live view. People type it anyway, and the thing they are looking
+      // for is the form on the home page. Answered here rather than by a page
+      // component so it resolves before React renders anything. Temporary
+      // rather than permanent because a browser caches a 308 indefinitely and
+      // /scan is a reasonable home for a standalone form later.
+      { source: '/scan', destination: '/', permanent: false },
     ];
   },
   async headers() {
