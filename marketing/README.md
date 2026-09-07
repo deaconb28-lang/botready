@@ -94,6 +94,7 @@ Two things we never say:
 | `press.md` | Press kit, boilerplate, fact sheet, the pitch emails, embargo terms |
 | `website.md` | What changes on botready.dev for launch week |
 | `schedule.md` | The fourteen days, hour by hour on the day itself |
+| `growth-plan.md` | The month around the launch, and the arithmetic on revenue |
 | `measurement.md` | What we count, and what we refuse to count |
 | `assets/build.mjs` | Generates every graphic in this campaign as SVG |
 | `video/` | The launch film, its cutdowns and the reels, and how they are built |
