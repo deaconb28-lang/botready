@@ -101,27 +101,54 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             data-domain="botready.dev"
           />
         ) : null}
+        {analytics ? (
+          // Affonso, which attributes a signup to the affiliate who sent it.
+          // Same plain tag for the same reason as above, and more so: this one
+          // reads a referral out of the URL and writes a cookie, and a visitor
+          // who lands and clicks through before hydration settles is a
+          // commission somebody does not get paid. The vendor sanctions both
+          // this form and next/script; this is the one that does not wait.
+          //
+          // Hosted mode. Their first-party option would dodge content
+          // blockers, and it is worth doing — see the note below on the one
+          // thing that has to change first.
+          <script
+            async
+            defer
+            src="https://cdn.affonso.io/js/pixel.min.js"
+            data-affonso="cmtqiiw9i001ju3dqx1lopby0"
+            data-cookie_duration="30"
+          />
+        ) : null}
       </body>
     </html>
   );
 }
 
 /**
- * Whether to load the analytics script at all.
+ * Whether to load the third-party tags at all — DataFast and Affonso both.
  *
- * Not a privacy switch — DataFast is cookieless and there is nothing here to
- * consent to. It is about the numbers being worth reading. Every preview
- * deployment and every `pnpm dev` session would otherwise report itself as
- * traffic to botready.dev, and the first thing anyone wants from analytics on a
- * launch day is to trust the count.
+ * Not a privacy switch. It is about the numbers being worth reading. Every
+ * preview deployment and every `pnpm dev` session would otherwise report itself
+ * as traffic to botready.dev, and the first thing anyone wants from analytics
+ * on a launch day is to trust the count. It matters more for Affonso than for
+ * DataFast: that one attributes commission, and a referral cookie set while
+ * somebody clicks around a preview build is a payout attached to a visit that
+ * never happened.
+ *
+ * Affonso's first-party proxy mode is worth adopting and is not done here,
+ * because the prefix their guide suggests is `/r` and this site already serves
+ * `/r/[domain]` — the public result page for a domain. Mounting a pixel proxy
+ * there would shadow a route that is linked from every share card. Any other
+ * prefix works; that is the whole of the blocker.
  *
  * Deliberately failing open: it loads unless we can see a reason not to. A
  * stray hit from a preview is a smaller problem than discovering at noon on
  * launch day that the tag never fired because an environment variable was not
  * what this expected.
  *
- * The website id is not a secret. It is what the script announces itself with
- * on every page load of every site that uses it, so it belongs in the source
+ * Neither id is a secret. Both are what their script announces itself with on
+ * every page load of every site that uses them, so they belong in the source
  * rather than in an env var pretending otherwise.
  */
 const analytics = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview';
