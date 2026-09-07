@@ -25,6 +25,8 @@ import { buildAgentPrompt } from './agent-prompt';
 import { buildPunchList, type PunchItem } from './punchlist';
 
 export { punchListMarkdown, type Effort, type PunchItem } from './punchlist';
+export { buildAnswerPack } from './answer-pack';
+export { brandFrom, oneLine, pathOf } from './shared';
 
 export interface FixFile {
   /** The filename we suggest, used as the download name. */

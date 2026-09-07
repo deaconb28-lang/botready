@@ -12,6 +12,7 @@
  */
 
 import type { FixFile, ScanFacts } from './index';
+import { oneLine, pathOf } from './shared';
 
 /**
  * The sections an llms.txt reader expects, and the path patterns that belong in
@@ -137,23 +138,11 @@ function humanisePath(path: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-function pathOf(url: string): string {
-  try {
-    return new URL(url).pathname.replace(/\/$/, '') || '/';
-  } catch {
-    return url;
-  }
-}
-
 /** `Pricing — Example` on example.com becomes `Pricing`. */
 function stripSuffix(title: string, domain: string): string {
   const brand = domain.split('.')[0] ?? domain;
   const pattern = new RegExp(`\\s*[—|·\\-–]\\s*${escapeRegExp(brand)}\\s*$`, 'i');
   return title.replace(pattern, '').trim();
-}
-
-function oneLine(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
 }
 
 function escapeRegExp(value: string): string {

@@ -10,6 +10,7 @@
  */
 
 import type { FixFile, ScanFacts } from './index';
+import { brandFrom, oneLine, pathOf } from './shared';
 
 export function buildJsonLd(domain: string, facts: ScanFacts): FixFile {
   const origin = `https://${domain}`;
@@ -115,21 +116,3 @@ export function buildJsonLd(domain: string, facts: ScanFacts): FixFile {
   };
 }
 
-function pathOf(url: string): string {
-  try {
-    return new URL(url).pathname.replace(/\/$/, '') || '/';
-  } catch {
-    return url;
-  }
-}
-
-/** `Example — a site an agent can read` on example.com becomes `Example`. */
-function brandFrom(title: string, domain: string): string {
-  if (!title) return domain.split('.')[0] ?? domain;
-  const head = title.split(/\s*[—|·–]\s*/)[0]?.trim();
-  return head && head.length > 1 ? head : (domain.split('.')[0] ?? domain);
-}
-
-function oneLine(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
-}

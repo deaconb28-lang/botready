@@ -1,0 +1,157 @@
+import type { FixFile, ScanFacts } from './index';
+import { brandFrom, oneLine, pathOf } from './shared';
+
+/**
+ * answers.html — a FAQPage block, questions filled in, answers left blank.
+ *
+ * This is the file that moves a site from readable to recommendable. An
+ * assistant asked "what is a good X for a team of five" does not rank pages, it
+ * matches constraints, and it can only match a constraint it can find stated as
+ * a fact. Q&A pairs are the form it lifts most directly, which is why this is
+ * the first artifact in the answer pack rather than the fifth.
+ *
+ * The questions are derived, the answers are not. A scan sees a page's URL,
+ * status, title and description and nothing else — no heading text, no body
+ * prose — so this file cannot write an answer without inventing one, and the
+ * rule in index.ts is that no generated fact is invented. What it can do is far
+ * from nothing: it knows which pages exist on this site, so it knows which
+ * questions this site is able to answer, and it points each one at the page the
+ * answer has to come from.
+ *
+ * The result is a form to fill in where every field is a question a buyer
+ * actually asks and every blank names the page holding the answer. That is a
+ * twenty minute job for the person who owns the site and an impossible one for
+ * a generator, which is the correct division of labour.
+ */
+
+/**
+ * Paths that tell us a question this site is equipped to answer.
+ *
+ * Matched against the path of a page the scan confirmed returned 2xx, so a
+ * question is only ever asked when the page backing it exists. Ordered by how
+ * often the question decides a recommendation: cost and fit come first because
+ * they are what a constraint query is usually made of.
+ */
+const FROM_PATH: Array<{ test: RegExp; question: (brand: string) => string; hint: string }> = [
+  {
+    test: /^\/(pricing|plans|price)/i,
+    question: (b) => `How much does ${b} cost?`,
+    hint: 'Name the number, the unit and the currency. "Free for up to five people, then $8 per seat per month" is matchable; "flexible pricing that grows with you" is not.',
+  },
+  {
+    test: /^\/(docs|documentation|guide|help)/i,
+    question: (b) => `How do you get started with ${b}?`,
+    hint: 'The shortest true path from nothing to working, in a sentence or two.',
+  },
+  {
+    test: /^\/(api|developers?|reference)/i,
+    question: (b) => `Does ${b} have an API?`,
+    hint: 'Say yes or no, then the auth method and where the reference lives.',
+  },
+  {
+    test: /^\/(integrations?|apps|connect)/i,
+    question: (b) => `What does ${b} integrate with?`,
+    hint: 'List the integrations by name. A named list is matchable; "integrates with your favourite tools" is not.',
+  },
+  {
+    test: /^\/(security|trust|compliance|privacy)/i,
+    question: (b) => `How does ${b} handle security and data?`,
+    hint: 'Certifications you actually hold, where data is stored, and who can see it.',
+  },
+  {
+    test: /^\/(about|company|team)/i,
+    question: (b) => `Who makes ${b}?`,
+    hint: 'Who you are and how long you have been doing this.',
+  },
+  {
+    test: /^\/(changelog|releases|updates|blog)/i,
+    question: (b) => `Is ${b} actively maintained?`,
+    hint: 'Recency is the whole answer here. Name the last release and its date.',
+  },
+];
+
+export function buildFaq(domain: string, facts: ScanFacts): FixFile {
+  const origin = `https://${domain}`;
+  const brand = brandFrom(facts.siteTitle, domain);
+  const home = facts.pages[0];
+
+  const entries: Array<{ q: string; hint: string; source: string }> = [];
+
+  // Two questions every buyer asks and no URL is needed to justify, because the
+  // site itself is the answer's source.
+  entries.push({
+    q: `What is ${brand}?`,
+    hint: facts.siteDescription
+      ? `Your own meta description reads: "${oneLine(facts.siteDescription)}". Say it again here in a full sentence that works with no page around it.`
+      : 'One sentence, no adjectives, that would let a stranger repeat what you do.',
+    source: home?.url ?? origin,
+  });
+  entries.push({
+    q: `Who is ${brand} for?`,
+    hint: 'Name the buyer and the size. "Product teams of two to twenty" is matchable; "teams of all sizes" removes you from every constraint query.',
+    source: home?.url ?? origin,
+  });
+
+  // The rest, only where a page exists to answer them.
+  for (const rule of FROM_PATH) {
+    const page = facts.pages.find((p) => rule.test.test(pathOf(p.url)));
+    if (!page) continue;
+    entries.push({ q: rule.question(brand), hint: rule.hint, source: page.url });
+  }
+
+  const block = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${origin}/#faq`,
+    mainEntity: entries.map((e) => ({
+      '@type': 'Question',
+      name: e.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: `<answer, from ${e.source}>`,
+      },
+    })),
+  };
+
+  const lines: string[] = [];
+  lines.push(`<!-- Answers for ${domain}`);
+  lines.push('     Generated by botready.dev.');
+  lines.push('');
+  lines.push('     Every question below is one this site has a page for. None of the');
+  lines.push('     answers are written, and that is deliberate: a scan reads your URLs,');
+  lines.push('     titles and descriptions, and writing an answer from that would mean');
+  lines.push('     inventing the fact the answer contains. An invented answer in JSON-LD');
+  lines.push('     is worse than none, because it is wrong in a form a machine believes.');
+  lines.push('');
+  lines.push('     Fill in each <answer, from …>. One or two sentences, stating the fact');
+  lines.push('     rather than gesturing at it. What you write here is close to what an');
+  lines.push('     assistant will repeat, so write it as the sentence you would want');
+  lines.push('     quoted back to a buyer.');
+  lines.push('-->');
+  lines.push('');
+  for (const e of entries) {
+    lines.push(`<!-- ${e.q}`);
+    lines.push(`     ${wrapHint(e.hint)}`);
+    lines.push(`     Source: ${e.source} -->`);
+  }
+  lines.push('');
+  lines.push('<script type="application/ld+json">');
+  lines.push(JSON.stringify(block, null, 2));
+  lines.push('</script>');
+
+  return {
+    name: 'answers.html',
+    purpose: `Paste into <head> on ${domain} once the answers are filled in. Q&A pairs are what an assistant quotes when it recommends you.`,
+    language: 'html',
+    content: lines.join('\n') + '\n',
+    addresses: ['jsonld_present'],
+    // Two questions always apply, so this is only useless when the scan saw no
+    // page at all — a blocked or dead site, which has a larger problem.
+    incomplete: facts.pages.length === 0,
+  };
+}
+
+/** Keeps a hint on one comment line without running past a readable width. */
+function wrapHint(hint: string): string {
+  return oneLine(hint);
+}
