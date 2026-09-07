@@ -164,6 +164,7 @@ pnpm typecheck
 pnpm db:push             applies db/schema.sql to an empty Supabase project
 pnpm db:migrate          applies db/migrations/*.sql, once each, to an existing one
 pnpm audit:ui            Playwright + axe over the running app
+pnpm stripe:verify       asks Stripe whether it charges what the site says
 ```
 
 ## Environment
