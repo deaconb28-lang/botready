@@ -69,6 +69,25 @@ export const PRICING = {
   fixpack: { amount: 15, currency: 'usd', label: '$15', cadence: 'one time' },
   fixpackExtra: { amount: 5, currency: 'usd', label: '$5', cadence: 'per extra domain' },
   monitor: { amount: 5, currency: 'usd', label: '$5', cadence: 'per month' },
+  agency: { amount: 29, currency: 'usd', label: '$29', cadence: 'per month' },
+} as const;
+
+/**
+ * The plane the answer work opens up, which is not for sale yet.
+ *
+ * Priced here rather than in a component because the number is a
+ * consequence of the cost model in docs/platform-architecture.md, not a
+ * marketing choice: a hundred prompts across three engines every week is
+ * about $36/month of model calls, and $179 is that at a margin the business
+ * survives. Anyone tempted to lower it should read the table first.
+ *
+ * `available: false` is load-bearing. It keeps the tier out of checkout, and
+ * it is what makes the offer a PreOrder rather than InStock in the JSON-LD.
+ * Selling a plane we have not built would break constraint 11 by a different
+ * door.
+ */
+export const EARLY_ACCESS = {
+  scale: { amount: 179, currency: 'usd', label: 'From $179', cadence: 'per month', available: false },
 } as const;
 
 /**
@@ -122,9 +141,95 @@ export function paymentLink(plan: keyof typeof PAYMENT_LINKS, reference: string,
  * monitor cron and the claim flow enforce them.
  */
 export const PLAN_LIMITS = {
-  free: { domains: 1, scansPerMonth: 10 },
-  monitor: { domains: 3, scansPerMonth: 30 },
+  free: { domains: 1, scansPerMonth: 10, prompts: 12, promptsWeekly: false },
+  monitor: { domains: 3, scansPerMonth: 30, prompts: 12, promptsWeekly: true },
+  // Pooled across every claimed domain rather than per-domain: 50 questions
+  // spread over ten clients is the shape of the work, and ten allowances of
+  // twelve would be 120 questions a week of model calls against a $29 price.
+  // Constraint 10 — cadence is priced — is why weekly is the only cadence here.
+  agency: { domains: 10, scansPerMonth: 120, prompts: 50, promptsWeekly: true },
 } as const;
+
+/**
+ * The plans, in order, as one list.
+ *
+ * Three pages ask "what is this person on and what is above it": the domain
+ * list when the slots run out, the billing page, and pricing. They asked it
+ * three different ways and the answers drifted — the billing page was still
+ * describing monitoring as the only thing to buy after the agency tier
+ * existed. The ladder is data so that adding a rung is one edit, in the
+ * spirit of constraint 3.
+ *
+ * `checkoutPath` is null for free and for anything not sold yet. A rung with
+ * no checkout path is never rendered as a buy button; see EARLY_ACCESS for
+ * the tier that is deliberately not on this ladder at all.
+ */
+export interface PlanRung {
+  id: keyof typeof PLAN_LIMITS;
+  /** How the plan is named in a sentence: "on the monitoring plan". */
+  label: string;
+  price: string | null;
+  cadence: string | null;
+  domains: number;
+  prompts: number;
+  /** Where the buy button goes. Null when there is nothing to buy. */
+  checkoutPath: string | null;
+  /**
+   * Whether that path needs a site id appended before it will do anything.
+   * Monitoring is bought for a domain you have claimed, so a button that has
+   * no site in hand has to send the person somewhere they can pick one first.
+   * Agency is bought for an account and needs nothing.
+   */
+  checkoutNeedsSite: boolean;
+}
+
+export const PLAN_LADDER: readonly PlanRung[] = [
+  { id: 'free', label: 'free', price: null, cadence: null, domains: PLAN_LIMITS.free.domains, prompts: PLAN_LIMITS.free.prompts, checkoutPath: null, checkoutNeedsSite: false },
+  {
+    id: 'monitor',
+    label: 'monitoring',
+    price: PRICING.monitor.label,
+    cadence: PRICING.monitor.cadence,
+    domains: PLAN_LIMITS.monitor.domains,
+    prompts: PLAN_LIMITS.monitor.prompts,
+    // Per-site, because monitoring is bought for a domain you have claimed.
+    // The caller appends the site id.
+    checkoutPath: '/api/checkout/monitor',
+    checkoutNeedsSite: true,
+  },
+  {
+    id: 'agency',
+    label: 'agency',
+    price: PRICING.agency.label,
+    cadence: PRICING.agency.cadence,
+    domains: PLAN_LIMITS.agency.domains,
+    prompts: PLAN_LIMITS.agency.prompts,
+    checkoutPath: '/api/checkout/agency',
+    checkoutNeedsSite: false,
+  },
+] as const;
+
+/** The rung somebody is on. */
+export function rung(plan: keyof typeof PLAN_LIMITS): PlanRung {
+  const found = PLAN_LADDER.find((r) => r.id === plan);
+  if (!found) throw new Error(`No rung for plan ${plan}`);
+  return found;
+}
+
+/**
+ * Where an upgrade button for this rung should point when the caller has no
+ * particular site in hand: straight at checkout, or at the page where they
+ * pick a domain first.
+ */
+export function upgradeHref(to: PlanRung): string {
+  return to.checkoutPath && !to.checkoutNeedsSite ? to.checkoutPath : '/pricing';
+}
+
+/** The rung above, or null at the top. What every upsell on the site reads. */
+export function nextRung(plan: keyof typeof PLAN_LIMITS): PlanRung | null {
+  const at = PLAN_LADDER.findIndex((r) => r.id === plan);
+  return at >= 0 ? (PLAN_LADDER[at + 1] ?? null) : null;
+}
 
 /**
  * The one address, everywhere. The footer, the crawler page, the docs, the

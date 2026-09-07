@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 
+import { planFor } from '@/lib/account-data';
 import { currentUser } from '@/lib/auth';
 import { serviceClient } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const MAX_PROMPTS = 12;
 const MAX_LENGTH = 200;
 
 /**
@@ -25,8 +25,8 @@ export async function POST(request: Request) {
   if (text.length > MAX_LENGTH) return problem(400, `Keep a prompt under ${MAX_LENGTH} characters.`);
 
   const supabase = serviceClient();
-  const { count } = await supabase.from('prompts').select('id', { count: 'exact', head: true }).eq('site_id', siteId).eq('is_active', true);
-  if ((count ?? 0) >= MAX_PROMPTS) return problem(409, `Up to ${MAX_PROMPTS} prompts per domain. Remove one first.`);
+  const room = await allowance(user.id, siteId);
+  if (room.used >= room.limit) return problem(409, room.message);
 
   const { data, error } = await supabase
     .from('prompts')
@@ -35,6 +35,39 @@ export async function POST(request: Request) {
     .single();
   if (error || !data) return problem(500, error?.message ?? 'Could not save the prompt.');
   return NextResponse.json({ ok: true, id: (data as { id: string }).id, text });
+}
+
+/**
+ * How many more questions this person may watch, and where the ceiling is.
+ *
+ * Two shapes, because the plans are two shapes. Monitoring is bought for a
+ * domain and its allowance is per domain. The agency plan is bought for an
+ * account and its allowance is pooled across every domain on it — a client
+ * whose category needs twenty questions should be able to have them, paid for
+ * out of the ones a quieter client is not using.
+ *
+ * Pooled counting is a query over the sites this person has claimed rather
+ * than over every site in the table: an agency's allowance is theirs, and a
+ * prompt somebody else wrote must not eat into it.
+ */
+async function allowance(userId: string, siteId: string): Promise<{ used: number; limit: number; message: string }> {
+  const supabase = serviceClient();
+  const plan = await planFor(userId);
+  const limit = plan.limits.prompts;
+
+  if (plan.plan !== 'agency') {
+    const { count } = await supabase.from('prompts').select('id', { count: 'exact', head: true }).eq('site_id', siteId).eq('is_active', true);
+    return { used: count ?? 0, limit, message: `Up to ${limit} questions per domain. Remove one first.` };
+  }
+
+  const { data: mine } = await supabase.from('sites').select('id').eq('claimed_by', userId);
+  const ids = (mine ?? []).map((row) => (row as { id: string }).id);
+  const { count } = await supabase.from('prompts').select('id', { count: 'exact', head: true }).in('site_id', ids).eq('is_active', true);
+  return {
+    used: count ?? 0,
+    limit,
+    message: `Up to ${limit} questions across every domain on the agency plan. Remove one first.`,
+  };
 }
 
 export async function DELETE(request: Request) {

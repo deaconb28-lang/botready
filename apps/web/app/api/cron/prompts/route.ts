@@ -13,8 +13,11 @@ export const maxDuration = 300;
  * GET /api/cron/prompts — weekly.
  *
  * Asks every active prompt for every claimed site whose owner holds a live
- * monitor entitlement, and records the answers. Sites on the free plan keep
- * their prompts and can run them by hand from the app.
+ * subscription, and records the answers. Sites on the free plan keep their
+ * prompts and can run them by hand from the app.
+ *
+ * Both paying plans qualify. Filtering on 'monitor' alone meant an agency
+ * subscriber, who is paying for more of exactly this, silently got none of it.
  */
 export async function GET(request: Request) {
   const auth = authoriseCron(request);
@@ -31,8 +34,8 @@ export async function GET(request: Request) {
 
   const out: Record<string, unknown> = {};
   for (const [siteId, site] of sites) {
-    if (!(await hasLiveMonitor(site.owner))) {
-      out[site.domain] = 'skipped: no monitor plan';
+    if (!(await hasLiveSubscription(site.owner))) {
+      out[site.domain] = 'skipped: free plan';
       continue;
     }
     out[site.domain] = await runPromptsForSite(siteId, site.domain);
@@ -40,8 +43,12 @@ export async function GET(request: Request) {
   return NextResponse.json({ sites: out });
 }
 
-async function hasLiveMonitor(userId: string): Promise<boolean> {
-  const { data } = await serviceClient().from('entitlements').select('current_period_end').eq('user_id', userId).eq('plan', 'monitor');
+async function hasLiveSubscription(userId: string): Promise<boolean> {
+  const { data } = await serviceClient()
+    .from('entitlements')
+    .select('current_period_end')
+    .eq('user_id', userId)
+    .in('plan', ['monitor', 'agency']);
   return (data ?? []).some((row) => {
     const end = (row as { current_period_end: string | null }).current_period_end;
     return end !== null && new Date(end).getTime() > Date.now();

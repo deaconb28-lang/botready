@@ -111,11 +111,11 @@ export async function entitlementsFor(userId: string): Promise<EntitlementRow[]>
     .from('entitlements')
     .select('plan, current_period_end, domain')
     .eq('user_id', userId)
-    .in('plan', ['fixpack', 'monitor']);
+    .in('plan', ['fixpack', 'monitor', 'agency']);
   return (data ?? []) as EntitlementRow[];
 }
 
-/** A monitor subscription that has not lapsed. The fix pack never expires. */
+/** A subscription that has not lapsed. The fix pack never expires. */
 export function live(row: EntitlementRow, now: number = Date.now()): boolean {
   if (row.plan === 'fixpack') return true;
   if (!row.current_period_end) return false;

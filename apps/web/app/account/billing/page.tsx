@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { AccountShell } from '@/components/account/AccountShell';
-import { Lede, ListCard, ListRow, PageHeading, SectionHeading, inWords } from '@/components/account/bits';
+import { Lede, ListCard, ListRow, PageHeading, SectionHeading, capitalise, inWords } from '@/components/account/bits';
 import { Bar, PillEyebrow } from '@/components/ui';
 import { planFor, usageFor } from '@/lib/account-data';
 import { currentUser } from '@/lib/auth';
 import { cardOnFile, listInvoices, type InvoiceLine } from '@/lib/billing';
-import { PLAN_LIMITS, PRICING } from '@/lib/site';
+import { EARLY_ACCESS, CONTACT_EMAIL, PLAN_LIMITS, nextRung, rung, upgradeHref } from '@/lib/site';
 import { formatDate } from '@/lib/theme';
 
 export const metadata: Metadata = {
@@ -40,8 +40,13 @@ export default async function BillingPage() {
     card = c;
   }
 
-  const monitor = plan.plan === 'monitor';
-  const renewLine = [monitor && plan.currentPeriodEnd ? `Renews ${renewalDate(plan.currentPeriodEnd)}` : null, card].filter(Boolean).join(' · ');
+  // The rung they are on and the one above it, both read off PLAN_LADDER.
+  // This page used to hardcode "free or monitoring", which meant the agency
+  // tier existed on the pricing page and nowhere a subscriber would see it.
+  const here = rung(plan.plan);
+  const up = nextRung(plan.plan);
+  const paying = plan.plan !== 'free';
+  const renewLine = [paying && plan.currentPeriodEnd ? `Renews ${renewalDate(plan.currentPeriodEnd)}` : null, card].filter(Boolean).join(' · ');
 
   const bars: Array<{ label: string; value: string; pct: number; color: string }> = [
     { label: 'Domains', value: `${usage.domains.used} of ${usage.domains.limit}`, pct: share(usage.domains.used, usage.domains.limit), color: '#4B44F5' },
@@ -53,8 +58,8 @@ export default async function BillingPage() {
     <AccountShell email={user.email} active="billing">
       <PageHeading>Your plan</PageHeading>
       <Lede className="mb-[26px] mt-[9px]">
-        {monitor
-          ? 'Monitoring, billed monthly. Cancel from this page whenever you like.'
+        {paying
+          ? `${capitalise(here.label)}, billed monthly. Cancel from this page whenever you like.`
           : `The free plan. One domain, ${inWords(PLAN_LIMITS.free.scansPerMonth)} checks a month, and nothing to cancel.`}
       </Lede>
 
@@ -64,16 +69,16 @@ export default async function BillingPage() {
             <span id="current-plan">Current plan</span>
           </PillEyebrow>
           <div className="mb-[2px] mt-4 flex items-baseline gap-[9px]">
-            <span className="font-display text-[46px] font-bold leading-none tracking-[-0.035em]">{monitor ? PRICING.monitor.label : 'Free'}</span>
-            <span className="font-mono text-[12.5px] text-on-violet">{monitor ? PRICING.monitor.cadence : 'no card on file'}</span>
+            <span className="font-display text-[46px] font-bold leading-none tracking-[-0.035em]">{here.price ?? 'Free'}</span>
+            <span className="font-mono text-[12.5px] text-on-violet">{here.cadence ?? 'no card on file'}</span>
           </div>
           <p className="mb-[18px] mt-2 text-[15px] leading-[1.55] text-on-violet">
-            {monitor
-              ? `Weekly re-scans of up to ${plan.limits.domains} domains, alerts on any drop, and the fix pack regenerated every run.`
-              : `One domain and ${PLAN_LIMITS.free.scansPerMonth} checks a month. Monitoring adds weekly re-scans of up to ${PLAN_LIMITS.monitor.domains} domains, alerts on any drop, and the fix pack regenerated every run, for ${PRICING.monitor.label} ${PRICING.monitor.cadence}.`}
+            {paying
+              ? `Weekly re-scans of up to ${here.domains} domains, ${here.prompts} watched questions, alerts on any drop, and the fix pack regenerated every run.`
+              : `One domain and ${PLAN_LIMITS.free.scansPerMonth} checks a month. Your questions are asked when you press the button rather than every week.`}
           </p>
           <div className="flex flex-wrap gap-[10px]">
-            {monitor ? (
+            {paying ? (
               plan.stripeCustomerId ? (
                 <>
                   <a href={PORTAL} className={LIME_BUTTON}>
@@ -87,7 +92,7 @@ export default async function BillingPage() {
             ) : (
               <>
                 <Link href="/pricing" className={LIME_BUTTON}>
-                  Start monitoring
+                  See the plans
                 </Link>
                 {plan.stripeCustomerId ? (
                   <a href={PORTAL} className={OUTLINE_BUTTON}>
@@ -98,6 +103,47 @@ export default async function BillingPage() {
             )}
           </div>
         </section>
+
+        {up ? (
+          <section className="edge rounded-[18px] bg-white p-[26px] shadow-hard-5" aria-labelledby="next-plan">
+            <span id="next-plan" className="font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-subtle">
+              The plan above
+            </span>
+            <div className="mb-[2px] mt-4 flex items-baseline gap-[9px]">
+              <span className="font-display text-[46px] font-bold leading-none tracking-[-0.035em]">{up.price}</span>
+              <span className="font-mono text-[12.5px] text-quiet">{up.cadence}</span>
+            </div>
+            <p className="mb-[18px] mt-2 text-[15px] leading-[1.55] text-muted">
+              {up.id === 'agency'
+                ? `${up.domains} domains instead of ${here.domains}, ${up.prompts} watched questions pooled across all of them, and a fix pack for every one. Built for somebody who does this for other people.`
+                : `${up.domains} domains, ${up.prompts} questions asked every week rather than when you press the button, and an alert the day a rule changes under you.`}
+            </p>
+            <a href={upgradeHref(up)} className={LIME_BUTTON}>
+              {up.id === 'agency' ? `Move to ${up.label}` : `Start ${up.label}`}
+            </a>
+          </section>
+        ) : (
+          <section className="edge rounded-[18px] bg-white p-[26px] shadow-hard-5" aria-labelledby="next-plan">
+            <span id="next-plan" className="font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-subtle">
+              What comes next
+            </span>
+            <div className="mb-[2px] mt-4 flex items-baseline gap-[9px]">
+              <span className="font-display text-[40px] font-bold leading-none tracking-[-0.035em]">{EARLY_ACCESS.scale.label}</span>
+              <span className="font-mono text-[12.5px] text-quiet">early access</span>
+            </div>
+            {/* Named, priced and explicitly not for sale. Constraint 11 is
+                about not inventing data; the same honesty applies to not
+                inventing a product, so this is a waiting list and says so. */}
+            <p className="mb-[18px] mt-2 text-[15px] leading-[1.55] text-muted">
+              We are building the other half: what the engines actually say when somebody asks about your category, and which
+              crawlers really reached your pages. Not finished, not for sale yet, and we would rather build it with a few people
+              than announce it to everybody.
+            </p>
+            <a href={`mailto:${CONTACT_EMAIL}?subject=Early%20access`} className={LIME_BUTTON}>
+              Ask for early access
+            </a>
+          </section>
+        )}
 
         <section className="edge rounded-[18px] bg-white p-[26px] shadow-hard-5" aria-label="This month">
           <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-subtle">This month</span>

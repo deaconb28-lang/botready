@@ -7,7 +7,7 @@ import { AlertDot, Lede, ListCard, ListRow, PageHeading, SectionHeading, StatusP
 import { cx } from '@/components/ui';
 import { loadAlerts, loadDomains, planFor, usageFor, type DomainCard } from '@/lib/account-data';
 import { currentUser } from '@/lib/auth';
-import { PLAN_LIMITS } from '@/lib/site';
+import { CONTACT_EMAIL, nextRung } from '@/lib/site';
 import { CLIENT_IDS, gradeIsHealthy, relativeTime } from '@/lib/theme';
 
 export const metadata: Metadata = {
@@ -24,6 +24,7 @@ export default async function AccountPage() {
   const plan = await planFor(user.id);
   const [domains, alerts, usage] = await Promise.all([loadDomains(user.id), loadAlerts(user.id), usageFor(user.id, plan)]);
   const slotsLeft = Math.max(0, usage.domains.limit - usage.domains.used);
+  const up = nextRung(plan.plan);
 
   return (
     <AccountShell email={user.email} active="domains">
@@ -75,18 +76,22 @@ export default async function AccountPage() {
             style={{ border: '2px dashed var(--color-dashed)' }}
           >
             <div className="font-body text-[16px] font-bold text-body">
-              {plan.plan === 'monitor' ? 'Every slot is in use' : 'The free plan holds one domain'}
+              {plan.plan === 'free' ? 'The free plan holds one domain' : 'Every slot is in use'}
             </div>
+            {/* The rung above, read off PLAN_LADDER rather than named here, so
+                that adding a tier does not leave this paragraph describing the
+                old top of the ladder to the people who have already reached
+                it. At the top there is nothing to sell and it says so. */}
             <p className="text-[14.5px] leading-[1.5] text-quiet">
-              {plan.plan === 'monitor'
-                ? `The monitoring plan watches ${inWords(plan.limits.domains)} domains. Remove one to make room.`
-                : `Monitoring watches up to ${inWords(PLAN_LIMITS.monitor.domains)} domains and re-checks them every week.`}
+              {up
+                ? `${capitalise(up.label)} watches up to ${inWords(up.domains)} domains and re-checks every one of them each week, for ${up.price} ${up.cadence}.`
+                : `You are on the largest plan we sell. Remove a domain to make room, or write to us about more than ${inWords(plan.limits.domains)}.`}
             </p>
             <Link
-              href="/pricing"
+              href={up ? '/pricing' : `mailto:${CONTACT_EMAIL}?subject=More%20than%20${up ? '' : plan.limits.domains}%20domains`}
               className="edge rounded-[10px] bg-white px-4 py-[10px] font-body text-[14px] font-semibold text-ink no-underline transition-colors duration-150 hover:bg-lime hover:text-ink"
             >
-              See the plans
+              {up ? `See the ${up.label} plan` : 'Write to us'}
             </Link>
           </div>
         )}

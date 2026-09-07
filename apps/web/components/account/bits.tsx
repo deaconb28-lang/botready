@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 
 import { cx } from '@/components/ui';
+import type { PlanName } from '@/lib/account-data';
+import { rung } from '@/lib/site';
 
 /**
  * The small pieces the three account pages share. Every value is read off the
@@ -61,6 +63,6 @@ export function capitalise(s: string): string {
 }
 
 /** The plan's name as it reads in a sentence. */
-export function planLabel(plan: 'free' | 'monitor'): string {
-  return plan === 'monitor' ? 'monitoring' : 'free';
+export function planLabel(plan: PlanName): string {
+  return rung(plan).label;
 }

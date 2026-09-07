@@ -1,6 +1,6 @@
 import { catalog } from '@botready/core';
 
-import { CONTACT_EMAIL, PRICING, SITE, absoluteUrl } from '@/lib/site';
+import { CONTACT_EMAIL, EARLY_ACCESS, PLAN_LIMITS, PRICING, SITE, absoluteUrl } from '@/lib/site';
 
 /**
  * JSON-LD, server-rendered so a client that does not run JavaScript sees it.
@@ -53,24 +53,52 @@ function offers() {
       url: absoluteUrl('/pricing'),
       availability: 'https://schema.org/InStock',
     },
+    subscription(
+      'Monitoring',
+      `Up to ${PLAN_LIMITS.monitor.domains} claimed domains re-scanned on a schedule, with an email when a client stops being able to read you.`,
+      PRICING.monitor.amount,
+      PRICING.monitor.currency,
+    ),
+    subscription(
+      'Agency',
+      `Up to ${PLAN_LIMITS.agency.domains} domains re-scanned weekly, ${PLAN_LIMITS.agency.prompts} watched questions pooled across them, and a fix pack for every one.`,
+      PRICING.agency.amount,
+      PRICING.agency.currency,
+    ),
+    // PreOrder rather than InStock, because it is not built and the page says
+    // so. An offer that claims availability it does not have is exactly the
+    // kind of thing this product exists to find on other people's sites.
     {
-      '@type': 'Offer',
-      name: 'Monitoring',
-      description: 'Up to three claimed domains re-scanned on a schedule, with an email when a client stops being able to read you.',
-      price: String(PRICING.monitor.amount),
-      priceCurrency: PRICING.monitor.currency.toUpperCase(),
-      url: absoluteUrl('/pricing'),
-      availability: 'https://schema.org/InStock',
-      priceSpecification: {
-        '@type': 'UnitPriceSpecification',
-        price: String(PRICING.monitor.amount),
-        priceCurrency: PRICING.monitor.currency.toUpperCase(),
-        billingDuration: 1,
-        billingIncrement: 1,
-        unitCode: 'MON',
-      },
+      ...subscription(
+        'Early access',
+        'What the answer engines say about you, and which crawlers verifiably reached your pages. In development.',
+        EARLY_ACCESS.scale.amount,
+        EARLY_ACCESS.scale.currency,
+      ),
+      availability: 'https://schema.org/PreOrder',
     },
   ];
+}
+
+/** A monthly plan, described the same way every time. */
+function subscription(name: string, description: string, amount: number, currency: string) {
+  return {
+    '@type': 'Offer',
+    name,
+    description,
+    price: String(amount),
+    priceCurrency: currency.toUpperCase(),
+    url: absoluteUrl('/pricing'),
+    availability: 'https://schema.org/InStock',
+    priceSpecification: {
+      '@type': 'UnitPriceSpecification',
+      price: String(amount),
+      priceCurrency: currency.toUpperCase(),
+      billingDuration: 1,
+      billingIncrement: 1,
+      unitCode: 'MON',
+    },
+  };
 }
 
 /** The homepage: who we are, what the software does, and what it costs. */

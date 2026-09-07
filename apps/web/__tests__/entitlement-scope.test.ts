@@ -27,6 +27,15 @@ const monitor = (domain: string | null, end: string | null): EntitlementRow => (
   domain,
 });
 
+const agency = (end: string | null): EntitlementRow => ({
+  plan: 'agency',
+  // Written unlimited by the webhook on purpose: the tier is sold as every
+  // domain the subscriber claims, and the claim flow is what holds that to
+  // ten. See `planOf` and the UNLIMITED line in the Stripe webhook.
+  current_period_end: end,
+  domain: UNLIMITED,
+});
+
 describe('a fix pack covers the domain it was bought for', () => {
   it('unlocks that domain', () => {
     expect(coversDomain([fixpack('example.com')], 'example.com', NOW)).toBe(true);
@@ -148,5 +157,29 @@ describe('the explicit unlimited grant', () => {
   it('is the only thing that unlocks a second domain', () => {
     // The whole point: one $15 pack is one domain, and the second is $5.
     expect(coversDomain([fixpack('one.com')], 'two.com', NOW)).toBe(false);
+  });
+});
+
+describe('the agency plan', () => {
+  it('covers every domain the subscriber has, because that is what it sells', () => {
+    expect(coversDomain([agency(NEXT_MONTH)], 'one-client.com', NOW)).toBe(true);
+    expect(coversDomain([agency(NEXT_MONTH)], 'another-client.com', NOW)).toBe(true);
+  });
+
+  it('stops covering anything once it lapses', () => {
+    expect(coversDomain([agency(LAST_MONTH)], 'one-client.com', NOW)).toBe(false);
+  });
+
+  it('is never claimable, because there is no unstamped grant to spend', () => {
+    // `claimable` exists for a purchase the webhook could not tie to a site.
+    // An agency row always names every domain, so nothing is pending on it and
+    // a first download must not consume it.
+    expect(claimable([agency(NEXT_MONTH)], 'one-client.com', NOW)).toBe(false);
+  });
+
+  it('does not resurrect a lapsed subscriber via a fix pack they still own', () => {
+    const rows = [agency(LAST_MONTH), fixpack('kept.com')];
+    expect(coversDomain(rows, 'kept.com', NOW)).toBe(true);
+    expect(coversDomain(rows, 'someone-else.com', NOW)).toBe(false);
   });
 });

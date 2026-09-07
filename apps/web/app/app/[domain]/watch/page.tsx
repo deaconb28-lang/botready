@@ -24,10 +24,12 @@ export default async function WatchPage({ params }: { params: Promise<{ domain: 
       <h1 className="display-tight text-[36px]">Prompt watch</h1>
       <p className="mb-[22px] mt-[10px] text-[16px] leading-[1.55] text-body">
         {prompts.length === 0
-          ? 'The questions a buyer would ask an assistant about your category. Add up to twelve; we ask them each week and record whether the answer mentions you.'
-          : `${wordNumber(prompts.length)} ${prompts.length === 1 ? 'question' : 'questions'} we ask ${plan.plan === 'monitor' ? 'each week' : 'when you press the button'}, and whether the answer mentions you.`}
+          ? `The questions a buyer would ask an assistant about your category. Add up to ${plan.limits.prompts}${
+              plan.plan === 'agency' ? ' across all your domains' : ''
+            }; we ask them ${plan.limits.promptsWeekly ? 'each week' : 'when you press the button'} and record whether the answer mentions you.`
+          : `${wordNumber(prompts.length)} ${prompts.length === 1 ? 'question' : 'questions'} we ask ${plan.limits.promptsWeekly ? 'each week' : 'when you press the button'}, and whether the answer mentions you.`}
       </p>
-      <PromptWatchView siteId={p.siteId} domain={p.domain} prompts={prompts} configured={probeConfigured()} weekly={plan.plan === 'monitor'} />
+      <PromptWatchView siteId={p.siteId} domain={p.domain} prompts={prompts} configured={probeConfigured()} weekly={plan.limits.promptsWeekly} />
     </div>
   );
 }

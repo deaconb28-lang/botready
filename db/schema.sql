@@ -91,7 +91,7 @@ create index scores_scan_idx on scores (scan_id);
 
 -- ---------------------------------------------------------------- billing
 
-create type plan_tier as enum ('free','fixpack','monitor');
+create type plan_tier as enum ('free','fixpack','monitor','agency');
 
 create table entitlements (
   id                   uuid primary key default gen_random_uuid(),

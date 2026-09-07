@@ -35,14 +35,14 @@ export interface AlertLine {
   scanId: string;
 }
 
-export type PlanName = 'free' | 'monitor';
+export type PlanName = 'free' | 'monitor' | 'agency';
 
 export interface PlanView {
   plan: PlanName;
   currentPeriodEnd: string | null;
   stripeCustomerId: string | null;
   hasFixpack: boolean;
-  limits: { domains: number; scansPerMonth: number };
+  limits: { domains: number; scansPerMonth: number; prompts: number; promptsWeekly: boolean };
 }
 
 export interface UsageView {
@@ -192,8 +192,11 @@ export async function loadAlerts(userId: string, limit = 8): Promise<AlertLine[]
 export async function planFor(userId: string): Promise<PlanView> {
   const { data } = await serviceClient().from('entitlements').select('plan, current_period_end, stripe_customer_id, created_at').eq('user_id', userId).order('created_at', { ascending: false });
   const rows = (data ?? []) as Array<{ plan: string; current_period_end: string | null; stripe_customer_id: string | null }>;
-  const live = rows.find((r) => r.plan === 'monitor' && r.current_period_end && new Date(r.current_period_end).getTime() > Date.now());
-  const plan: PlanName = live ? 'monitor' : 'free';
+  const current = (r: { current_period_end: string | null }) => Boolean(r.current_period_end && new Date(r.current_period_end).getTime() > Date.now());
+  // Highest tier wins. Somebody who upgrades mid-period holds both rows until
+  // the monitor one lapses, and the answer to "what can they do" is agency.
+  const live = rows.find((r) => r.plan === 'agency' && current(r)) ?? rows.find((r) => r.plan === 'monitor' && current(r));
+  const plan: PlanName = live ? (live.plan as PlanName) : 'free';
   return {
     plan,
     currentPeriodEnd: live?.current_period_end ?? null,

@@ -10,7 +10,7 @@
 import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
 import { PUBLIC_PAGES, markdownPathFor, pageFor } from './content';
-import { CONTACT_EMAIL, LIMITS, PRICING, PUBLIC_INDEX_LISTED, SITE, USER_AGENT, absoluteUrl } from './site';
+import { CONTACT_EMAIL, EARLY_ACCESS, LIMITS, PLAN_LIMITS, PRICING, PUBLIC_INDEX_LISTED, SITE, USER_AGENT, absoluteUrl } from './site';
 
 function heading(path: string): string[] {
   const page = pageFor(path);
@@ -108,8 +108,20 @@ function pricing(): string {
     '',
     `## Monitoring — ${PRICING.monitor.label} ${PRICING.monitor.cadence}`,
     '',
-    `Up to three claimed domains, re-scanned on a schedule, with an email the moment a client that could read you`,
+    `Up to ${PLAN_LIMITS.monitor.domains} claimed domains, re-scanned on a schedule, with an email the moment a client that could read you`,
     'stops being able to. That regression is the one this product exists to catch, and it is silent by nature.',
+    `Includes ${PLAN_LIMITS.monitor.prompts} questions asked of an assistant each week, and whether the answer named you.`,
+    '',
+    `## Agency — ${PRICING.agency.label} ${PRICING.agency.cadence}`,
+    '',
+    `Up to ${PLAN_LIMITS.agency.domains} domains on one bill and one login, each re-scanned weekly with its own public result`,
+    `page. ${PLAN_LIMITS.agency.prompts} watched questions are pooled across all of them rather than rationed per domain, and`,
+    'every domain gets its own fix pack, regenerated on every scan, to hand to the client under your own name.',
+    '',
+    `## Early access — ${EARLY_ACCESS.scale.label} ${EARLY_ACCESS.scale.cadence}`,
+    '',
+    'Not built and not for sale. What the answer engines actually say when somebody asks about your category, and which',
+    'crawlers verifiably reached your pages rather than merely claimed to. Write to us if you want to be early.',
     '',
     '## Refunds',
     '',

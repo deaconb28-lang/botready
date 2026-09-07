@@ -7,7 +7,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, DashConnector, GradeTile, PillEyebrow, TerminalLine, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
 import { pageMetadata } from '@/lib/metadata';
-import { CONTACT_EMAIL, PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
+import { CONTACT_EMAIL, EARLY_ACCESS, PLAN_LIMITS, PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/pricing');
 
@@ -17,7 +17,7 @@ interface Tier {
   unit: string;
   body: string;
   items: string[];
-  cta: { label: string; href: string };
+  cta: { label: string; href: string; /** Route handler or mailto: render an <a>, not a <Link>. */ external?: boolean };
   dark?: boolean;
   highlight?: string;
 }
@@ -61,12 +61,27 @@ const TIERS: Tier[] = [
     unit: PRICING.monitor.cadence,
     body: 'We re-check weekly and tell you the day a firewall rule changes under you.',
     items: [
-      'Weekly re-scans of the domains you claim',
+      `Weekly re-scans of up to ${PLAN_LIMITS.monitor.domains} domains you claim`,
       'An alert on any category drop, or a new refusal',
+      `${PLAN_LIMITS.monitor.prompts} questions asked of an assistant every week, and whether the answer named you`,
       'Score history, with the change annotated',
       'The fix pack included, regenerated on every scan',
     ],
     cta: { label: 'Claim a domain', href: '/account/domains/new' },
+  },
+  {
+    eyebrow: 'Agency',
+    price: PRICING.agency.label,
+    unit: PRICING.agency.cadence,
+    body: 'The same thing across a client list, with one bill and one login.',
+    items: [
+      `${PLAN_LIMITS.agency.domains} domains, re-scanned weekly, each with its own public result page`,
+      `${PLAN_LIMITS.agency.prompts} watched questions pooled across all of them, so you spend them where the work is`,
+      'A fix pack for every domain, regenerated on every scan, yours to hand over under your own name',
+      'An alert the day any client stops being readable',
+      `${PLAN_LIMITS.agency.scansPerMonth} checks a month, which is more than a monthly report needs`,
+    ],
+    cta: { label: 'Start on agency', href: '/api/checkout/agency', external: true },
   },
 ];
 
@@ -75,13 +90,13 @@ export default function PricingPage() {
     <div className="min-h-dvh bg-canvas">
       <PricingStructuredData />
       <SiteHeader />
-      <Container as="main" id="main" width={1100} className="pb-24 pt-14">
+      <Container as="main" id="main" width={1240} className="pb-24 pt-14">
         <div className="text-center">
           <span className="eyebrow text-subtle-2">Pricing</span>
           <h1 className="display-tight mx-auto mt-3 max-w-[26ch] text-[clamp(38px,5.2vw,64px)]">Simple, transparent pricing</h1>
         </div>
 
-        <div className="mt-11 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[18px]">
+        <div className="mt-11 grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
           {TIERS.map((t) => (
             <div
               key={t.eyebrow}
@@ -116,18 +131,73 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={t.cta.href}
-                className={cx(
+              {(() => {
+                const className = cx(
                   'mt-auto block w-full rounded-[12px] py-[14px] text-center font-body text-[15px] font-semibold no-underline',
                   t.dark ? 'bg-white text-ink hover:bg-lime' : 'border border-ink bg-transparent text-ink hover:bg-ink hover:text-white',
-                )}
-              >
-                {t.cta.label}
-              </Link>
+                );
+                return t.cta.external ? (
+                  <a href={t.cta.href} className={className}>
+                    {t.cta.label}
+                  </a>
+                ) : (
+                  <Link href={t.cta.href} className={className}>
+                    {t.cta.label}
+                  </Link>
+                );
+              })()}
             </div>
           ))}
         </div>
+
+        {/* The plane we are building, priced and explicitly not for sale.
+            Its own band rather than a fifth card, because a card in the grid
+            reads as something you can buy and this is a waiting list. The
+            price is the one from the cost model in
+            docs/platform-architecture.md, printed here so that nobody has to
+            find out what it costs by asking. */}
+        <section className="edge mt-[18px] rounded-[20px] bg-white p-[30px] shadow-hard-4 sm:p-[38px]" aria-labelledby="whats-next">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-8">
+            <div>
+              <span className="eyebrow text-placeholder">Not for sale yet</span>
+              <h2 id="whats-next" className="display-tight mt-3 text-[clamp(28px,3.4vw,40px)]">
+                The other half of the question
+              </h2>
+              <p className="mt-3 max-w-[46ch] text-[16px] leading-[1.6] text-muted">
+                Everything above measures what an assistant can read on your site. It cannot tell you what the assistant then says
+                about you, or which crawlers actually turned up. We are building both, and we would rather build them with a few
+                people who care than announce them to everyone.
+              </p>
+              <div className="mt-5 flex items-baseline gap-[9px]">
+                <span className="display-tight text-[38px]">{EARLY_ACCESS.scale.label}</span>
+                <span className="font-mono text-[12.5px] text-quiet">{EARLY_ACCESS.scale.cadence}, when it opens</span>
+              </div>
+              <a
+                href={`mailto:${CONTACT_EMAIL}?subject=Early%20access`}
+                className="edge mt-5 inline-block rounded-[12px] bg-lime px-[26px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 transition-colors duration-150 hover:bg-white"
+              >
+                Ask for early access
+              </a>
+            </div>
+            <ul className="m-0 grid list-none content-start gap-[13px] p-0">
+              {[
+                'Which questions in your category name you, and which name a competitor instead',
+                'The same question asked of several assistants, not just one, and the answers put side by side',
+                'Which crawlers really fetched your pages — verified, not taken from a user-agent string',
+                'How many of the visits an assistant sent you actually turned into something',
+                'One timeline: what you changed, what the crawlers did, what the answers said afterwards',
+              ].map((line) => (
+                <li key={line} className="bullet text-[15px] leading-[1.5] text-muted" style={{ ['--bullet-color' as string]: '#4B44F5' }}>
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="mt-7 border-t border-hairline-4 pt-5 text-[14px] leading-[1.6] text-quiet">
+            None of that is built. We are telling you the price and the plan now because you will want to know both before you
+            build a year around us, and because a roadmap you can read is worth more than a demo you cannot.
+          </p>
+        </section>
 
         {/* Both things you can buy here arrive by email, and our mail still
             lands in spam at Gmail more often than not: the domain is weeks old

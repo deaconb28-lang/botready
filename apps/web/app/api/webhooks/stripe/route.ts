@@ -6,6 +6,7 @@ import { claimOnce } from '@/lib/redis';
 import { serviceClient } from '@/lib/supabase';
 import { stripe, verifyWebhook } from '@/lib/stripe';
 import { sendFixpackReady, sendMonitorStarted } from '@/lib/email';
+import { UNLIMITED } from '@/lib/auth';
 import { assembleFixPack } from '@/lib/fixpack';
 import { loadScanView } from '@/lib/scan-data';
 
@@ -61,6 +62,29 @@ export async function POST(request: Request) {
   }
 }
 
+/**
+ * Which plan a completed session bought.
+ *
+ * A Checkout Session this code created says so in metadata. A payment link
+ * cannot — Stripe hosts that page and we never touch it — so mode is the
+ * fallback discriminator: a one-off payment is the fix pack, a subscription is
+ * monitoring. Agency only ever arrives with metadata, because there is no
+ * payment link for it and there is not meant to be; a link cannot carry which
+ * of the two subscriptions it was, and guessing the higher one from mode alone
+ * would upgrade every $5 subscriber who came in through a pasted URL.
+ */
+function planOf(session: Stripe.Checkout.Session): Plan {
+  const declared = session.metadata?.plan;
+  if (declared === 'agency') return 'agency';
+  if (declared === 'monitor') return 'monitor';
+  return session.mode === 'subscription' ? 'monitor' : 'fixpack';
+}
+
+/** The plans that renew, and so carry a period end and no scan. */
+function recurring(plan: Plan): boolean {
+  return plan === 'monitor' || plan === 'agency';
+}
+
 async function handleCheckout(session: Stripe.Checkout.Session, eventId: string) {
   const email = session.customer_details?.email ?? session.customer_email;
   if (!email) {
@@ -76,7 +100,7 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
   // `client_reference_id` when we sent the person there. Mode is the reliable
   // discriminator — the fix pack is a one-off payment, monitoring is a
   // subscription — and the reference is the scan or the site.
-  const plan: Plan = session.metadata?.plan === 'monitor' || session.mode === 'subscription' ? 'monitor' : 'fixpack';
+  const plan: Plan = planOf(session);
   const reference = session.client_reference_id ?? null;
   let scanId = session.metadata?.scanId ?? (plan === 'fixpack' ? reference : null);
   let domain = session.metadata?.domain ?? null;
@@ -85,14 +109,18 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
   if (!domain && reference) {
     domain = await domainFor(plan, reference);
   }
-  if (plan === 'monitor') scanId = null;
+  // Agency is sold as every domain the subscriber claims, and the claim flow
+  // is what holds that to ten. Scoping the grant to whichever domain happened
+  // to be in the metadata would sell ten and deliver one.
+  if (plan === 'agency') domain = UNLIMITED;
+  if (recurring(plan)) scanId = null;
 
   const outcome = await grantEntitlement(supabaseStore(serviceClient()), {
     eventId,
     email,
     plan,
     stripeCustomerId: typeof session.customer === 'string' ? session.customer : (session.customer?.id ?? null),
-    currentPeriodEnd: plan === 'monitor' ? periodEndFor(session) : null,
+    currentPeriodEnd: recurring(plan) ? periodEndFor(session) : null,
     // What they bought it for. Null only when neither the metadata nor the
     // reference could name a domain, which is a payment link with nothing
     // attached; that grant is unscoped, which is the old behaviour and the
@@ -120,7 +148,7 @@ async function handleCheckout(session: Stripe.Checkout.Session, eventId: string)
       .catch((err) => {
         console.error('[stripe] fix pack email failed', err);
       });
-  } else if (outcome.granted && plan === 'monitor') {
+  } else if (outcome.granted && recurring(plan)) {
     // Monitoring used to send nothing at all: the fix pack email needs a scan
     // and this plan has none, so a subscriber's only confirmation was Stripe's
     // receipt. Paying every month and never hearing from us is the same

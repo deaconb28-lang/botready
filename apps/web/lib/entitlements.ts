@@ -18,7 +18,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type Plan = 'fixpack' | 'monitor';
+export type Plan = 'fixpack' | 'monitor' | 'agency';
 
 export interface GrantInput {
   /** Stripe's event id, the idempotency key. */

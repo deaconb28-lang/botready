@@ -82,6 +82,10 @@ export const serverEnv = {
   stripeWebhookSecret: () => need('STRIPE_WEBHOOK_SECRET'),
   stripePriceFixpack: () => need('STRIPE_PRICE_FIXPACK'),
   stripePriceMonitor: () => need('STRIPE_PRICE_MONITOR'),
+  // Optional in practice: with no price id the agency checkout builds the
+  // price inline from PRICING, the same way monitoring does, so the tier works
+  // on a fresh Stripe account with nothing configured.
+  stripePriceAgency: () => need('STRIPE_PRICE_AGENCY'),
 
   resendApiKey: () => want('RESEND_API_KEY'),
   /** Report prose only. Never anything factual. */
