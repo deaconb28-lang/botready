@@ -7,6 +7,7 @@ import { AgentRace } from '@/components/home/AgentRace';
 import { BotScene } from '@/components/bot/BotScene';
 import { ChatProof } from '@/components/home/ChatProof';
 import { HeroScanCard } from '@/components/home/HeroScanCard';
+import { LiveStats } from '@/components/home/LiveStats';
 import { Copy, CopyItem } from '@/components/ModeText';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
@@ -14,6 +15,17 @@ import { Button, Card, Container, Eyebrow, PillEyebrow, TerminalCard, cx } from 
 import { FIX_FILES } from '@/lib/copy';
 
 export const metadata: Metadata = pageMetadata('/');
+
+/**
+ * Regenerated hourly, not per request.
+ *
+ * LiveStats reads the chart, and the home page is the one page an entire launch
+ * lands on at the same moment. Per-visitor that is a Supabase round trip each
+ * time, for numbers that move a handful of times an hour; this way it is one
+ * read an hour and every visitor gets a static file. The same reasoning as the
+ * cookie check in lib/auth.ts, applied to the same page.
+ */
+export const revalidate = 3600;
 
 export default function HomePage() {
   return (
@@ -36,7 +48,7 @@ export default function HomePage() {
   );
 }
 
-function Hero() {
+async function Hero() {
   return (
     <Container as="section" width={1120} className="pt-[72px]">
       {/* Hoisted out of the grid on purpose: inside a 1fr track the badge wraps
@@ -68,6 +80,11 @@ function Hero() {
             carries no information to lose. */}
         <BotScene variant="surfing" className="hidden lg:block" />
       </div>
+
+      {/* Below the box, never above it. Four counts from the corpus, each one a
+          row anybody can go and check on the chart. It renders nothing at all
+          when there is not enough scanned to mean anything. */}
+      <LiveStats />
     </Container>
   );
 }
