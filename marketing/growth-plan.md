@@ -9,28 +9,32 @@ month around it.
 
 ## The arithmetic, first
 
-MRR is recurring revenue, and only one of the three prices recurs.
+MRR is recurring revenue, and only two of the five prices recur.
 
 | | | |
 |---|---|---|
 | Fix pack | $15 | **one time** |
 | Extra domain | $5 | one time |
+| Monitoring — 3 domains | $5 | **per month** |
 | Agency — 10 domains | $29 | **per month** |
+| Scale | from $179 | **per month**, not for sale yet |
 
-So `$1,000 MRR ÷ $29 = 35 accounts`. That is the whole target, and it is a
-very different number from the one this file was first written against.
-
-**The $29 tier changed the shape of the problem.** At $5 for three domains it
-took 200 subscribers, which needed upwards of 40,000 scans in a month — off by
-more than an order of magnitude from anything a launch produces. At $29 for ten:
+Two tiers recur, and they are worth very different amounts. `$1,000 ÷ $29 = 35`
+agency accounts; the same $1,000 off monitoring alone is **200** subscribers.
+That gap is the whole strategy: the target is reachable through the agency tier
+and effectively unreachable through the $5 one.
 
 | | Subscribers for $1k MRR | Scans needed, at 10% attach and 3% conversion |
 |---|---|---|
-| Old $5 plan | 200 | ~44,400 |
-| **New $29 plan** | **35** | **~11,700** |
+| Monitoring, $5 | 200 | ~44,400 |
+| **Agency, $29** | **35** | **~11,700** |
 
-Still roughly five times the traffic that produces $1,000 of one-time revenue,
-but no longer in a different universe from it.
+Monitoring at 200 subscribers needs upwards of 40,000 scans in a month, off by
+more than an order of magnitude from anything a launch produces. Agency at 35 is
+still roughly five times the traffic that produces $1,000 of one-time revenue,
+but no longer in a different universe from it. So monitoring is not the MRR
+path — it is the tier that keeps a single-site owner paying something while the
+selling happens further up.
 
 **And the funnel is no longer the only route.** 200 people had to be *found*;
 35 accounts can be *sold to*. That is the real consequence of the repricing and
@@ -53,23 +57,25 @@ a tool by scanning its own marketing site.
 
 ## The gap the repricing opened
 
-A solo founder with one site now has nothing to buy monthly. $29 for ten
+A solo founder with one site has monitoring at $5 for three domains, and $29 for ten
 domains is the wrong shape for them, and they were the audience every piece of
 copy in this directory is written for.
 
 That is survivable — they buy the $15 pack and leave, which is the one-time
 revenue in target one — but it should be a deliberate position rather than an
-accident. If the monitoring attach rate for single-site owners turns out to
-matter, the answer is a cheap single-domain watch, not a discount on agency.
+accident. Monitoring at $5 is that cheap watch, and it is the right shape:
+a discount on agency would have taught the market that $29 is negotiable.
 
 ## What the agency tier still needs
 
 It is on the pricing page and priced in code. Two things are unfinished:
 
-1. **The $29 price does not exist in Stripe.** Checkout builds a correctly
-   priced Session from `PRICING`, but `STRIPE_LINK_MONITOR` has no value and
-   the fallback is deliberately disabled rather than pointed at the old $5
-   link. Create the price, set the variable.
+1. **Confirm Stripe charges $29 for it.** `STRIPE_PRICE_AGENCY` is read by
+   `lib/env.ts` and the checkout builds the Session from it. `pnpm
+   stripe:verify` asks Stripe what each id actually costs and fails on any
+   disagreement with `PRICING` — run it before the tier is sold, because the
+   $5 monitoring price and the $29 agency price are now two live ids and
+   swapping them would charge a sixth of the plan.
 2. **Nothing in the product is agency-shaped yet.** One alert feed across ten
    client domains is sold on the pricing page; check it behaves that way before
    an agency is looking at it.

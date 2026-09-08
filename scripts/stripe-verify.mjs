@@ -5,10 +5,10 @@
  *   pnpm stripe:verify
  *
  * The pricing page, the JSON-LD offers and the checkout routes all read
- * PRICING in apps/web/lib/site.ts. But when STRIPE_PRICE_FIXPACK or
- * STRIPE_PRICE_MONITOR is set, that price id wins at checkout and PRICING is
- * only what the page *says*. Nothing made the two agree, so editing one and
- * forgetting the other shows one number and charges another.
+ * PRICING in apps/web/lib/site.ts. But when one of the STRIPE_PRICE_* ids is
+ * set, that price wins at checkout and PRICING is only what the page *says*.
+ * Nothing made the two agree, so editing one and forgetting the other shows
+ * one number and charges another.
  *
  * That is the same failure this product exists to find, pointed at ourselves:
  * a claim on a page that nobody checks against what actually happens.
@@ -35,9 +35,20 @@ function priced(name) {
   return Number(m[1]);
 }
 
+/**
+ * One entry per paid thing, and the PRICING key has to be the one the page
+ * actually renders. Monitoring and agency are separate tiers at separate
+ * prices: checking STRIPE_PRICE_MONITOR against PRICING.agency would pass
+ * while the site charged $5 for a $29 plan, which is the drift this exists
+ * to catch.
+ *
+ * EARLY_ACCESS is deliberately absent. It has no price id and no checkout
+ * path, so there is nothing for Stripe to disagree with.
+ */
 const CHECKS = [
   { env: 'STRIPE_PRICE_FIXPACK', expect: priced('fixpack'), recurring: false, label: 'fix pack' },
-  { env: 'STRIPE_PRICE_MONITOR', expect: priced('monitor'), recurring: 'month', label: 'agency' },
+  { env: 'STRIPE_PRICE_MONITOR', expect: priced('monitor'), recurring: 'month', label: 'monitoring' },
+  { env: 'STRIPE_PRICE_AGENCY', expect: priced('agency'), recurring: 'month', label: 'agency' },
 ];
 
 let bad = 0;
