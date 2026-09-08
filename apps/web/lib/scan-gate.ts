@@ -90,6 +90,34 @@ export function limitedMessage(verdict: RateLimitVerdict, signedIn: boolean, sig
 export const STUCK_AFTER_MS = 5 * 60 * 1000;
 
 /**
+ * How long the batch reaper waits before settling a scan, which is much
+ * longer than STUCK_AFTER_MS and deliberately so.
+ *
+ * The two thresholds answer different questions. STUCK_AFTER_MS is asked by
+ * the page somebody is watching, and being wrong there costs them a re-run of
+ * something that was already dead. This one is asked by a cron about every
+ * running scan on the platform at once, and being wrong here kills a scan that
+ * was going to finish.
+ *
+ * Set from the data rather than from a round number: the slowest scan that
+ * ever completed took 1,008 seconds — sixteen minutes — against a median of
+ * 35. Thirty minutes clears that by nearly double and still settles a dead row
+ * inside the hour.
+ */
+export const REAP_AFTER_MS = 30 * 60 * 1000;
+
+/**
+ * What a scan says when it stopped rather than finished.
+ *
+ * One string, because two code paths settle these — the page poll and the
+ * cron — and a person who saw one message on screen and a different one in
+ * their history would reasonably wonder which had happened.
+ */
+export const STOPPED_MESSAGE =
+  'The scan stopped before it finished, which is our problem and not the site\'s. ' +
+  'Some checks ran and the rest did not, so there is no score. Run it again.';
+
+/**
  * Whether a scan has outlived any possible run.
  *
  * Nothing marks an orphaned scan as finished. The worker is the only thing

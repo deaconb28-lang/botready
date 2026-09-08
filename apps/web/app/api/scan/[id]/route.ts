@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import type { PerAgentFetch } from '@botready/core';
 
-import { isStuck } from '@/lib/scan-gate';
+import { STOPPED_MESSAGE, isStuck } from '@/lib/scan-gate';
 import { loadScanView, markScanErrored, persistScore } from '@/lib/scan-data';
 
 export const runtime = 'nodejs';
@@ -43,10 +43,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   let status = scan.status;
   if (isStuck(status, scan.started_at, scan.created_at)) {
     status = 'error';
-    await markScanErrored(
-      scan.id,
-      'The scan stopped before it finished, which is our problem and not the site\'s. Nothing was measured. Run it again.',
-    ).catch(() => {});
+    await markScanErrored(scan.id, STOPPED_MESSAGE).catch(() => {});
     // And forget the cached id, or the 24-hour window hands the next person
     // this same dead scan instead of crawling.
     const { forgetCachedScan } = await import('@/lib/redis');
