@@ -59,8 +59,12 @@ export interface Revenue {
   payments: number;
   /** Mean successful payment, in dollars. */
   averageOrder: number;
-  /** Monthly recurring revenue from live subscriptions. */
-  mrr: number;
+  /**
+   * Monthly recurring revenue from live subscriptions. Null when the
+   * subscription half of the call failed on its own — which is a different
+   * fact from "no subscriptions", and is drawn differently.
+   */
+  mrr: number | null;
   /** Most recent payments, newest first. */
   recent: Array<{ date: string; amount: number; description: string; refunded: boolean }>;
 }
@@ -408,17 +412,96 @@ export function isOurs(charge: Stripe.Charge): boolean {
   return false;
 }
 
-/** The same question about a subscription, for MRR. */
-export function isOurSubscription(sub: Stripe.Subscription): boolean {
+/**
+ * The same question about a subscription, for MRR.
+ *
+ * `nameOf` resolves a product id to its name. A subscription item carries its
+ * price as an object but its product as a bare id, and the product name is
+ * where an older subscription keeps the only evidence of whose it is. It
+ * cannot be expanded on the way in — `data.items.data.price.product` is five
+ * levels and Stripe expands four — so the caller looks the products up in a
+ * second call and passes the answers down here. Unresolved is not ours, same
+ * as an unreadable invoice: exclude and count rather than guess.
+ */
+export function isOurSubscription(
+  sub: Stripe.Subscription,
+  nameOf: (productId: string) => string | null = () => null,
+): boolean {
   if (sub.metadata?.product === 'botready') return true;
   // A subscription this app created before the product marker existed still
   // says which plan it is, and those names are ours.
   if (['monitor', 'agency'].includes(sub.metadata?.plan ?? '')) return true;
   return sub.items.data.some((item) => {
     const product = item.price.product;
-    if (typeof product === 'string') return false;
-    return 'name' in product && BOTREADY_MARKER.test(product.name ?? '');
+    const name = typeof product === 'string' ? nameOf(product) : 'name' in product ? product.name : null;
+    return BOTREADY_MARKER.test(name ?? '');
   });
+}
+
+/** Distinct product ids on subscriptions whose ownership is still undecided. */
+function unresolvedProductIds(subs: Stripe.Subscription[]): string[] {
+  const ids = new Set<string>();
+  for (const sub of subs) {
+    if (isOurSubscription(sub)) continue;
+    for (const item of sub.items.data) {
+      if (typeof item.price.product === 'string') ids.add(item.price.product);
+    }
+  }
+  return [...ids];
+}
+
+/**
+ * Monthly recurring revenue, or null if Stripe would not say.
+ *
+ * Separate from the charges call, and failing on its own, because the first
+ * version put both in one `Promise.all` and a bad expand on this half threw
+ * away the charges that had already come back. One broken number should cost
+ * one number.
+ */
+async function loadMrr(client: Stripe): Promise<number | null> {
+  try {
+    const subscriptions = await client.subscriptions.list({ status: 'active', limit: 100 });
+
+    // Retrieved one by one rather than listed, because `products.list` has no
+    // id filter and this is a handful of ids on any real account.
+    const names = new Map<string, string>();
+    await Promise.all(
+      unresolvedProductIds(subscriptions.data).map(async (id) => {
+        try {
+          const product = await client.products.retrieve(id);
+          if (!product.deleted) names.set(id, product.name ?? '');
+        } catch {
+          /* an unreadable product is not ours; the miss is deliberate */
+        }
+      }),
+    );
+
+    // Stripe quotes a subscription price in the interval it bills on, so a
+    // yearly plan has to be divided back down before it can sit beside a
+    // monthly one under the letters MRR.
+    const cents = subscriptions.data
+      .filter((sub) => isOurSubscription(sub, (id) => names.get(id) ?? null))
+      .reduce((sum, sub) => {
+        for (const item of sub.items.data) {
+          const amount = item.price.unit_amount ?? 0;
+          const quantity = item.quantity ?? 1;
+          const interval = item.price.recurring?.interval;
+          const every = item.price.recurring?.interval_count ?? 1;
+          const perMonth =
+            interval === 'year' ? amount / (12 * every)
+            : interval === 'week' ? (amount * 52) / (12 * every)
+            : interval === 'day' ? (amount * 365) / (12 * every)
+            : amount / every;
+          sum += perMonth * quantity;
+        }
+        return sum;
+      }, 0);
+
+    return Math.round(cents / 100);
+  } catch (err) {
+    console.error('[admin] Stripe would not list subscriptions; MRR will show as unknown', err);
+    return null;
+  }
 }
 
 async function loadRevenue(): Promise<Revenue> {
@@ -431,67 +514,56 @@ async function loadRevenue(): Promise<Revenue> {
     refunded: 0,
     payments: 0,
     averageOrder: 0,
-    mrr: 0,
+    mrr: null,
     recent: [],
   };
 
+  let client: Stripe;
   try {
-    const client = stripe();
-    const [charges, subscriptions] = await Promise.all([
-      // The invoice comes back expanded because a subscription charge carries
-      // nothing of its own that names the product — the line item does.
-      client.charges.list({ limit: 100, expand: ['data.invoice'] }),
-      client.subscriptions.list({ status: 'active', limit: 100, expand: ['data.items.data.price.product'] }),
-    ]);
-
-    const succeeded = charges.data.filter((c) => c.paid && c.status === 'succeeded');
-    const paid = succeeded.filter(isOurs);
-    const cutoff = (days: number) => Date.now() / 1000 - days * 86_400;
-    const net = (c: (typeof paid)[number]) => c.amount - c.amount_refunded;
-
-    const grossAllTime = paid.reduce((sum, c) => sum + net(c), 0);
-    const refunded = paid.reduce((sum, c) => sum + c.amount_refunded, 0);
-
-    // Stripe quotes a subscription price in the interval it bills on, so a
-    // yearly plan has to be divided back down before it can sit beside a
-    // monthly one under the letters MRR.
-    const mrr = subscriptions.data.filter(isOurSubscription).reduce((sum, sub) => {
-      for (const item of sub.items.data) {
-        const amount = item.price.unit_amount ?? 0;
-        const quantity = item.quantity ?? 1;
-        const interval = item.price.recurring?.interval;
-        const every = item.price.recurring?.interval_count ?? 1;
-        const perMonth =
-          interval === 'year' ? amount / (12 * every)
-          : interval === 'week' ? (amount * 52) / (12 * every)
-          : interval === 'day' ? (amount * 365) / (12 * every)
-          : amount / every;
-        sum += perMonth * quantity;
-      }
-      return sum;
-    }, 0);
-
-    return {
-      available: true,
-      excluded: succeeded.length - paid.length,
-      grossAllTime: Math.round(grossAllTime / 100),
-      gross30d: Math.round(paid.filter((c) => c.created >= cutoff(30)).reduce((s, c) => s + net(c), 0) / 100),
-      gross7d: Math.round(paid.filter((c) => c.created >= cutoff(7)).reduce((s, c) => s + net(c), 0) / 100),
-      refunded: Math.round(refunded / 100),
-      payments: paid.length,
-      averageOrder: paid.length > 0 ? Math.round(grossAllTime / paid.length) / 100 : 0,
-      mrr: Math.round(mrr / 100),
-      recent: paid.slice(0, 8).map((c) => ({
-        date: new Date(c.created * 1000).toISOString(),
-        amount: Math.round(net(c)) / 100,
-        description: c.description ?? 'Payment',
-        refunded: c.amount_refunded > 0,
-      })),
-    };
+    client = stripe();
   } catch (err) {
-    console.error('[admin] Stripe did not answer; the revenue panel will say so', err);
+    console.error('[admin] no Stripe client; the revenue panel will say so', err);
     return empty;
   }
+
+  // Settled rather than all: one half failing must not discard the other.
+  const [chargeResult, mrr] = await Promise.all([
+    // The invoice comes back expanded because a subscription charge carries
+    // nothing of its own that names the product — the line item does.
+    client.charges.list({ limit: 100, expand: ['data.invoice'] }).catch((err: unknown) => {
+      console.error('[admin] Stripe would not list charges; the revenue panel will say so', err);
+      return null;
+    }),
+    loadMrr(client),
+  ]);
+
+  if (!chargeResult) return { ...empty, mrr };
+
+  const succeeded = chargeResult.data.filter((c) => c.paid && c.status === 'succeeded');
+  const paid = succeeded.filter(isOurs);
+  const cutoff = (days: number) => Date.now() / 1000 - days * 86_400;
+  const net = (c: (typeof paid)[number]) => c.amount - c.amount_refunded;
+
+  const grossAllTime = paid.reduce((sum, c) => sum + net(c), 0);
+  const refunded = paid.reduce((sum, c) => sum + c.amount_refunded, 0);
+
+  return {
+    available: true,
+    excluded: succeeded.length - paid.length,
+    grossAllTime: Math.round(grossAllTime / 100),
+    gross30d: Math.round(paid.filter((c) => c.created >= cutoff(30)).reduce((s, c) => s + net(c), 0) / 100),
+    gross7d: Math.round(paid.filter((c) => c.created >= cutoff(7)).reduce((s, c) => s + net(c), 0) / 100),
+    refunded: Math.round(refunded / 100),
+    payments: paid.length,
+    averageOrder: paid.length > 0 ? Math.round(grossAllTime / paid.length) / 100 : 0,
+    mrr,
+    recent: paid.slice(0, 8).map((c) => ({
+      date: new Date(c.created * 1000).toISOString(),
+      amount: Math.round(net(c)) / 100,
+      description: c.description ?? 'Payment',
+      refunded: c.amount_refunded > 0,
+    })),
+  };
 }
 
 /** Thirty buckets, oldest first, including the days with nothing in them. */

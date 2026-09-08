@@ -181,7 +181,13 @@ function Revenue({ m }: { m: AdminMetrics }) {
         <Stat n={money(r.grossAllTime)} label="collected, all time" tone="green" />
         <Stat n={money(r.gross30d)} label="last 30 days" />
         <Stat n={money(r.gross7d)} label="last 7 days" />
-        <Stat n={money(r.mrr)} label="monthly recurring" tone="green" />
+        {/* An em dash, not $0. Stripe answering about charges and not about
+            subscriptions is one broken number, and it says which one. */}
+        <Stat
+          n={r.mrr === null ? '—' : money(r.mrr)}
+          label={r.mrr === null ? 'monthly recurring — Stripe did not say' : 'monthly recurring'}
+          tone={r.mrr === null ? undefined : 'green'}
+        />
         <Stat n={`$${r.averageOrder.toFixed(2)}`} label="average payment" />
         <Stat n={r.refunded > 0 ? money(r.refunded) : '$0'} label="refunded" tone={r.refunded > 0 ? 'coral' : undefined} />
       </div>

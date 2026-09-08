@@ -12,6 +12,8 @@
  * panel reports what it excluded for exactly that reason.
  */
 
+import { readFile } from 'node:fs/promises';
+
 import { describe, expect, it } from 'vitest';
 import type Stripe from 'stripe';
 
@@ -82,8 +84,47 @@ describe('a subscription counts toward MRR when', () => {
     expect(isOurSubscription(subscription({ items }))).toBe(false);
   });
 
-  it('and not when the product came back as an id rather than an object', () => {
+  it('a bare product id resolves to one of our names', () => {
+    // The id is what Stripe actually sends: a subscription item carries its
+    // price as an object and its product as an id, and the expand that would
+    // have inlined it is one level past the limit. So the name arrives from a
+    // second lookup, and this is the path that carries every older
+    // subscription's only evidence of whose it is.
+    const items = { data: [{ price: { product: 'prod_123' } }] };
+    const names = new Map([['prod_123', 'BotReady for agencies']]);
+    expect(isOurSubscription(subscription({ items }), (id) => names.get(id) ?? null)).toBe(true);
+  });
+
+  it('and not when a bare id resolves to somebody else', () => {
+    const items = { data: [{ price: { product: 'prod_sub' } }] };
+    const names = new Map([['prod_sub', 'Monthly newsletter']]);
+    expect(isOurSubscription(subscription({ items }), (id) => names.get(id) ?? null)).toBe(false);
+  });
+
+  it('and not when the product came back as an id nothing could resolve', () => {
     const items = { data: [{ price: { product: 'prod_123' } }] };
     expect(isOurSubscription(subscription({ items }))).toBe(false);
+  });
+});
+
+/**
+ * The bug this half of the file exists to prevent from returning.
+ *
+ * `charges.list` and `subscriptions.list` were issued as one `Promise.all`,
+ * and the subscription call carried `expand: ['data.items.data.price.product']`
+ * — five levels, where Stripe allows four. It failed every time, took the
+ * charges down with it, and the Money panel drew its "Stripe did not answer"
+ * empty state for days while Stripe was answering fine about the charges.
+ */
+describe('what we ask Stripe for', () => {
+  it('never expands more than four levels', async () => {
+    const source = await readFile(new URL('../lib/admin-metrics.ts', import.meta.url), 'utf8');
+    const expands = [...source.matchAll(/expand:\s*\[([^\]]*)\]/g)].flatMap((m) =>
+      [...(m[1] ?? '').matchAll(/'([^']+)'/g)].map((p) => p[1] ?? ''),
+    );
+    expect(expands.length).toBeGreaterThan(0);
+    for (const path of expands) {
+      expect(path.split('.').length, `${path} is too deep for Stripe`).toBeLessThanOrEqual(4);
+    }
   });
 });
