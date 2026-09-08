@@ -18,6 +18,17 @@ That is not squeamishness. A product that sells a measurement cannot advertise
 with a picture of a measurement it did not take, and the first person to notice
 would be exactly the engineer we are trying to convince.
 
+The landscape promo holds to the same line, and it is worth saying why it was
+not made the way it was asked for. It was briefed off a competitor's promo that
+is thirty-five seconds of nothing but interface: assistant answers, dashboards,
+analytics tables, every word of it legible. No generative video model can draw
+an interface that survives being read, and a model good enough to try would be
+drawing scans nobody ran — a fabricated product, which is the one thing
+`../README.md` rules out. So the panels are 2x screenshots of the running app
+and only the motion, the gradient and the type are ours. Higgsfield could not
+have supplied the music either: its audio tool generates speech and refuses
+standalone music outright.
+
 The one thing that is synthesised is the narration. It is `text2speech_v2` on
 its `elevenlabs` engine, voice preset Emmett, and the choice is recorded as
 `VOICE` in `script.mjs` rather than living in somebody's shell history — a line
@@ -32,8 +43,10 @@ itself off your durations, and the credit cost of this directory goes to zero.
 | | |
 |---|---|
 | `script.mjs` | **The locked script.** Beats, narration, cutdown definitions, reels. One source of truth for the voice and the edit. |
+| `promo-landscape.mjs` | The 35s silent landscape promo: real panels floating on a drifting gradient. Cards come from `tools/capture-cards.mjs` |
 | `titles.mjs` | Draws the title cards in Chromium from the design tokens |
 | `build-film.mjs` | The edit. ffmpeg, driven from Node |
+| `cards/` | Still panels from `tools/capture-cards.mjs`, captured at 2x |
 | `footage/` | Recordings from `tools/capture-footage.mjs`, plus `shots.json` |
 | `titles/` | Rendered cards, plus `titles.json` |
 | `vo/` | One mp3 per narrated beat, named by beat id |
