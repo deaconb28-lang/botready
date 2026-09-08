@@ -4,8 +4,10 @@ import { notFound } from 'next/navigation';
 
 import { Copy } from '@/components/ModeText';
 import { SiteFooter } from '@/components/site/SiteFooter';
+import { CorpusStrip } from '@/components/home/CorpusStrip';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Card, Container, cx } from '@/components/ui';
+import { corpusStats } from '@/lib/corpus-stats';
 import { loadIndex, type IndexRow } from '@/lib/index-data';
 import { PUBLIC_INDEX_LISTED, SEGMENTS, isSegment, type SegmentKey } from '@/lib/site';
 import { scoreColorFor } from '@/lib/theme';
@@ -72,7 +74,11 @@ export default async function IndexPage({ params }: { params: Promise<{ segment:
           ))}
         </nav>
 
-        <Card radius="panel" shadow={4} className="mt-8 overflow-hidden">
+        {view && view.rows.length > 0 ? (
+          <CorpusStrip stats={corpusStats(view.rows)} href={`/index/${segment}#table`} className="mt-8" />
+        ) : null}
+
+        <Card id="table" radius="panel" shadow={4} className="mt-8 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] border-collapse">
               <caption className="sr-only">{label} sites ranked by agent readability</caption>
