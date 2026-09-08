@@ -16,7 +16,22 @@ interface Tier {
   price: string;
   unit: string;
   body: string;
-  items: string[];
+  /**
+   * One line each, with its own marker. An emoji rather than a dot because the
+   * four cards are read by scanning down a column, and a symbol that differs
+   * per line is faster to scan than a symbol that does not.
+   */
+  items: Array<[icon: string, text: string]>;
+  /**
+   * The tier this one contains, named rather than restated.
+   *
+   * Agency repeated five of monitoring's six bullets, which made the card long
+   * and the relationship between the two plans something the reader had to
+   * work out by comparing lists. Saying it once is shorter and answers the
+   * question the reader actually has, which is "do I lose anything by moving
+   * up".
+   */
+  includes?: string;
   cta: { label: string; href: string; /** Route handler or mailto: render an <a>, not a <Link>. */ external?: boolean };
   dark?: boolean;
   highlight?: string;
@@ -27,12 +42,12 @@ const TIERS: Tier[] = [
     eyebrow: 'The check',
     price: 'Free',
     unit: 'no account',
-    body: 'Everything the scan measures, on a page anyone can read and link to.',
+    body: 'The whole diagnosis, on a page anyone can read and link to.',
     items: [
-      'The grade, the score and six category scores',
-      "Every client's status code for the same URL",
-      'Every finding with the raw request and response',
-      'A share card and a result page that keeps working',
+      ['🎯', 'Your grade, your score, six categories'],
+      ['🤖', 'What each AI client got from the same URL'],
+      ['🔬', 'Every finding, with the raw response'],
+      ['🔗', 'A public result page that keeps working'],
     ],
     cta: { label: 'Run a check', href: '/#check' },
   },
@@ -40,17 +55,15 @@ const TIERS: Tier[] = [
     eyebrow: 'The fix pack',
     price: PRICING.fixpack.label,
     unit: PRICING.fixpack.cadence,
-    body: 'Eight generated files and a punch list, built from your scan. Covers one domain; another is $5.',
+    body: 'Eight files built from your own scan. One domain; another is $5.',
     highlight: 'A full prompt for your coding agent. Paste it into Claude Code or Cursor and your site fixes itself.',
     items: [
-      'llms.txt, from the pages we confirmed returned 200',
-      'The robots.txt block naming the agents you refuse',
-      'Link tags and negotiation notes for your top 20 URLs',
-      'A JSON-LD block filled in from your own pages',
-      'The questions buyers ask, as a FAQ block ready for your answers',
-      'Price, audience and limits, in the fields an assistant matches on',
-      'A punch list ordered by effort, not by points',
-      'One domain. Add another for $5, as many as you like',
+      ['📄', 'llms.txt, from pages we confirmed return 200'],
+      ['🛡️', 'A robots.txt block and a WAF rule'],
+      ['🏷️', 'JSON-LD filled in from your own pages'],
+      ['❓', 'The questions buyers ask, ready for your answers'],
+      ['💵', 'Price and audience, in fields an assistant matches on'],
+      ['✅', 'A punch list ordered by effort, not by points'],
     ],
     cta: { label: 'Run a check first', href: '/#check' },
     dark: true,
@@ -59,13 +72,13 @@ const TIERS: Tier[] = [
     eyebrow: 'Monitoring',
     price: PRICING.monitor.label,
     unit: PRICING.monitor.cadence,
-    body: 'We re-check weekly and tell you the day a firewall rule changes under you.',
+    body: 'We re-check weekly and tell you the day a rule changes under you.',
     items: [
-      `Weekly re-scans of up to ${PLAN_LIMITS.monitor.domains} domains you claim`,
-      'An alert on any category drop, or a new refusal',
-      `${PLAN_LIMITS.monitor.prompts} questions asked of an assistant every week, and whether the answer named you`,
-      'Score history, with the change annotated',
-      'The fix pack included, regenerated on every scan',
+      ['🔁', `Weekly re-scans of ${PLAN_LIMITS.monitor.domains} domains`],
+      ['🚨', 'An alert on any drop, or a new refusal'],
+      ['💬', `${PLAN_LIMITS.monitor.prompts} questions asked of an assistant each week`],
+      ['📈', 'Score history, with the change annotated'],
+      ['📦', 'The fix pack included, regenerated every scan'],
     ],
     cta: { label: 'Claim a domain', href: '/account/domains/new' },
   },
@@ -73,16 +86,15 @@ const TIERS: Tier[] = [
     eyebrow: 'Agency',
     price: PRICING.agency.label,
     unit: PRICING.agency.cadence,
-    body: 'The same thing across a client list, with one bill and one login.',
+    body: 'The same thing across a client list, on one bill.',
+    includes: 'Everything in monitoring, plus',
     items: [
-      `${PLAN_LIMITS.agency.domains} domains, re-scanned weekly, each with its own public result page`,
-      `${PLAN_LIMITS.agency.prompts} watched questions pooled across all of them, so you spend them where the work is`,
-      'Share of voice: how often an assistant cites your client versus the competitors they named',
-      'Crawler analytics from your client’s own access logs: which AI crawlers actually fetched which pages',
-      'Every fetch checked against the vendor’s published addresses and reverse DNS, so a scraper wearing a crawler’s name is counted separately',
-      'A fix pack for every domain, regenerated on every scan, yours to hand over under your own name',
-      'An alert the day any client stops being readable',
-      `${PLAN_LIMITS.agency.scansPerMonth} checks a month, which is more than a monthly report needs`,
+      ['🏢', `${PLAN_LIMITS.agency.domains} domains instead of ${PLAN_LIMITS.monitor.domains}`],
+      ['💬', `${PLAN_LIMITS.agency.prompts} questions, pooled — spend them where the work is`],
+      ['📣', 'Share of voice against the competitors you name'],
+      ['🕵️', 'Which AI crawlers really fetched your pages, from your logs'],
+      ['🪪', 'Each one checked against the vendor’s own addresses'],
+      ['🏷️', 'A fix pack per domain, to hand over under your name'],
     ],
     cta: { label: 'Start on agency', href: '/api/checkout/agency', external: true },
   },
@@ -123,14 +135,32 @@ export default function PricingPage() {
                   <TerminalLine className="mt-3 rounded-[9px] border-0 px-3 py-[10px]">$ claude &quot;apply botready-fixes.md&quot;</TerminalLine>
                 </div>
               ) : null}
-              <ul className="m-0 mb-6 mt-5 grid list-none gap-[11px] p-0">
-                {t.items.map((item) => (
+              {t.includes ? (
+                <p
+                  className={cx(
+                    'mb-1 mt-5 font-mono text-[11.5px] font-medium uppercase tracking-[0.1em]',
+                    t.dark ? 'text-subtle-2' : 'text-placeholder',
+                  )}
+                >
+                  {t.includes}
+                </p>
+              ) : null}
+              <ul className={cx('m-0 mb-6 grid list-none gap-[10px] p-0', t.includes ? 'mt-3' : 'mt-5')}>
+                {t.items.map(([icon, text]) => (
                   <li
-                    key={item}
-                    className={cx('bullet text-[14.5px] leading-[1.5]', t.dark ? 'text-on-ink' : 'text-muted')}
-                    style={{ ['--bullet-color' as string]: t.dark ? '#5A646F' : '#D3D3CB' }}
+                    key={text}
+                    className={cx(
+                      'grid grid-cols-[20px_1fr] gap-[9px] text-[14px] leading-[1.45]',
+                      t.dark ? 'text-on-ink' : 'text-muted',
+                    )}
                   >
-                    {item}
+                    {/* aria-hidden: the emoji is a bullet, and a screen reader
+                        announcing "office building" before every line is worse
+                        than announcing nothing. */}
+                    <span aria-hidden className="text-[15px] leading-[1.35]">
+                      {icon}
+                    </span>
+                    <span>{text}</span>
                   </li>
                 ))}
               </ul>
@@ -167,9 +197,8 @@ export default function PricingPage() {
                 The other half of the question
               </h2>
               <p className="mt-3 max-w-[46ch] text-[16px] leading-[1.6] text-muted">
-                Everything above measures what an assistant can read on your site. It cannot tell you what the assistant then says
-                about you, or which crawlers actually turned up. We are building both, and we would rather build them with a few
-                people who care than announce them to everyone.
+                Everything above is measured on one site at a time. This is the whole category at once — every engine, every
+                rival, one timeline. Not finished, and we would rather build it with a few people than announce it to everyone.
               </p>
               <div className="mt-5 flex items-baseline gap-[9px]">
                 <span className="display-tight text-[38px]">{EARLY_ACCESS.scale.label}</span>
@@ -184,21 +213,22 @@ export default function PricingPage() {
             </div>
             <ul className="m-0 grid list-none content-start gap-[13px] p-0">
               {[
-                'Which questions in your category name you, and which name a competitor instead',
-                'The same question asked of several assistants, not just one, and the answers put side by side',
-                'Which crawlers really fetched your pages — verified, not taken from a user-agent string',
-                'How many of the visits an assistant sent you actually turned into something',
-                'One timeline: what you changed, what the crawlers did, what the answers said afterwards',
-              ].map((line) => (
-                <li key={line} className="bullet text-[15px] leading-[1.5] text-muted" style={{ ['--bullet-color' as string]: '#4B44F5' }}>
-                  {line}
+                ['🗣️', 'Every engine asked, not one — answers side by side'],
+                ['📊', 'Your whole category ranked, week over week'],
+                ['💸', 'What the visits an assistant sent you were worth'],
+                ['🧵', 'One timeline: your change, the crawlers, then the answers'],
+              ].map(([icon, line]) => (
+                <li key={line} className="grid grid-cols-[22px_1fr] gap-[10px] text-[15px] leading-[1.5] text-muted">
+                  <span aria-hidden className="text-[16px] leading-[1.4]">
+                    {icon}
+                  </span>
+                  <span>{line}</span>
                 </li>
               ))}
             </ul>
           </div>
           <p className="mt-7 border-t border-hairline-4 pt-5 text-[14px] leading-[1.6] text-quiet">
-            None of that is built. We are telling you the price and the plan now because you will want to know both before you
-            build a year around us, and because a roadmap you can read is worth more than a demo you cannot.
+            None of it is built yet. The price is here because you will want to know it before you build a year around us.
           </p>
         </section>
 
