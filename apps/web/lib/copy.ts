@@ -52,11 +52,11 @@ export interface MarketingCopy {
 export const COPY: MarketingCopy = {
     badge: 'Your competitors are in the answer. Are you?',
     heroSub:
-      'ChatGPT, Claude and Perplexity are answering questions about your category today. We ask your site the way they do, show you exactly what they got back, and write the files that fix it. Thirty seconds, free.',
+      'A billion people a week now ask an assistant instead of searching. An assistant can only recommend a site it managed to read. We fetch yours as ChatGPT, Claude and Perplexity do, show you exactly what each one got back, and write the files that fix it. Thirty seconds, free.',
     question: "What's a good project tracker for a small team?",
     whyTitle: 'Right now an assistant is recommending someone else',
     whyBody:
-      'An assistant answers from the pages it managed to fetch. If it never reached yours, your name never comes up — and there is nothing anywhere to tell you it happened.',
+      'ChatGPT passed a billion people a week in August. Every one of those answers is built from pages the assistant managed to fetch, and if it never reached yours your name never comes up — with nothing anywhere to tell you it happened.',
     whyPoints: [
       'Analytics cannot show you a visit that never happened.',
       'Usually it is a Cloudflare default nobody switched on deliberately.',

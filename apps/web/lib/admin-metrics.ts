@@ -1,3 +1,5 @@
+import type Stripe from 'stripe';
+
 import { serviceClient } from './supabase';
 import { stripe } from './stripe';
 
@@ -44,6 +46,11 @@ export interface Funnel {
 export interface Revenue {
   /** Null when Stripe could not be reached. Not zero: zero means no sales. */
   available: boolean;
+  /**
+   * Charges on this Stripe account that are not botready's and were left out.
+   * Shown, because a filter nobody can see is a filter nobody can check.
+   */
+  excluded: number;
   /** Successful charges, minus what was refunded, in whole dollars. */
   grossAllTime: number;
   gross30d: number;
@@ -365,9 +372,59 @@ async function countAccounts(): Promise<number> {
  * `available: false` on any failure, so the panel can say "Stripe did not
  * answer" instead of drawing a convincing zero.
  */
+/**
+ * What marks a charge as botready's.
+ *
+ * This Stripe account takes money for more than one thing, and `charges.list`
+ * returns all of it — the dashboard was reporting a Substack's income as
+ * botready's revenue. Three ways a payment says it is ours, in order of how
+ * much they can be trusted:
+ *
+ *   1. `metadata.product`, which every checkout this app creates now sets on
+ *      the payment intent and on the subscription. Exact, and the only one of
+ *      the three that survives somebody renaming a product.
+ *   2. The charge's own description, which the fix pack route writes as
+ *      "botready.dev fix pack for ...".
+ *   3. A line on the expanded invoice, which is where a subscription charge
+ *      keeps the product name — "BotReady monitoring", "BotReady for agencies".
+ *
+ * Two and three exist for the charges taken before rule one was written, and
+ * for anything bought through a payment link configured in the dashboard.
+ * Whatever matches none of them is excluded and counted, because a filter
+ * nobody can see is a filter nobody can check — and silently dropping a real
+ * sale is the same size of mistake as silently counting somebody else's.
+ */
+export const BOTREADY_MARKER = /botready/i;
+
+export function isOurs(charge: Stripe.Charge): boolean {
+  if (charge.metadata?.product === 'botready') return true;
+  if (charge.description && BOTREADY_MARKER.test(charge.description)) return true;
+
+  const invoice = charge.invoice;
+  if (invoice && typeof invoice !== 'string') {
+    if (invoice.metadata?.product === 'botready') return true;
+    if (invoice.lines?.data?.some((line) => BOTREADY_MARKER.test(line.description ?? ''))) return true;
+  }
+  return false;
+}
+
+/** The same question about a subscription, for MRR. */
+export function isOurSubscription(sub: Stripe.Subscription): boolean {
+  if (sub.metadata?.product === 'botready') return true;
+  // A subscription this app created before the product marker existed still
+  // says which plan it is, and those names are ours.
+  if (['monitor', 'agency'].includes(sub.metadata?.plan ?? '')) return true;
+  return sub.items.data.some((item) => {
+    const product = item.price.product;
+    if (typeof product === 'string') return false;
+    return 'name' in product && BOTREADY_MARKER.test(product.name ?? '');
+  });
+}
+
 async function loadRevenue(): Promise<Revenue> {
   const empty: Revenue = {
     available: false,
+    excluded: 0,
     grossAllTime: 0,
     gross30d: 0,
     gross7d: 0,
@@ -381,11 +438,14 @@ async function loadRevenue(): Promise<Revenue> {
   try {
     const client = stripe();
     const [charges, subscriptions] = await Promise.all([
-      client.charges.list({ limit: 100 }),
-      client.subscriptions.list({ status: 'active', limit: 100 }),
+      // The invoice comes back expanded because a subscription charge carries
+      // nothing of its own that names the product — the line item does.
+      client.charges.list({ limit: 100, expand: ['data.invoice'] }),
+      client.subscriptions.list({ status: 'active', limit: 100, expand: ['data.items.data.price.product'] }),
     ]);
 
-    const paid = charges.data.filter((c) => c.paid && c.status === 'succeeded');
+    const succeeded = charges.data.filter((c) => c.paid && c.status === 'succeeded');
+    const paid = succeeded.filter(isOurs);
     const cutoff = (days: number) => Date.now() / 1000 - days * 86_400;
     const net = (c: (typeof paid)[number]) => c.amount - c.amount_refunded;
 
@@ -395,7 +455,7 @@ async function loadRevenue(): Promise<Revenue> {
     // Stripe quotes a subscription price in the interval it bills on, so a
     // yearly plan has to be divided back down before it can sit beside a
     // monthly one under the letters MRR.
-    const mrr = subscriptions.data.reduce((sum, sub) => {
+    const mrr = subscriptions.data.filter(isOurSubscription).reduce((sum, sub) => {
       for (const item of sub.items.data) {
         const amount = item.price.unit_amount ?? 0;
         const quantity = item.quantity ?? 1;
@@ -413,6 +473,7 @@ async function loadRevenue(): Promise<Revenue> {
 
     return {
       available: true,
+      excluded: succeeded.length - paid.length,
       grossAllTime: Math.round(grossAllTime / 100),
       gross30d: Math.round(paid.filter((c) => c.created >= cutoff(30)).reduce((s, c) => s + net(c), 0) / 100),
       gross7d: Math.round(paid.filter((c) => c.created >= cutoff(7)).reduce((s, c) => s + net(c), 0) / 100),

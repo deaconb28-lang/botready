@@ -73,8 +73,8 @@ async function createSession(email: string) {
       customer_email: email,
       // No client_reference_id: there is no one site this covers. The webhook
       // writes the grant unlimited for exactly that reason.
-      metadata: { plan: 'agency', affonso_referral },
-      subscription_data: { metadata: { plan: 'agency', affonso_referral } },
+      metadata: { product: 'botready', plan: 'agency', affonso_referral },
+      subscription_data: { metadata: { product: 'botready', plan: 'agency', affonso_referral } },
       // To the domain list, because the first thing an agency does after
       // paying is add the nine other clients.
       success_url: absoluteUrl('/account?subscribed=agency'),

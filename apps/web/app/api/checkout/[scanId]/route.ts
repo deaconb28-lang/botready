@@ -167,6 +167,12 @@ async function createSession(scanId: string, domain: string, email: string | nul
       // The receipt line says what it is, in the product's own words.
       payment_intent_data: {
         description: `botready.dev fix pack for ${domain} (${pricing.label} ${pricing.cadence})`,
+        // On the charge itself, not just the session. This Stripe account
+        // takes money for more than one business, and the dashboard reads
+        // charges — so a charge that cannot say which product it belongs to
+        // is a charge that gets counted as somebody else's revenue or not at
+        // all. See BOTREADY_MARKER in lib/admin-metrics.ts.
+        metadata: { product: 'botready', plan: 'fixpack', domain },
       },
     });
   } catch (err) {

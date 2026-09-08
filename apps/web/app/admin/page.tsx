@@ -174,7 +174,7 @@ function Revenue({ m }: { m: AdminMetrics }) {
         {/* Said out loud because the two numbers below would otherwise look
             like they disagree with the row counts above them. */}
         <span className="font-mono text-[11.5px] text-subtle-2">
-          from Stripe, net of refunds — not our prices times our rows
+          botready only, from Stripe, net of refunds
         </span>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 lg:grid-cols-6">
@@ -185,6 +185,15 @@ function Revenue({ m }: { m: AdminMetrics }) {
         <Stat n={`$${r.averageOrder.toFixed(2)}`} label="average payment" />
         <Stat n={r.refunded > 0 ? money(r.refunded) : '$0'} label="refunded" tone={r.refunded > 0 ? 'coral' : undefined} />
       </div>
+      {/* This Stripe account takes money for more than one business, so the
+          filter has to be visible: a number that quietly drops sales is the
+          same size of mistake as one that quietly counts somebody else's. */}
+      {r.excluded > 0 ? (
+        <p className="mt-6 text-[13px] leading-[1.5] text-muted">
+          {r.excluded} other {r.excluded === 1 ? 'payment' : 'payments'} on this Stripe account {r.excluded === 1 ? 'is' : 'are'}{' '}
+          not botready and {r.excluded === 1 ? 'is' : 'are'} excluded from every figure above.
+        </p>
+      ) : null}
       {r.recent.length > 0 ? (
         <div className="mt-7 border-t-2 border-hairline pt-5">
           <SubHead>Latest payments</SubHead>

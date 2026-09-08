@@ -93,10 +93,10 @@ async function createSession(siteId: string, domain: string, email: string) {
       line_items: [lineItem()],
       customer_email: email,
       client_reference_id: siteId,
-      metadata: { plan: 'monitor', siteId, domain, affonso_referral },
+      metadata: { product: 'botready', plan: 'monitor', siteId, domain, affonso_referral },
       // On the subscription too, so a renewal a year from now still names the
       // affiliate. The checkout session is not around to ask by then.
-      subscription_data: { metadata: { plan: 'monitor', siteId, domain, affonso_referral } },
+      subscription_data: { metadata: { product: 'botready', plan: 'monitor', siteId, domain, affonso_referral } },
       // Into the app, not back to the claim page they started on. The claim
       // page is where somebody goes to prove a domain is theirs; landing there
       // after paying says nothing about what they just bought. `subscribed=1`
