@@ -240,6 +240,10 @@ STRIPE_PRICE_AGENCY          optional. Without it the agency checkout builds the
                              price inline from PRICING, so the tier works on a
                              Stripe account with nothing configured.
 RESEND_API_KEY
+ADMIN_EMAILS                 who may open /admin, comma separated, matched on
+                             the signed-in Supabase address. Empty or unset
+                             admits nobody, which is deliberate: the dashboard
+                             reads every account and every purchase.
 ANTHROPIC_API_KEY            prompt watch only. Never a fact about a site: the
                              answer is stored as the model's words, labelled as
                              such, and no score or generated file reads it.
