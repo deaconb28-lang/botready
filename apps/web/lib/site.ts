@@ -91,6 +91,50 @@ export const EARLY_ACCESS = {
 } as const;
 
 /**
+ * Bigger than anything on the page, and a conversation rather than a button.
+ *
+ * There is no enterprise product to describe, and that is the honest shape of
+ * it: what somebody at this size wants is a cadence, an engine list and a
+ * domain count that no fixed tier has, and every one of those is a number in
+ * our cost model rather than a feature flag. So the offer is a reply from a
+ * person, and the only figure printed is the floor.
+ *
+ * `from` is EARLY_ACCESS.scale rather than another 179, because the two
+ * numbers are the same number: this starts where the tier above it starts.
+ * Written twice they would drift the first time either moved, and a pricing
+ * page that contradicts itself is the cheapest way to lose a large customer.
+ */
+/**
+ * The shape the answer-plane tier is priced for: watched questions per week.
+ *
+ * One number, because the pricing page and /pricing.md both quote it in the
+ * same sentence as the cost it produces, and a page that says "a hundred
+ * questions a week is about $39" while the markdown says eighty is a page
+ * arguing with itself. Not a limit anyone is held to — PLAN_LIMITS does that
+ * — but the assumption the price rests on.
+ */
+export const WATCHED_PER_WEEK = 100;
+
+export const ENTERPRISE = {
+  from: EARLY_ACCESS.scale,
+  /** What lands in the subject line, so the reply knows what it is about. */
+  subject: 'Talk to us',
+} as const;
+
+/**
+ * A mailto for a named conversation.
+ *
+ * The three of these on the site were each written by hand with their own
+ * percent-encoded subject. All three happened to be right, which is the
+ * argument for the helper rather than against it: the next one is written by
+ * somebody interpolating a domain name into a subject line, and encoding a
+ * subject is not a thing to be careful about twice.
+ */
+export function contactHref(subject: string): string {
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;
+}
+
+/**
  * Stripe payment links.
  *
  * A payment link is a page Stripe hosts and we redirect to, rather than a

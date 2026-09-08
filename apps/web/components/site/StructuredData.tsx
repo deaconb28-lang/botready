@@ -1,6 +1,6 @@
 import { catalog } from '@botready/core';
 
-import { CONTACT_EMAIL, EARLY_ACCESS, PLAN_LIMITS, PRICING, SITE, absoluteUrl } from '@/lib/site';
+import { CONTACT_EMAIL, EARLY_ACCESS, ENTERPRISE, PLAN_LIMITS, PRICING, SITE, absoluteUrl } from '@/lib/site';
 
 /**
  * JSON-LD, server-rendered so a client that does not run JavaScript sees it.
@@ -70,6 +70,25 @@ function offers() {
         EARLY_ACCESS.scale.currency,
       ),
       availability: 'https://schema.org/PreOrder',
+    },
+    // No price, only a floor. `priceSpecification` with a `minPrice` is
+    // schema.org's way of saying "from", and it is the only honest shape for
+    // an offer whose cost depends on a cadence we have not agreed yet. Quoting
+    // a single price here would put a number in a machine-readable field that
+    // no human on our side has committed to.
+    {
+      '@type': 'Offer',
+      name: 'Enterprise',
+      description:
+        'Hundreds of domains, a cadence the published plans do not offer, or your own log pipeline. Priced per agreement; the answer comes from a person.',
+      priceCurrency: ENTERPRISE.from.currency.toUpperCase(),
+      url: absoluteUrl('/pricing'),
+      availability: 'https://schema.org/PreOrder',
+      priceSpecification: {
+        '@type': 'PriceSpecification',
+        minPrice: String(ENTERPRISE.from.amount),
+        priceCurrency: ENTERPRISE.from.currency.toUpperCase(),
+      },
     },
   ];
 }

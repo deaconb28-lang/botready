@@ -16,12 +16,18 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { ENGINES, cycleCostUsd, monthlyAskCostUsd } from '@botready/core';
+
 import {
+  CONTACT_EMAIL,
   EARLY_ACCESS,
+  ENTERPRISE,
   LISTED_PLANS,
   PLAN_LADDER,
   PLAN_LIMITS,
   PRICING,
+  WATCHED_PER_WEEK,
+  contactHref,
   nextRung,
   rung,
   upgradeHref,
@@ -92,6 +98,63 @@ describe('the readable pricing page', () => {
   it('says the early-access tier is not for sale', () => {
     expect(md).toContain(EARLY_ACCESS.scale.label);
     expect(md.toLowerCase()).toContain('not for sale');
+  });
+});
+
+/**
+ * The enterprise band, which prints one number and takes no money.
+ *
+ * Both halves matter. A floor that disagrees with the tier above it is the
+ * cheapest way to lose a large customer, and a "talk to us" that quietly
+ * acquired a checkout would be selling a cadence nobody has agreed to.
+ */
+describe('the enterprise floor', () => {
+  it('is the same number as the tier it starts from', () => {
+    expect(ENTERPRISE.from.amount).toBe(EARLY_ACCESS.scale.amount);
+    expect(ENTERPRISE.from).toBe(EARLY_ACCESS.scale);
+  });
+
+  it('has no checkout, on the ladder or off it', () => {
+    expect(ENTERPRISE).not.toHaveProperty('checkoutPath');
+    expect(PLAN_LADDER.some((r) => r.label.toLowerCase().includes('enterprise'))).toBe(false);
+  });
+
+  it('reaches a person, with an encoded subject', () => {
+    const href = contactHref(ENTERPRISE.subject);
+    expect(href.startsWith(`mailto:${CONTACT_EMAIL}?subject=`)).toBe(true);
+    expect(href).not.toMatch(/subject=[^&]*\s/);
+    expect(decodeURIComponent(href.split('subject=')[1] ?? '')).toBe(ENTERPRISE.subject);
+  });
+
+  it('is in the markdown too, so a crawler reads the same offer a person does', () => {
+    const md = markdownFor('/pricing') ?? '';
+    expect(md.toLowerCase()).toContain('enterprise');
+    expect(md).toContain(String(ENTERPRISE.from.amount));
+  });
+});
+
+/**
+ * The price justification is derived, not typed.
+ *
+ * It is printed on the page as the reason $179 is $179, which makes it the one
+ * figure on the pricing page that must move when the catalog does. An engine
+ * added to engines.json at four cents a run raises our cost, and a page still
+ * quoting the old month is a page arguing for a margin we no longer have.
+ */
+describe('what the answer plane costs us', () => {
+  it('reads every engine in the catalog', () => {
+    const expected = Math.round((cycleCostUsd(WATCHED_PER_WEEK, ENGINES.map((e) => e.id)) * 52) / 12);
+    expect(monthlyAskCostUsd(WATCHED_PER_WEEK)).toBe(expected);
+  });
+
+  it('scales with how much is asked', () => {
+    expect(monthlyAskCostUsd(200)).toBe(monthlyAskCostUsd(100) * 2);
+  });
+
+  it('stays under the price it is quoted to justify', () => {
+    // Not a style rule. If asking costs more than the plan charges, the plan
+    // loses money on every customer and the number on the page is fiction.
+    expect(monthlyAskCostUsd(WATCHED_PER_WEEK)).toBeLessThan(EARLY_ACCESS.scale.amount);
   });
 });
 

@@ -7,7 +7,7 @@ import { AlertDot, Lede, ListCard, ListRow, PageHeading, SectionHeading, StatusP
 import { cx } from '@/components/ui';
 import { loadAlerts, loadDomains, planFor, usageFor, type DomainCard } from '@/lib/account-data';
 import { currentUser } from '@/lib/auth';
-import { CONTACT_EMAIL, nextRung } from '@/lib/site';
+import { contactHref, nextRung } from '@/lib/site';
 import { CLIENT_IDS, gradeIsHealthy, relativeTime } from '@/lib/theme';
 
 export const metadata: Metadata = {
@@ -88,7 +88,7 @@ export default async function AccountPage() {
                 : `You are on the largest plan we sell. Remove a domain to make room, or write to us about more than ${inWords(plan.limits.domains)}.`}
             </p>
             <Link
-              href={up ? '/pricing' : `mailto:${CONTACT_EMAIL}?subject=More%20than%20${up ? '' : plan.limits.domains}%20domains`}
+              href={up ? '/pricing' : contactHref(`More than ${plan.limits.domains} domains`)}
               className="edge rounded-[10px] bg-white px-4 py-[10px] font-body text-[14px] font-semibold text-ink no-underline transition-colors duration-150 hover:bg-lime hover:text-ink"
             >
               {up ? `See the ${up.label} plan` : 'Write to us'}

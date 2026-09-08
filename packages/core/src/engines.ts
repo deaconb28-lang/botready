@@ -57,3 +57,23 @@ export function engineDef(id: string): EngineDef | undefined {
 export function cycleCostUsd(prompts: number, engineIds: readonly string[] = LIVE_ENGINES.map((e) => e.id)): number {
   return engineIds.reduce((sum, id) => sum + prompts * (engineDef(id)?.costPerRunUsd ?? 0), 0);
 }
+
+/**
+ * What a month of asking costs, across every engine in the catalog.
+ *
+ * The figure printed on the pricing page as the reason the answer-plane tier
+ * costs what it costs. It lives here rather than beside the price because it
+ * is a derivation over a catalog and constraint 2 puts those in core — and
+ * because `lib/site.ts` is imported by client components, so a catalog
+ * reached from there would ship 22KB of JSON to a browser that has no use for
+ * it.
+ *
+ * 52/12 rather than 4 weeks. Four understates a recurring cost by 8%, on the
+ * one figure whose whole job is to show we have not understated it.
+ *
+ * Rounded to whole dollars, so it reads as a claim about the order of
+ * magnitude rather than a quote.
+ */
+export function monthlyAskCostUsd(promptsPerWeek: number, engineIds: readonly string[] = ENGINES.map((e) => e.id)): number {
+  return Math.round((cycleCostUsd(promptsPerWeek, engineIds) * 52) / 12);
+}

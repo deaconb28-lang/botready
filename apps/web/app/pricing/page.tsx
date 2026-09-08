@@ -1,13 +1,25 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { ENGINES, LIVE_ENGINES, monthlyAskCostUsd } from '@botready/core';
+
+import { ScaleBot } from '@/components/site/ScaleBot';
 import { PricingStructuredData } from '@/components/site/StructuredData';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Card, Container, DashConnector, GradeTile, PillEyebrow, TerminalLine, cx } from '@/components/ui';
 import { FIX_FILES } from '@/lib/copy';
 import { pageMetadata } from '@/lib/metadata';
-import { CONTACT_EMAIL, EARLY_ACCESS, PLAN_LIMITS, PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
+import {
+  CONTACT_EMAIL,
+  EARLY_ACCESS,
+  ENTERPRISE,
+  PLAN_LIMITS,
+  PRICING,
+  PUBLIC_INDEX_LISTED,
+  WATCHED_PER_WEEK,
+  contactHref,
+} from '@/lib/site';
 
 export const metadata: Metadata = pageMetadata('/pricing');
 
@@ -36,6 +48,41 @@ interface Tier {
   dark?: boolean;
   highlight?: string;
 }
+
+/**
+ * The four planes and what is actually running today.
+ *
+ * `part` is doing real work here. The answer plane has share of voice and one
+ * live engine, and the action plane generates fixes but proves nothing yet.
+ * Rounding either up to "built" would be the same species of claim this
+ * product exists to catch on other people's sites.
+ */
+const PLANES: Array<{ icon: string; name: string; body: string; state: 'built' | 'part' | 'none' }> = [
+  {
+    icon: '🔍',
+    name: 'The site',
+    body: 'What each AI client got back from the same URL, scored and public.',
+    state: 'built',
+  },
+  {
+    icon: '🗣️',
+    name: 'The answers',
+    body: `What an assistant says when asked about your category. ${LIVE_ENGINES.length} of ${ENGINES.length} engines live.`,
+    state: 'part',
+  },
+  {
+    icon: '🤖',
+    name: 'The crawlers',
+    body: 'Which fetches were provably the crawler they claimed to be, from your own logs.',
+    state: 'built',
+  },
+  {
+    icon: '🧵',
+    name: 'One timeline',
+    body: 'Your change, then the crawler, then the answer — as cause and effect.',
+    state: 'none',
+  },
+];
 
 const TIERS: Tier[] = [
   {
@@ -171,12 +218,19 @@ export default function PricingPage() {
 
         {/* The plane we are building, priced and explicitly not for sale.
             Its own band rather than a fifth card, because a card in the grid
-            reads as something you can buy and this is a waiting list. The
-            price is the one from the cost model in
-            docs/platform-architecture.md, printed here so that nobody has to
-            find out what it costs by asking. */}
+            reads as something you can buy and this is a waiting list.
+
+            Built out rather than teased. Somebody deciding whether to wait for
+            this needs four things: what it does, what already exists under it,
+            what it costs, and what we will not do. Withholding any of them
+            makes the section an advertisement for a product that does not
+            exist, which is the one thing it must not be. The price is the one
+            from the cost model in docs/platform-architecture.md, and the
+            arithmetic under it is derived from engines.json rather than
+            retyped, so an engine's cost changing moves the justification with
+            it. */}
         <section className="edge mt-[18px] rounded-[20px] bg-white p-[30px] shadow-hard-4 sm:p-[38px]" aria-labelledby="whats-next">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-8">
+          <div className="grid items-start gap-9 lg:grid-cols-[1.15fr_1fr]">
             <div>
               <span className="eyebrow text-placeholder">Not for sale yet</span>
               <h2 id="whats-next" className="display-tight mt-3 text-[clamp(28px,3.4vw,40px)]">
@@ -191,31 +245,165 @@ export default function PricingPage() {
                 <span className="font-mono text-[12.5px] text-quiet">{EARLY_ACCESS.scale.cadence}, when it opens</span>
               </div>
               <a
-                href={`mailto:${CONTACT_EMAIL}?subject=Early%20access`}
+                href={contactHref('Early access')}
                 className="edge mt-5 inline-block rounded-[12px] bg-lime px-[26px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 transition-colors duration-150 hover:bg-white"
               >
                 Ask for early access
               </a>
+
+              <ul className="m-0 mt-7 grid list-none content-start gap-[13px] p-0">
+                {[
+                  ['🗣️', 'Every engine asked, not one — answers side by side'],
+                  ['📊', 'Your whole category ranked, week over week'],
+                  ['💸', 'What the visits an assistant sent you were worth'],
+                  ['🧵', 'One timeline: your change, the crawlers, then the answers'],
+                ].map(([icon, line]) => (
+                  <li key={line} className="grid grid-cols-[22px_1fr] gap-[10px] text-[15px] leading-[1.5] text-muted">
+                    <span aria-hidden className="text-[16px] leading-[1.4]">
+                      {icon}
+                    </span>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="m-0 grid list-none content-start gap-[13px] p-0">
-              {[
-                ['🗣️', 'Every engine asked, not one — answers side by side'],
-                ['📊', 'Your whole category ranked, week over week'],
-                ['💸', 'What the visits an assistant sent you were worth'],
-                ['🧵', 'One timeline: your change, the crawlers, then the answers'],
-              ].map(([icon, line]) => (
-                <li key={line} className="grid grid-cols-[22px_1fr] gap-[10px] text-[15px] leading-[1.5] text-muted">
-                  <span aria-hidden className="text-[16px] leading-[1.4]">
-                    {icon}
-                  </span>
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
+
+            {/* The claim as a shape. One question up, several engines back,
+                ranked — which is the whole difference between this plane and
+                the scan above it. */}
+            <div className="edge rounded-[18px] bg-surface-alt p-5 shadow-hard-3 sm:p-6">
+              <ScaleBot />
+              <p className="mt-4 border-t-2 border-hairline-4 pt-4 font-mono text-[11.5px] leading-[1.5] text-subtle-2">
+                {ENGINES.length} engines in the catalog, {LIVE_ENGINES.length} live today
+              </p>
+            </div>
           </div>
+
+          {/* What already exists under it. A waiting list is easier to join
+              when three quarters of the machinery is already running, and
+              saying which quarter is not is what makes the other three
+              believable. */}
+          <div className="mt-8 border-t border-hairline-4 pt-7">
+            <span className="eyebrow text-placeholder">Four planes, one timeline</span>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {PLANES.map((plane) => (
+                <div key={plane.name} className="edge rounded-[14px] bg-surface-alt p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span aria-hidden className="text-[17px] leading-none">
+                      {plane.icon}
+                    </span>
+                    <span
+                      className={cx(
+                        'edge rounded-[99px] px-[9px] py-[3px] font-mono text-[10px] uppercase tracking-[0.1em]',
+                        plane.state === 'built' ? 'bg-lime text-ink' : plane.state === 'part' ? 'bg-amber text-ink' : 'bg-white text-subtle-2',
+                      )}
+                    >
+                      {plane.state === 'built' ? 'Built' : plane.state === 'part' ? 'Part built' : 'Not built'}
+                    </span>
+                  </div>
+                  <div className="mt-3 font-body text-[14.5px] font-semibold text-ink">{plane.name}</div>
+                  <p className="mt-[6px] text-[13px] leading-[1.5] text-muted">{plane.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Why the number is the number. Printed because a reader deciding
+              whether to build a year around us is entitled to know whether the
+              price is a cost or a guess, and because it is the same table that
+              says why the $5 plan cannot carry this. */}
+          <div className="mt-7 grid gap-6 border-t border-hairline-4 pt-7 lg:grid-cols-[1fr_1fr]">
+            <div>
+              <span className="eyebrow text-placeholder">Why {EARLY_ACCESS.scale.label.replace('From ', '')}</span>
+              <p className="mt-3 max-w-[48ch] text-[14.5px] leading-[1.6] text-muted">
+                Asking is the cost. {WATCHED_PER_WEEK} questions a week across every engine in our catalog is about{' '}
+                <span className="font-mono text-[13.5px] text-ink">${monthlyAskCostUsd(WATCHED_PER_WEEK)}</span> a month of model calls before we have
+                paid for anything else, and that figure is read from the same catalog the prober uses.
+              </p>
+              <p className="mt-3 max-w-[48ch] text-[14.5px] leading-[1.6] text-muted">
+                Which is why cadence is a plan and not a switch: weekly and daily differ by seven times the cost, so a toggle
+                that quietly multiplied our bill would eventually be paid for by making the answers worse.
+              </p>
+            </div>
+            <div>
+              <span className="eyebrow text-placeholder">Two things it will never do</span>
+              <ul className="m-0 mt-3 grid list-none gap-[11px] p-0">
+                {[
+                  ['🚫', 'Quote how many people asked something', 'Nobody can measure that without buying somebody else’s conversation logs, and a number we cannot check is a number we will not print.'],
+                  ['✍️', 'Write your content for you', 'The write side we want is narrower: a fix, applied, then proved by a re-scan. Generating a page and hoping is the part of this category that ages worst.'],
+                ].map(([icon, title, body]) => (
+                  <li key={title} className="grid grid-cols-[22px_1fr] gap-[10px]">
+                    <span aria-hidden className="text-[15px] leading-[1.5]">
+                      {icon}
+                    </span>
+                    <span>
+                      <span className="font-body text-[14.5px] font-semibold text-ink">{title}</span>
+                      <span className="mt-[3px] block text-[13px] leading-[1.5] text-muted">{body}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
           <p className="mt-7 border-t border-hairline-4 pt-5 text-[14px] leading-[1.6] text-quiet">
-            None of it is built yet. The price is here because you will want to know it before you build a year around us.
+            The timeline is not built yet. The price is here because you will want to know it before you build a year around us.
           </p>
+        </section>
+
+        {/* Enterprise, which is a conversation rather than a tier.
+            A band and not a card for the same reason as the section above it:
+            there is no checkout behind this and a card in a price grid implies
+            one. The only figure is the floor, and it is the floor of the tier
+            above so the two cannot disagree. */}
+        <section
+          className="edge mt-[18px] rounded-[20px] bg-ink p-[30px] shadow-hard-5 sm:p-[38px]"
+          aria-labelledby="enterprise"
+        >
+          <div className="grid items-center gap-8 lg:grid-cols-[1.3fr_1fr]">
+            <div>
+              <span className="eyebrow text-on-ink-soft">Bigger than the plans above</span>
+              <h2 id="enterprise" className="display-tight mt-3 text-[clamp(26px,3vw,36px)] text-white">
+                Talk to us
+              </h2>
+              <p className="mt-3 max-w-[50ch] text-[15.5px] leading-[1.6] text-on-ink">
+                Every one of these is a number in our cost model rather than a switch, so the answer comes from a person who
+                can tell you what exists today and what does not.
+              </p>
+              <ul className="m-0 mt-5 grid list-none gap-x-8 gap-y-[9px] p-0 sm:grid-cols-2">
+                {[
+                  ['🏢', 'Hundreds of domains'],
+                  ['⏱️', 'Daily, or on demand'],
+                  ['🔌', 'Your own log pipeline'],
+                  ['📝', 'A contract and an invoice'],
+                ].map(([icon, line]) => (
+                  <li key={line} className="grid grid-cols-[20px_1fr] gap-[9px] font-mono text-[12.5px] text-on-ink-soft">
+                    <span aria-hidden>{icon}</span>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="lg:justify-self-end">
+              <div className="flex items-baseline gap-[9px]">
+                <span className="display-tight text-[40px] text-white">{ENTERPRISE.from.label}</span>
+                <span className="font-mono text-[12.5px] text-on-ink-soft">{ENTERPRISE.from.cadence}</span>
+              </div>
+              <p className="mt-2 max-w-[30ch] text-[13.5px] leading-[1.55] text-on-ink-soft">
+                Where it starts. What it costs depends on how often you want us to ask, which is the only honest way to price
+                it.
+              </p>
+              <a
+                href={contactHref(ENTERPRISE.subject)}
+                className="edge mt-5 inline-block rounded-[12px] bg-lime px-[26px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 transition-colors duration-150 hover:bg-white"
+              >
+                Talk to us
+              </a>
+              <p className="mt-3 font-mono text-[12px] text-on-ink-soft">
+                {CONTACT_EMAIL} · a person replies, not a form
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* Both things you can buy here arrive by email, and our mail still

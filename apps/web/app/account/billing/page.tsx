@@ -8,7 +8,7 @@ import { Bar, PillEyebrow } from '@/components/ui';
 import { planFor, usageFor } from '@/lib/account-data';
 import { currentUser } from '@/lib/auth';
 import { cardOnFile, listInvoices, type InvoiceLine } from '@/lib/billing';
-import { EARLY_ACCESS, CONTACT_EMAIL, PLAN_LIMITS, nextRung, rung, upgradeHref } from '@/lib/site';
+import { EARLY_ACCESS, PLAN_LIMITS, contactHref, nextRung, rung, upgradeHref } from '@/lib/site';
 import { formatDate } from '@/lib/theme';
 
 export const metadata: Metadata = {
@@ -139,7 +139,7 @@ export default async function BillingPage() {
               crawlers really reached your pages. Not finished, not for sale yet, and we would rather build it with a few people
               than announce it to everybody.
             </p>
-            <a href={`mailto:${CONTACT_EMAIL}?subject=Early%20access`} className={LIME_BUTTON}>
+            <a href={contactHref('Early access')} className={LIME_BUTTON}>
               Ask for early access
             </a>
           </section>
