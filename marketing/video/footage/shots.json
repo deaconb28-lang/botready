@@ -1,0 +1,138 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "fps": 30,
+  "shots": [
+    {
+      "name": "split",
+      "path": "/",
+      "file": "split.mp4",
+      "crop": {
+        "x": 386,
+        "y": 640,
+        "width": 1148,
+        "height": 442
+      },
+      "note": "The five agents landing. Two full loops, so it can be cut on any row."
+    },
+    {
+      "name": "terminal",
+      "path": "/",
+      "file": "terminal.mp4",
+      "crop": {
+        "x": 972,
+        "y": 326,
+        "width": 564,
+        "height": 338
+      },
+      "note": "The product's own terminal block: 403 Forbidden, cf-mitigated: challenge."
+    },
+    {
+      "name": "marquee",
+      "path": "/",
+      "file": "marquee.mp4",
+      "crop": {
+        "x": 0,
+        "y": 492,
+        "width": 1920,
+        "height": 96
+      },
+      "note": "The twelve real crawler user agents, one pass of the 26s slide."
+    },
+    {
+      "name": "hero",
+      "path": "/",
+      "file": "hero.mp4",
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "note": "Are you BotReady? and the URL box with the caret blinking."
+    },
+    {
+      "name": "result",
+      "path": "/preview/waf-blocked-spa",
+      "file": "result.mp4",
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "note": "The score counting to 50 over 1500ms, grade D, the six category bars."
+    },
+    {
+      "name": "score",
+      "path": "/preview/waf-blocked-spa",
+      "file": "score.mp4",
+      "crop": {
+        "x": 412,
+        "y": 242,
+        "width": 1096,
+        "height": 264
+      },
+      "note": "The report header alone: the score counting to 50, grade D, six category bars."
+    },
+    {
+      "name": "clients",
+      "path": "/preview/waf-blocked-spa",
+      "file": "clients.mp4",
+      "crop": {
+        "x": 1140,
+        "y": 510,
+        "width": 368,
+        "height": 434
+      },
+      "note": "What each client got. The 200-vs-403 column, which is the headline finding."
+    },
+    {
+      "name": "findings",
+      "path": "/preview/waf-blocked-spa",
+      "file": "findings.mp4",
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "note": "What to fix, with the parity finding opened."
+    },
+    {
+      "name": "fixpack",
+      "path": "/preview/waf-blocked-spa",
+      "file": "fixpack.mp4",
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "note": "The violet panel and the coding-agent line."
+    },
+    {
+      "name": "blocked",
+      "path": "/preview/waf-blocked-spa?state=blocked",
+      "file": "blocked.mp4",
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "note": "The refusal screen. This is the moat, so it gets its own shot."
+    },
+    {
+      "name": "live-open",
+      "path": "/scan/live?id=00000000-0000-4000-8000-000000000000",
+      "file": "live-open.mp4",
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080
+      },
+      "note": "The scan page as it opens. See marketing/video/README.md — the stages only advance against a real backend, so this shot is the opening only."
+    }
+  ]
+}
