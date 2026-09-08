@@ -88,7 +88,10 @@ export default async function ClaimPage({ params }: { params: Promise<{ domain: 
                       Weekly re-checks of up to {PLAN_LIMITS.agency.domains} domains, an alert on any drop or a new 403,
                       and the fix pack regenerated on every scan.
                     </Lede>
-                    {/* A plain anchor: the checkout route redirects to Stripe, which a client-side navigation cannot follow. */}
+                    {/* A plain anchor: the checkout route redirects to Stripe, which a client-side navigation cannot follow.
+                        next/lint reads the literal path as a page and asks for a Link; it is a route handler, and a
+                        Link here would swallow the 303 and land the buyer nowhere. */}
+                    {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                     <a
                       href="/api/checkout/agency"
                       className="edge mt-6 inline-flex items-center justify-center rounded-[10px] bg-ink px-4 py-[10px] font-body text-[14px] font-semibold text-white no-underline shadow-hard-3 transition-colors duration-150 hover:bg-violet hover:text-white"

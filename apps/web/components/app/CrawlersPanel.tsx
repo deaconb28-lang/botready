@@ -15,8 +15,8 @@ import type { CrawlerView } from '@/lib/crawler-data';
  * So there is no single big number here. There is a verified number, an
  * unverified number and a forged number, and the copy says which is which.
  */
-export function CrawlersPanel({ v, domain }: { v: CrawlerView; domain: string }) {
-  if (!v.receiving) return <Setup v={v} domain={domain} />;
+export function CrawlersPanel({ v }: { v: CrawlerView }) {
+  if (!v.receiving) return <Setup v={v} />;
 
   const peak = Math.max(1, ...v.daily.map((d) => d.verified + d.unverified + d.forged));
 
@@ -170,7 +170,7 @@ function share(part: number, whole: number): number {
 }
 
 /** Before any logs have arrived. The whole feature is inert until they do. */
-function Setup({ v, domain }: { v: CrawlerView; domain: string }) {
+function Setup({ v }: { v: CrawlerView }) {
   return (
     <Card radius="panel" shadow={5} className="mt-6 p-6 sm:p-7">
       <Eyebrow>Nothing has arrived yet</Eyebrow>

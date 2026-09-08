@@ -29,7 +29,7 @@ export default async function CrawlersPage({ params }: { params: Promise<{ domai
         Every scan asks what a crawler <em>would</em> get from {domain}. This is the other direction: which ones
         actually turned up, and which of them were really who they said they were.
       </p>
-      {view ? <CrawlersPanel v={view} domain={domain} /> : <CrawlersLocked domain={domain} />}
+      {view ? <CrawlersPanel v={view} /> : <CrawlersLocked domain={domain} />}
     </div>
   );
 }
