@@ -20,7 +20,7 @@
 import { mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..', '..');
@@ -32,7 +32,7 @@ const ffmpeg = (await import('ffmpeg-static')
 
 const W = 1920, H = 1080, FPS = 60;
 const OUT = join(HERE, 'out');
-const FRAMES = join(OUT, '.promo-frames');
+const FRAMES = join(OUT, `.promo-frames-${process.pid}`);
 
 // tokens.css, read rather than restated.
 const css = readFileSync(join(REPO, 'apps/web/app/tokens.css'), 'utf8');
@@ -322,5 +322,25 @@ const dest = join(OUT, 'promo-landscape-silent.mp4');
 execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-framerate', String(FPS),
   '-i', join(FRAMES, '%05d.png'), '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
   '-pix_fmt', 'yuv420p', '-movflags', '+faststart', dest]);
+
+/**
+ * Check the encode against what was asked for rather than against ffmpeg's exit
+ * status. The image2 demuxer stops at the first frame it cannot read and still
+ * exits 0, so a truncated file reports itself as a successful build — which is
+ * worse than a failed one, because it ships. `-progress pipe:1` puts a
+ * machine-readable out_time on stdout; the human-readable stats do not survive
+ * a non-tty stderr.
+ */
+const probe = spawnSync(ffmpeg, ['-hide_banner', '-i', dest, '-map', '0:v:0',
+  '-c', 'copy', '-f', 'null', '-progress', 'pipe:1', '-'], { encoding: 'utf8' });
+const stamp = (`${probe.stdout}`.match(/out_time=(\d+):(\d+):([\d.]+)/g) ?? []).pop();
+const secs = stamp
+  ? stamp.replace('out_time=', '').split(':').reduce((a, x) => a * 60 + Number(x), 0)
+  : 0;
+if (secs < TOTAL - 0.15) {
+  rmSync(dest, { force: true });
+  throw new Error(
+    `encode is short: ${secs.toFixed(2)}s of ${TOTAL.toFixed(2)}s. Frames kept in ${FRAMES}`);
+}
 rmSync(FRAMES, { recursive: true, force: true });
-console.log(`\n${TOTAL.toFixed(1)}s @ ${FPS}fps -> ${dest}`);
+console.log(`\n${TOTAL.toFixed(1)}s @ ${FPS}fps, verified ${secs.toFixed(2)}s -> ${dest}`);
