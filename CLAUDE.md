@@ -228,7 +228,15 @@ Active, sentence case, plain. A button says exactly what happens and the resulti
 pnpm dev                 web on :3000
 pnpm --filter scanner dev    worker on :8080
 pnpm test                vitest, packages/core has the meaningful coverage
-pnpm typecheck
+pnpm typecheck           tsc only. Does NOT run ESLint, so it cannot fail on a
+                         lint error the way Vercel does — run the build too.
+pnpm --filter @botready/web build
+                         the production build, including next lint. The check
+                         that catches what typecheck cannot: a literal href to
+                         an /api route trips no-html-link-for-pages, and a
+                         template-string href does not, so the same line can
+                         pass for months and then fail. Run this before pushing
+                         anything that touches a page.
 pnpm db:push             applies db/schema.sql to an empty Supabase project
 pnpm db:migrate          applies db/migrations/*.sql, once each, to an existing one
 pnpm audit:ui            Playwright + axe over the running app
