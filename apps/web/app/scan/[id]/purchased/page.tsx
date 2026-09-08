@@ -173,7 +173,7 @@ export default async function PurchasedPage({
             <h2 className="display text-[20px]">Keep it that way</h2>
             <p className="mt-2 max-w-[46ch] text-[15px] leading-[1.55] text-ink">
               Claim the domain and we re-check it weekly, then write to you the day a client that could read it stops being
-              able to. {PRICING.monitor.label} {PRICING.monitor.cadence}.
+              able to. {PRICING.agency.label} {PRICING.agency.cadence}.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <Link href={nextHref} className="edge inline-flex items-center rounded-[12px] bg-ink px-[22px] py-[14px] font-body text-[15px] font-bold text-white no-underline shadow-hard-3 hover:bg-violet">

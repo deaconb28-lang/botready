@@ -54,7 +54,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   {
     path: '/pricing',
     title: 'Pricing',
-    description: 'The check is free and always will be. The fix pack is $15 once, monitoring is $5 a month, and ten domains on the agency plan is $29.',
+    description: 'The check is free and always will be. The fix pack is $15 once, and ten domains watched every week on the agency plan is $29 a month.',
     updated: '2026-09-07',
     sources: ['apps/web/app/pricing'],
     changeFrequency: 'monthly',

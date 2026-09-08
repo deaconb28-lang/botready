@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   EARLY_ACCESS,
+  LISTED_PLANS,
   PLAN_LADDER,
   PLAN_LIMITS,
   PRICING,
@@ -46,8 +47,11 @@ describe('the ladder', () => {
     expect(rung('free').price).toBeNull();
   });
 
-  it('walks upward and stops at the top', () => {
-    expect(nextRung('free')?.id).toBe('monitor');
+  it('walks upward past the unlisted rungs and stops at the top', () => {
+    // Somebody on free must not be offered a plan they cannot find on the
+    // pricing page, so monitoring is skipped. Somebody already on monitoring
+    // still gets agency, which is the next listed rung either way.
+    expect(nextRung('free')?.id).toBe('agency');
     expect(nextRung('monitor')?.id).toBe('agency');
     expect(nextRung('agency')).toBeNull();
   });
@@ -67,16 +71,21 @@ describe('the readable pricing page', () => {
     expect(md).not.toBe('');
   });
 
-  it('names every plan that can actually be bought, with its price', () => {
-    for (const r of PLAN_LADDER) {
+  it('names every plan on offer, with its price', () => {
+    for (const r of LISTED_PLANS) {
       if (!r.price) continue;
       expect(md).toContain(r.price);
     }
     expect(md).toContain(PRICING.fixpack.label);
   });
 
-  it('quotes the domain counts from the constants rather than from memory', () => {
-    expect(md).toContain(String(PLAN_LIMITS.monitor.domains));
+  it('does not offer an unlisted plan', () => {
+    // Monitoring still renews for the people on it. It is not sold to anybody
+    // else, and a price on this page is an offer.
+    expect(md).not.toContain(`## Monitoring`);
+  });
+
+  it('quotes the domain count from the constants rather than from memory', () => {
     expect(md).toContain(String(PLAN_LIMITS.agency.domains));
   });
 
@@ -95,10 +104,24 @@ describe('what is not built is not sold', () => {
     expect(EARLY_ACCESS.scale.available).toBe(false);
   });
 
-  it('gives every purchasable rung a way to pay, and free none', () => {
+  it('gives every priced rung a way to pay, and free none', () => {
     for (const r of PLAN_LADDER) {
       if (r.price) expect(r.checkoutPath).toMatch(/^\/api\/checkout\//);
       else expect(r.checkoutPath).toBeNull();
     }
+  });
+
+  it('keeps an unlisted plan payable, so a subscriber on it can still renew', () => {
+    // Unlisting is a decision about who is offered a plan, not about who is
+    // allowed to keep one. A plan that could not be paid for would cancel
+    // itself at the next renewal, which is a worse outcome than a fourth card.
+    const monitor = rung('monitor');
+    expect(monitor.listed).toBe(false);
+    expect(monitor.checkoutPath).toBe('/api/checkout/monitor');
+    expect(monitor.price).toBe(PRICING.monitor.label);
+  });
+
+  it('offers exactly the rungs marked listed', () => {
+    expect(LISTED_PLANS.map((r) => r.id)).toEqual(['free', 'agency']);
   });
 });

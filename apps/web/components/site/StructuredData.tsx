@@ -54,12 +54,6 @@ function offers() {
       availability: 'https://schema.org/InStock',
     },
     subscription(
-      'Monitoring',
-      `Up to ${PLAN_LIMITS.monitor.domains} claimed domains re-scanned on a schedule, with an email when a client stops being able to read you.`,
-      PRICING.monitor.amount,
-      PRICING.monitor.currency,
-    ),
-    subscription(
       'Agency',
       `Up to ${PLAN_LIMITS.agency.domains} domains re-scanned weekly, ${PLAN_LIMITS.agency.prompts} watched questions pooled across them, share of voice against named competitors, verified crawler analytics from your own logs, and a fix pack for every domain.`,
       PRICING.agency.amount,

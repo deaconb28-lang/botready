@@ -49,7 +49,7 @@ function agentManifest() {
     pricing: {
       diagnosis: 'free',
       fix_pack: { amount: PRICING.fixpack.amount, currency: PRICING.fixpack.currency, cadence: PRICING.fixpack.cadence },
-      monitoring: { amount: PRICING.monitor.amount, currency: PRICING.monitor.currency, cadence: PRICING.monitor.cadence },
+      agency: { amount: PRICING.agency.amount, currency: PRICING.agency.currency, cadence: PRICING.agency.cadence },
     },
     crawler: {
       user_agent: USER_AGENT,

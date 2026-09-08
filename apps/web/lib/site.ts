@@ -177,6 +177,17 @@ export interface PlanRung {
   cadence: string | null;
   domains: number;
   prompts: number;
+  /**
+   * Whether this rung is offered to anybody who does not already have it.
+   *
+   * Monitoring is unlisted: it still exists, still renews, and the people on
+   * it keep everything they bought — but a visitor is not offered it. Three
+   * prices read faster than four, and the $5 tier was the one that made the
+   * page a comparison exercise rather than a decision. Unlisted rather than
+   * deleted because deleting it would strand a paying subscriber to save a
+   * line of copy.
+   */
+  listed: boolean;
   /** Where the buy button goes. Null when there is nothing to buy. */
   checkoutPath: string | null;
   /**
@@ -189,7 +200,7 @@ export interface PlanRung {
 }
 
 export const PLAN_LADDER: readonly PlanRung[] = [
-  { id: 'free', label: 'free', price: null, cadence: null, domains: PLAN_LIMITS.free.domains, prompts: PLAN_LIMITS.free.prompts, checkoutPath: null, checkoutNeedsSite: false },
+  { id: 'free', label: 'free', price: null, cadence: null, domains: PLAN_LIMITS.free.domains, prompts: PLAN_LIMITS.free.prompts, listed: true, checkoutPath: null, checkoutNeedsSite: false },
   {
     id: 'monitor',
     label: 'monitoring',
@@ -197,8 +208,10 @@ export const PLAN_LADDER: readonly PlanRung[] = [
     cadence: PRICING.monitor.cadence,
     domains: PLAN_LIMITS.monitor.domains,
     prompts: PLAN_LIMITS.monitor.prompts,
+    listed: false,
     // Per-site, because monitoring is bought for a domain you have claimed.
-    // The caller appends the site id.
+    // The caller appends the site id. Still live: an unlisted plan that could
+    // not be paid for would cancel itself at the next renewal.
     checkoutPath: '/api/checkout/monitor',
     checkoutNeedsSite: true,
   },
@@ -209,6 +222,7 @@ export const PLAN_LADDER: readonly PlanRung[] = [
     cadence: PRICING.agency.cadence,
     domains: PLAN_LIMITS.agency.domains,
     prompts: PLAN_LIMITS.agency.prompts,
+    listed: true,
     checkoutPath: '/api/checkout/agency',
     checkoutNeedsSite: false,
   },
@@ -230,11 +244,21 @@ export function upgradeHref(to: PlanRung): string {
   return to.checkoutPath && !to.checkoutNeedsSite ? to.checkoutPath : '/pricing';
 }
 
-/** The rung above, or null at the top. What every upsell on the site reads. */
+/**
+ * The rung above, or null at the top. What every upsell on the site reads.
+ *
+ * Skips the unlisted ones, so somebody on free is offered agency rather than
+ * a plan they cannot find on the pricing page. Somebody already on monitoring
+ * still gets agency, which is the next listed rung above them either way.
+ */
 export function nextRung(plan: keyof typeof PLAN_LIMITS): PlanRung | null {
   const at = PLAN_LADDER.findIndex((r) => r.id === plan);
-  return at >= 0 ? (PLAN_LADDER[at + 1] ?? null) : null;
+  if (at < 0) return null;
+  return PLAN_LADDER.slice(at + 1).find((r) => r.listed) ?? null;
 }
+
+/** The plans a visitor is offered. */
+export const LISTED_PLANS: readonly PlanRung[] = PLAN_LADDER.filter((r) => r.listed);
 
 /**
  * The one address, everywhere. The footer, the crawler page, the docs, the

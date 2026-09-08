@@ -9,7 +9,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { Button, Container, Eyebrow, PageTitle } from '@/components/ui';
 import { currentUser } from '@/lib/auth';
 import { instructions } from '@/lib/claims';
-import { PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
+import { PLAN_LIMITS, PRICING, PUBLIC_INDEX_LISTED } from '@/lib/site';
 import { publicClient } from '@/lib/supabase';
 import { ClaimForm } from './ClaimForm';
 
@@ -81,19 +81,19 @@ export default async function ClaimPage({ params }: { params: Promise<{ domain: 
                   </p>
                 </div>
                 <div className="mt-10">
-                    <Section kicker={`Monitoring · ${PRICING.monitor.label} ${PRICING.monitor.cadence}`}>
+                    <Section kicker={`Agency · ${PRICING.agency.label} ${PRICING.agency.cadence}`}>
                       Know the day a WAF rule changes under you
                     </Section>
                     <Lede>
-                      Weekly re-checks, an alert on any category drop or a new 403 to any client, and the fix pack
-                      regenerated on every scan.
+                      Weekly re-checks of up to {PLAN_LIMITS.agency.domains} domains, an alert on any drop or a new 403,
+                      and the fix pack regenerated on every scan.
                     </Lede>
                     {/* A plain anchor: the checkout route redirects to Stripe, which a client-side navigation cannot follow. */}
                     <a
-                      href={`/api/checkout/monitor/${site.id}`}
+                      href="/api/checkout/agency"
                       className="edge mt-6 inline-flex items-center justify-center rounded-[10px] bg-ink px-4 py-[10px] font-body text-[14px] font-semibold text-white no-underline shadow-hard-3 transition-colors duration-150 hover:bg-violet hover:text-white"
                     >
-                      Start monitoring — {PRICING.monitor.label} {PRICING.monitor.cadence}
+                      Start on agency — {PRICING.agency.label} {PRICING.agency.cadence}
                   </a>
                 </div>
               </>

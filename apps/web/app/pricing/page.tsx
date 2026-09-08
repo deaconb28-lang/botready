@@ -69,28 +69,14 @@ const TIERS: Tier[] = [
     dark: true,
   },
   {
-    eyebrow: 'Monitoring',
-    price: PRICING.monitor.label,
-    unit: PRICING.monitor.cadence,
-    body: 'We re-check weekly and tell you the day a rule changes under you.',
-    items: [
-      ['🔁', `Weekly re-scans of ${PLAN_LIMITS.monitor.domains} domains`],
-      ['🚨', 'An alert on any drop, or a new refusal'],
-      ['💬', `${PLAN_LIMITS.monitor.prompts} questions asked of an assistant each week`],
-      ['📈', 'Score history, with the change annotated'],
-      ['📦', 'The fix pack included, regenerated every scan'],
-    ],
-    cta: { label: 'Claim a domain', href: '/account/domains/new' },
-  },
-  {
     eyebrow: 'Agency',
     price: PRICING.agency.label,
     unit: PRICING.agency.cadence,
-    body: 'The same thing across a client list, on one bill.',
-    includes: 'Everything in monitoring, plus',
+    body: 'Everything above, watched every week, across a client list.',
     items: [
-      ['🏢', `${PLAN_LIMITS.agency.domains} domains instead of ${PLAN_LIMITS.monitor.domains}`],
-      ['💬', `${PLAN_LIMITS.agency.prompts} questions, pooled — spend them where the work is`],
+      ['🔁', `Weekly re-scans of ${PLAN_LIMITS.agency.domains} domains, on one bill`],
+      ['🚨', 'An alert the day any client stops being readable'],
+      ['💬', `${PLAN_LIMITS.agency.prompts} questions asked of an assistant each week, pooled`],
       ['📣', 'Share of voice against the competitors you name'],
       ['🕵️', 'Which AI crawlers really fetched your pages, from your logs'],
       ['🪪', 'Each one checked against the vendor’s own addresses'],
@@ -111,7 +97,7 @@ export default function PricingPage() {
           <h1 className="display-tight mx-auto mt-3 max-w-[26ch] text-[clamp(38px,5.2vw,64px)]">Simple, transparent pricing</h1>
         </div>
 
-        <div className="mt-11 grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-11 grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
           {TIERS.map((t) => (
             <div
               key={t.eyebrow}

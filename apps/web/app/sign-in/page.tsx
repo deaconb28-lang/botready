@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 const PERKS: Array<{ title: string; chip: string; body: string }> = [
   {
     title: 'Score history',
-    chip: `${PLAN_LIMITS.monitor.domains} domains`,
+    chip: `${PLAN_LIMITS.agency.domains} domains`,
     body: 'Every run kept, with the change annotated so you can see what moved the number.',
   },
   {

@@ -64,8 +64,8 @@ export default async function NewPropertyPage() {
             </Step>
 
             <p className="mt-6 border-t border-hairline-2 pt-5 text-[14px] leading-[1.6] text-muted">
-              Monitoring is optional: {PRICING.monitor.label} {PRICING.monitor.cadence} to re-check weekly and write to
-              you the day a client that could read your site stops being able to.
+              Watching is optional: {PRICING.agency.label} {PRICING.agency.cadence} to re-check weekly and write to you
+              the day a client that could read your site stops being able to.
             </p>
           </>
         ) : (
