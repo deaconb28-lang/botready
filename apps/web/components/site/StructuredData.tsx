@@ -61,7 +61,7 @@ function offers() {
     ),
     subscription(
       'Agency',
-      `Up to ${PLAN_LIMITS.agency.domains} domains re-scanned weekly, ${PLAN_LIMITS.agency.prompts} watched questions pooled across them, and a fix pack for every one.`,
+      `Up to ${PLAN_LIMITS.agency.domains} domains re-scanned weekly, ${PLAN_LIMITS.agency.prompts} watched questions pooled across them, share of voice against named competitors, verified crawler analytics from your own logs, and a fix pack for every domain.`,
       PRICING.agency.amount,
       PRICING.agency.currency,
     ),
