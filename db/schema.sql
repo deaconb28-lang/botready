@@ -194,6 +194,9 @@ create table prompt_runs (
   id             uuid primary key default gen_random_uuid(),
   prompt_id      uuid not null references prompts(id) on delete cascade,
   ran_at         timestamptz not null default now(),
+  -- Which engine answered. Text rather than an enum so that adding one stays a
+  -- data edit; must exist in packages/core/engines.json.
+  engine_id      text not null default 'claude',
   model          text not null,
   answer_excerpt text not null default '',
   cited_domains  jsonb not null default '[]'::jsonb,   -- ["linear.app", "height.app"]
@@ -201,6 +204,7 @@ create table prompt_runs (
 );
 
 create index prompt_runs_prompt_idx on prompt_runs (prompt_id, ran_at desc);
+create index prompt_runs_engine_idx on prompt_runs (engine_id, ran_at desc);
 
 -- ---------------------------------------------------------------- the index
 

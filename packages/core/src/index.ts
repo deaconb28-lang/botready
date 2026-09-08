@@ -17,3 +17,5 @@ export * from './findings';
 export * from './segment';
 export * from './profiles';
 export * from './remedies';
+export * from './engines';
+export * from './visibility';

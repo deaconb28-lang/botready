@@ -77,6 +77,7 @@ const TIERS: Tier[] = [
     items: [
       `${PLAN_LIMITS.agency.domains} domains, re-scanned weekly, each with its own public result page`,
       `${PLAN_LIMITS.agency.prompts} watched questions pooled across all of them, so you spend them where the work is`,
+      'Share of voice: how often an assistant cites your client versus the competitors they named',
       'A fix pack for every domain, regenerated on every scan, yours to hand over under your own name',
       'An alert the day any client stops being readable',
       `${PLAN_LIMITS.agency.scansPerMonth} checks a month, which is more than a monthly report needs`,

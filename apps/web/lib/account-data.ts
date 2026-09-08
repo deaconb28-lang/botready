@@ -42,7 +42,7 @@ export interface PlanView {
   currentPeriodEnd: string | null;
   stripeCustomerId: string | null;
   hasFixpack: boolean;
-  limits: { domains: number; scansPerMonth: number; prompts: number; promptsWeekly: boolean };
+  limits: { domains: number; scansPerMonth: number; prompts: number; promptsWeekly: boolean; visibility: boolean };
 }
 
 export interface UsageView {

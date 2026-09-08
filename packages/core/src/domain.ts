@@ -19,6 +19,23 @@ export function normaliseDomain(input: string): string {
   return s;
 }
 
+/**
+ * The registrable part of a domain, for deciding whether two hostnames are the
+ * same site: docs.linear.app and linear.app both come back as linear.app.
+ *
+ * Deliberately the last two labels rather than a public-suffix list. That is
+ * wrong for a handful of suffixes — anything under .co.uk or .com.au collapses
+ * to co.uk — and right for everything the answer plane compares, which is a
+ * customer's own domain against a competitor list they typed themselves. A
+ * real PSL is a dependency and a monthly data update in exchange for a case
+ * this does not yet have; when it does, this is the one function to change.
+ */
+export function rootDomain(input: string): string {
+  const host = normaliseDomain(input);
+  const labels = host.split('.').filter(Boolean);
+  return labels.length <= 2 ? host : labels.slice(-2).join('.');
+}
+
 export class InvalidUrlError extends Error {
   constructor(message: string) {
     super(message);

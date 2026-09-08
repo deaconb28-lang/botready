@@ -3,9 +3,11 @@ import { notFound } from 'next/navigation';
 import { normaliseDomain } from '@botready/core';
 
 import { PromptWatchView } from '@/components/app/PromptWatchView';
+import { VisibilityLocked, VisibilityPanel } from '@/components/app/VisibilityPanel';
 import { loadPrompts } from '@/lib/app-data';
 import { propertyFor, requireUser } from '@/lib/app-context';
 import { probeConfigured } from '@/lib/prompt-probe';
+import { loadVisibility } from '@/lib/visibility-data';
 import { planFor } from '@/lib/account-data';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +20,9 @@ export default async function WatchPage({ params }: { params: Promise<{ domain: 
   const p = await propertyFor(domain, user.id);
   if (!p) notFound();
   const [prompts, plan] = await Promise.all([loadPrompts(p.siteId, p.domain), planFor(user.id)]);
+  // Only queried for the plan that can read it, so the page costs nothing extra
+  // for everybody else.
+  const view = plan.limits.visibility ? await loadVisibility(p.siteId, p.domain) : null;
 
   return (
     <div>
@@ -30,6 +35,7 @@ export default async function WatchPage({ params }: { params: Promise<{ domain: 
           : `${wordNumber(prompts.length)} ${prompts.length === 1 ? 'question' : 'questions'} we ask ${plan.limits.promptsWeekly ? 'each week' : 'when you press the button'}, and whether the answer mentions you.`}
       </p>
       <PromptWatchView siteId={p.siteId} domain={p.domain} prompts={prompts} configured={probeConfigured()} weekly={plan.limits.promptsWeekly} />
+      {view ? <VisibilityPanel v={view} domain={p.domain} /> : <VisibilityLocked domain={p.domain} />}
     </div>
   );
 }

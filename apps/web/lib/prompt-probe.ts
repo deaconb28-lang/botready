@@ -18,6 +18,9 @@ import { serverEnv } from './env';
 
 export const PROBE_MODEL = 'claude-opus-5';
 
+/** Which engine in packages/core/engines.json this probe is. */
+export const PROBE_ENGINE = 'claude';
+
 export interface ProbeOutcome {
   model: string;
   /** The answer, cut to a few hundred characters. */

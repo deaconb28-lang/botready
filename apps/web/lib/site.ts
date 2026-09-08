@@ -141,13 +141,18 @@ export function paymentLink(plan: keyof typeof PAYMENT_LINKS, reference: string,
  * monitor cron and the claim flow enforce them.
  */
 export const PLAN_LIMITS = {
-  free: { domains: 1, scansPerMonth: 10, prompts: 12, promptsWeekly: false },
-  monitor: { domains: 3, scansPerMonth: 30, prompts: 12, promptsWeekly: true },
+  free: { domains: 1, scansPerMonth: 10, prompts: 12, promptsWeekly: false, visibility: false },
+  monitor: { domains: 3, scansPerMonth: 30, prompts: 12, promptsWeekly: true, visibility: false },
   // Pooled across every claimed domain rather than per-domain: 50 questions
   // spread over ten clients is the shape of the work, and ten allowances of
   // twelve would be 120 questions a week of model calls against a $29 price.
   // Constraint 10 — cadence is priced — is why weekly is the only cadence here.
-  agency: { domains: 10, scansPerMonth: 120, prompts: 50, promptsWeekly: true },
+  // `visibility` is the line between the two paid tiers, and it is a real one
+  // rather than a lever: monitoring watches one site and tells you whether an
+  // assistant named you, which is a fact about you. Share of voice is a fact
+  // about a category, needs a competitor set to have a denominator at all, and
+  // is what somebody managing a portfolio is actually buying.
+  agency: { domains: 10, scansPerMonth: 120, prompts: 50, promptsWeekly: true, visibility: true },
 } as const;
 
 /**

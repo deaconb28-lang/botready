@@ -2,7 +2,9 @@
  * Running the watched prompts for a site and recording each answer.
  */
 
-import { probePrompt } from './prompt-probe';
+import { rootDomain } from '@botready/core';
+
+import { PROBE_ENGINE, probePrompt } from './prompt-probe';
 import { serviceClient } from './supabase';
 
 export interface RunSummary {
@@ -21,9 +23,10 @@ export async function runPromptsForSite(siteId: string, selfDomain: string): Pro
   for (const prompt of list) {
     const outcome = await probePrompt(prompt.text);
     if (outcome.error) errors += 1;
-    if (outcome.citedDomains.some((d) => sameRoot(d, selfDomain))) cited += 1;
+    if (outcome.citedDomains.some((d) => rootDomain(d) === rootDomain(selfDomain))) cited += 1;
     await supabase.from('prompt_runs').insert({
       prompt_id: prompt.id,
+      engine_id: PROBE_ENGINE,
       model: outcome.model,
       answer_excerpt: outcome.excerpt,
       cited_domains: outcome.citedDomains,
@@ -34,7 +37,4 @@ export async function runPromptsForSite(siteId: string, selfDomain: string): Pro
   return { asked: list.length, cited, errors };
 }
 
-function sameRoot(a: string, b: string): boolean {
-  const root = (d: string) => d.toLowerCase().replace(/^www\./, '').split('.').slice(-2).join('.');
-  return root(a) === root(b);
-}
+
