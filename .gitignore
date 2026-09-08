@@ -28,6 +28,7 @@ tools/design-out/
 # record the framing decisions, and vo/ is kept because regenerating it spends
 # credits at a text-to-speech API rather than CPU.
 marketing/video/out/
+tools/design-out/
 marketing/video/footage/*.mp4
 marketing/video/titles/*.mp4
 marketing/video/cards/*.png
