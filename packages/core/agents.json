@@ -1,0 +1,147 @@
+{
+  "agentsVersion": "1.0",
+  "agents": [
+    {
+      "id": "gptbot",
+      "label": "GPTBot",
+      "vendor": "OpenAI",
+      "purpose": "training",
+      "uaPattern": "GPTBot",
+      "rdnsSuffixes": [],
+      "rangeUrls": ["https://openai.com/gptbot.json"]
+    },
+    {
+      "id": "oai-searchbot",
+      "label": "OAI-SearchBot",
+      "vendor": "OpenAI",
+      "purpose": "search",
+      "uaPattern": "OAI-SearchBot",
+      "rdnsSuffixes": [],
+      "rangeUrls": ["https://openai.com/searchbot.json"]
+    },
+    {
+      "id": "chatgpt-user",
+      "label": "ChatGPT-User",
+      "vendor": "OpenAI",
+      "purpose": "on-demand",
+      "uaPattern": "ChatGPT-User",
+      "rdnsSuffixes": [],
+      "rangeUrls": ["https://openai.com/chatgpt-user.json"]
+    },
+    {
+      "id": "claudebot",
+      "label": "ClaudeBot",
+      "vendor": "Anthropic",
+      "purpose": "training",
+      "uaPattern": "ClaudeBot",
+      "rdnsSuffixes": [],
+      "rangeUrls": ["https://docs.anthropic.com/claude/page/claudebot.json"]
+    },
+    {
+      "id": "claude-user",
+      "label": "Claude-User",
+      "vendor": "Anthropic",
+      "purpose": "on-demand",
+      "uaPattern": "Claude-User",
+      "rdnsSuffixes": [],
+      "rangeUrls": ["https://docs.anthropic.com/claude/page/claude-user.json"]
+    },
+    {
+      "id": "perplexitybot",
+      "label": "PerplexityBot",
+      "vendor": "Perplexity",
+      "purpose": "search",
+      "uaPattern": "PerplexityBot",
+      "rdnsSuffixes": [".perplexity.ai"],
+      "rangeUrls": ["https://www.perplexity.ai/perplexitybot.json"]
+    },
+    {
+      "id": "perplexity-user",
+      "label": "Perplexity-User",
+      "vendor": "Perplexity",
+      "purpose": "on-demand",
+      "uaPattern": "Perplexity-User",
+      "rdnsSuffixes": [".perplexity.ai"],
+      "rangeUrls": ["https://www.perplexity.ai/perplexity-user.json"]
+    },
+    {
+      "id": "google-extended",
+      "label": "Google-Extended",
+      "vendor": "Google",
+      "purpose": "training",
+      "uaPattern": "Google-Extended",
+      "rdnsSuffixes": [".googlebot.com", ".google.com"],
+      "rangeUrls": ["https://developers.google.com/static/search/apis/ipranges/googlebot.json"]
+    },
+    {
+      "id": "googlebot",
+      "label": "Googlebot",
+      "vendor": "Google",
+      "purpose": "search",
+      "uaPattern": "Googlebot",
+      "rdnsSuffixes": [".googlebot.com", ".google.com"],
+      "rangeUrls": ["https://developers.google.com/static/search/apis/ipranges/googlebot.json"]
+    },
+    {
+      "id": "bingbot",
+      "label": "Bingbot",
+      "vendor": "Microsoft",
+      "purpose": "search",
+      "uaPattern": "bingbot",
+      "rdnsSuffixes": [".search.msn.com"],
+      "rangeUrls": ["https://www.bing.com/toolbox/bingbot.json"]
+    },
+    {
+      "id": "applebot",
+      "label": "Applebot",
+      "vendor": "Apple",
+      "purpose": "search",
+      "uaPattern": "Applebot",
+      "rdnsSuffixes": [".applebot.apple.com"],
+      "rangeUrls": []
+    },
+    {
+      "id": "amazonbot",
+      "label": "Amazonbot",
+      "vendor": "Amazon",
+      "purpose": "search",
+      "uaPattern": "Amazonbot",
+      "rdnsSuffixes": [".crawl.amazon.com"],
+      "rangeUrls": []
+    },
+    {
+      "id": "meta-externalagent",
+      "label": "meta-externalagent",
+      "vendor": "Meta",
+      "purpose": "training",
+      "uaPattern": "meta-externalagent",
+      "rdnsSuffixes": [],
+      "rangeUrls": []
+    },
+    {
+      "id": "bytespider",
+      "label": "Bytespider",
+      "vendor": "ByteDance",
+      "purpose": "training",
+      "uaPattern": "Bytespider",
+      "rdnsSuffixes": [],
+      "rangeUrls": []
+    },
+    {
+      "id": "ccbot",
+      "label": "CCBot",
+      "vendor": "Common Crawl",
+      "purpose": "training",
+      "uaPattern": "CCBot",
+      "rdnsSuffixes": [],
+      "rangeUrls": []
+    }
+  ],
+  "referrers": [
+    { "id": "chatgpt", "label": "ChatGPT", "hosts": ["chatgpt.com", "chat.openai.com"] },
+    { "id": "perplexity", "label": "Perplexity", "hosts": ["perplexity.ai"] },
+    { "id": "claude", "label": "Claude", "hosts": ["claude.ai"] },
+    { "id": "gemini", "label": "Gemini", "hosts": ["gemini.google.com"] },
+    { "id": "copilot", "label": "Copilot", "hosts": ["copilot.microsoft.com", "bing.com"] }
+  ]
+}

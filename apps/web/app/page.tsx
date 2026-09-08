@@ -41,6 +41,7 @@ export default function HomePage() {
         <BrowserVsAgent />
         <WhyAeo />
         <TheCheck />
+        <WhoCame />
         <ClosingCta />
       </main>
       <SiteFooter />
@@ -295,6 +296,70 @@ function TheCheck() {
             </div>
           ))}
         </dl>
+      </Card>
+    </Container>
+  );
+}
+
+/**
+ * The traffic plane, on the landing page.
+ *
+ * The claim here is narrow on purpose. Everything above measures what a
+ * crawler would get; this measures which ones came. What makes it worth a
+ * section is not the counting — every log tool counts — it is that a
+ * user-agent is a claim, and reporting claims as crawler visits is what the
+ * whole category does. So the section leads on the verdict, not the total.
+ */
+function WhoCame() {
+  const rows: Array<{ agent: string; verdict: string; tone: 'ok' | 'unknown' | 'bad' }> = [
+    { agent: 'GPTBot', verdict: 'verified · published range', tone: 'ok' },
+    { agent: 'PerplexityBot', verdict: 'verified · forward-confirmed DNS', tone: 'ok' },
+    { agent: 'ClaudeBot', verdict: 'claimed · unproven', tone: 'unknown' },
+    { agent: 'GPTBot', verdict: 'proven fake · not their address', tone: 'bad' },
+  ];
+
+  return (
+    <Container as="section" className="pt-20">
+      <Card radius="panel-lg" shadow={7} className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-center gap-9 p-6 sm:p-11">
+        <div>
+          <PillEyebrow>Who came [05]</PillEyebrow>
+          <h2 className="display mt-3 text-[clamp(28px,3.6vw,42px)] leading-[1.07] tracking-[-0.03em]">
+            Not every AI crawler in your logs is the one it says it is
+          </h2>
+          <p className="mt-4 max-w-[46ch] text-[16.5px] leading-[1.6] text-muted">
+            A user-agent is a claim anybody can type. Point your access logs at us and every fetch gets checked against
+            the vendor&rsquo;s own published addresses and reverse DNS, so a real crawler and a scraper wearing its name
+            stop counting as the same visit.
+          </p>
+          <p className="mt-4 max-w-[46ch] text-[15px] leading-[1.6] text-muted">
+            Your visitors&rsquo; addresses are never written down — not stored, not hashed. A crawler&rsquo;s lives
+            just long enough to ask DNS whether the claim is true.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button href="/pricing" tone="ink" size="lg" className="px-[24px]">
+              On the agency plan
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-[10px]">
+          {rows.map((r, i) => (
+            <div key={i} className="edge flex items-center justify-between gap-3 rounded-[13px] bg-white p-[14px] shadow-hard-3">
+              <span className="font-mono text-[13px] font-medium text-ink">{r.agent}</span>
+              <span
+                className={cx(
+                  'edge whitespace-nowrap rounded-[8px] px-[9px] py-[3px] font-mono text-[11px] font-bold',
+                  r.tone === 'ok' ? 'bg-lime text-ink' : r.tone === 'bad' ? 'bg-coral text-ink' : 'bg-surface-alt text-body',
+                )}
+              >
+                {r.verdict}
+              </span>
+            </div>
+          ))}
+          <p className="mt-1 font-mono text-[11px] leading-[1.5] text-placeholder">
+            An illustration of the four verdicts, not a customer&rsquo;s data.
+          </p>
+        </div>
       </Card>
     </Container>
   );

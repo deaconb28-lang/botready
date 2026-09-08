@@ -121,6 +121,7 @@ function navFor(p: Property): NavItem[] {
     { group: 'Diagnose', label: 'Competitors', href: `${base}/competitors`, meta: '', tone: 'neutral' },
     { group: 'Fix & watch', label: 'Editor', href: `${base}/editor`, meta: p.projected?.grade ?? '', tone: 'neutral' },
     { group: 'Fix & watch', label: 'Prompt watch', href: `${base}/watch`, meta: '', tone: 'neutral' },
+    { group: 'Fix & watch', label: 'Crawlers', href: `${base}/crawlers`, meta: '', tone: 'neutral' },
     { group: 'Fix & watch', label: 'Settings', href: `${base}/settings`, meta: '', tone: 'neutral' },
     { group: 'Fix & watch', label: 'New scan', href: `${base}/new`, meta: '', tone: 'neutral' },
   ];

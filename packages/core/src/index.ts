@@ -19,3 +19,4 @@ export * from './profiles';
 export * from './remedies';
 export * from './engines';
 export * from './visibility';
+export * from './identity';

@@ -45,9 +45,16 @@ the services, the volumes, the cost model and the phasing.
 | Plane | What it observes | State |
 |---|---|---|
 | **Site** | What each client retrieved | `apps/scanner`, done |
-| **Answer** | What engines say when asked a question in the category | `prompts` / `prompt_runs` and one engine; needs `apps/prober` |
-| **Traffic** | Which verified crawlers fetched what, and which AI surfaces referred humans | Needs `apps/collector` and log ingest |
+| **Answer** | What engines say when asked a question in the category | Share of voice built; one engine live, `engines.json` declares three more |
+| **Traffic** | Which verified crawlers fetched what, and which AI surfaces referred humans | Ingest and verification built, in `apps/web` rather than a separate service |
 | **Action** | A fix, applied, and a re-scan that proves it landed | `packages/core/remedies/` generates; nothing verifies yet |
+
+The traffic plane deliberately landed as `/api/collect` in the web app rather
+than as the separate `apps/collector` the architecture calls for. Verification
+is DNS-bound rather than CPU-bound, one route on Node runtime carries it, and a
+service exists to be scaled — which is a thing to do when a customer's drain
+outgrows a function, not before. The split stays in the architecture doc as the
+next move rather than as a thing that was skipped.
 
 Constraints 7 to 11 exist because of this. They are written for planes that
 are not built so that the first commit on each one does not have to invent
