@@ -69,9 +69,11 @@ ${font('Familjen Grotesk', 'FamiljenGrotesk-Bold.ttf', 700)}
 ${font('Public Sans', 'PublicSans-Regular.ttf', 400)}
 ${font('JetBrains Mono', 'JetBrainsMono-Regular.ttf', 400)}
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:${W}px;height:${H}px;overflow:hidden;
-  background:linear-gradient(160deg,#FFFFFF 0%,${C.canvas} 62%,#FFFFFF 100%)}
-#wash{position:absolute;inset:-25%;filter:blur(110px);opacity:.62}
+html,body{width:${W}px;height:${H}px;overflow:hidden;background:#FBFAFF}
+#wash{position:absolute;inset:-25%;filter:blur(130px);opacity:.55}
+/* The end card is the one saturated frame, the way the reference ends on a
+   full field of its own brand colour rather than on the pale ground. */
+#endwash{position:absolute;inset:-20%;filter:blur(120px);opacity:0}
 .blob{position:absolute;border-radius:50%}
 #stage{position:absolute;inset:0}
 .card{position:absolute;display:block;border-radius:16px;will-change:transform,opacity}
@@ -95,6 +97,10 @@ html,body{width:${W}px;height:${H}px;overflow:hidden;
   <div class="blob" id="b1"></div>
   <div class="blob" id="b2"></div>
   <div class="blob" id="b3"></div>
+</div>
+<div id="endwash">
+  <div class="blob" id="e1"></div>
+  <div class="blob" id="e2"></div>
 </div>
 <div id="stage">
   ${CARDS.map((n) => `<img class="card" id="c_${n}" src="${src[n]}">`).join('\n  ')}
@@ -142,7 +148,7 @@ await page.evaluate(({ W, H, C, TOTAL }) => {
     el.style.width = w + 'px';
     el.style.opacity = String(clamp(alpha));
     el.style.zIndex = String(z);
-    el.style.boxShadow = alpha > 0.02 ? `5px 5px 0 ${C.ink}` : 'none';
+    el.style.boxShadow = alpha > 0.02 ? '0 22px 48px rgba(17,19,24,.13)' : 'none';
     // translate is from the element's own top-left, so centre it by hand.
     el.style.transform =
       `translate(${x - w / 2}px, ${y + rise}px) rotate(${rot}deg)`;
@@ -160,12 +166,24 @@ await page.evaluate(({ W, H, C, TOTAL }) => {
       b.style.left = (sx + Math.sin(p * Math.PI * 2 + i) * 130) + 'px';
       b.style.top = (sy + Math.cos(p * Math.PI * 2 + i * 1.7) * 110) + 'px';
     };
-    drift(1, 100, -80, 1250, C.violet + '30');
-    drift(2, 1220, 300, 1050, C.coral + '2C');
-    drift(3, 620, 700, 900, C.violet + '18');
+    drift(1, 100, -80, 1250, C.violet + '26');
+    drift(2, 1220, 300, 1050, C.coral + '24');
+    drift(3, 620, 700, 900, C.violet + '14');
+
+    // The saturated field the end card sits on. Held at opacity 0 until beat 9.
+    const endBlob = (id, sx, sy, r, col) => {
+      const b = $(id);
+      b.style.width = r + 'px'; b.style.height = r + 'px';
+      b.style.background = col;
+      b.style.left = sx + 'px'; b.style.top = sy + 'px';
+    };
+    endBlob('e1', -180, -260, 1900, C.violet + 'CC');
+    endBlob('e2', 900, 520, 1700, C.coral + 'B0');
+    $('endwash').style.opacity = '0';
 
     for (const n of ['urlbox', 'assistant', 'agents', 'blocked403', 'fixfiles',
                      'shortlist', 'whateach', 'retrieve']) hide(n);
+    $('stage').style.filter = 'none';
     $('l1').style.opacity = '0'; $('l2').style.opacity = '0';
     $('eyebrow').style.opacity = '0';
     $('mark').style.opacity = '0';
@@ -186,45 +204,51 @@ await page.evaluate(({ W, H, C, TOTAL }) => {
     if (t < 3.5) {
       const a = ease(t / 0.9);
       eyebrow('one url', a * ease((t - 0.35) / 0.7));
-      put('urlbox', { x: W / 2, y: H / 2 - 130, scale: 1.55, alpha: a, rise: (1 - a) * 26 });
+      put('urlbox', { x: W / 2, y: 430, scale: 1.95, alpha: a, rise: (1 - a) * 26 });
     }
 
     // ============ 2. what the assistant answers (3.1 - 7.6) ===============
+    // A tight overlapping cluster, axis-aligned, one card cropped by the right
+    // edge. The reference never rotates a card and never leaves one floating
+    // alone in space; the overlap is what gives the frame its depth.
     if (t >= 3.0 && t < 7.8) {
       const p = win(t, 3.1, 7.6, 0.55);
-      const q = ease((t - 3.3) / 0.8);
-      eyebrow('what your customers get back', p);
-      put('urlbox', { x: W / 2 - 470, y: H / 2 - 330, scale: 1.18, alpha: p, z: 2 });
-      put('shortlist', {
-        x: W / 2 - 470, y: H / 2 - 30, scale: 1.30,
-        alpha: p * ease((t - 4.4) / 0.8), rise: (1 - ease((t - 4.4) / 0.8)) * 28, rot: -0.7, z: 2,
+      put('urlbox', {
+        x: 660, y: 120, scale: 1.55,
+        alpha: p * ease((t - 3.1) / 0.7), rise: (1 - ease((t - 3.1) / 0.7)) * 30, z: 2,
       });
       put('assistant', {
-        x: W / 2 + 420, y: H / 2 - 300, scale: 1.55,
-        alpha: p * q, rise: (1 - q) * 36, rot: 0.7, z: 3,
+        x: 700, y: 400, scale: 1.95,
+        alpha: p * ease((t - 3.6) / 0.8), rise: (1 - ease((t - 3.6) / 0.8)) * 34, z: 4,
+      });
+      put('shortlist', {
+        x: 1500, y: 250, scale: 1.95,
+        alpha: p * ease((t - 4.5) / 0.8), rise: (1 - ease((t - 4.5) / 0.8)) * 30, z: 3,
       });
     }
 
     // ===== 3. the finding: 200 for one, 403 for four (7.4 - 12.6) =========
+    // One dominant panel. This is the whole product argument, so nothing else
+    // is on screen competing with it.
     if (t >= 7.3 && t < 12.8) {
       const p = win(t, 7.4, 12.6, 0.55);
       const q = ease((t - 7.6) / 0.9);
-      eyebrow('same url, same second, same ip', p);
       put('agents', {
-        x: W / 2, y: H / 2 - 330, scale: 1.42,
+        x: W / 2, y: 240, scale: 1.56,
         alpha: p * q, rise: (1 - q) * 42, z: 4,
-      });
-      const r = ease((t - 8.9) / 0.9);
-      put('blocked403', {
-        x: W / 2 + 620, y: H / 2 + 220, scale: 0.80,
-        alpha: p * r, rise: (1 - r) * 30, rot: 0.9, z: 3,
       });
     }
 
     // ================ 4. the type beat (12.4 - 16.8) ======================
+    // Set over the blurred cluster, the way the reference blurs its answer
+    // cards behind "Are YOU one of them?".
     if (t >= 12.4 && t < 17.0) {
       const p = win(t, 12.5, 16.8, 0.5);
       const second = ease((t - 14.1) / 0.6);
+      $('stage').style.filter = 'blur(18px)';
+      put('urlbox',    { x: 660,  y: 120, scale: 1.55, alpha: 0.34, z: 1 });
+      put('assistant', { x: 700,  y: 400, scale: 1.95, alpha: 0.34, z: 1 });
+      put('shortlist', { x: 1500, y: 250, scale: 1.95, alpha: 0.34, z: 1 });
       say('Your site is fine.',
           'Your site is also <span class="acc">invisible</span>.',
           p, (1 - ease((t - 12.6) / 0.7)) * 18);
@@ -239,42 +263,37 @@ await page.evaluate(({ W, H, C, TOTAL }) => {
       $('chip').style.opacity = '0';
     }
 
-    // ========== 6. the score, and what it costs (19.2 - 23.6) ============
+    // ========== 6. the evidence under the score (19.2 - 23.6) ============
     if (t >= 19.2 && t < 23.8) {
       const p = win(t, 19.3, 23.6, 0.5);
-      const q = ease((t - 19.5) / 0.8);
-      eyebrow('twenty-one checks, six categories', p);
       put('whateach', {
-        x: W / 2 - 430, y: H / 2 - 330, scale: 1.55,
-        alpha: p * q, rise: (1 - q) * 32, z: 4,
+        x: 560, y: 140, scale: 2.05,
+        alpha: p * ease((t - 19.4) / 0.8), rise: (1 - ease((t - 19.4) / 0.8)) * 32, z: 4,
       });
-      const r = ease((t - 20.5) / 0.9);
       put('retrieve', {
-        x: W / 2 + 400, y: H / 2 - 180, scale: 1.20,
-        alpha: p * r, rise: (1 - r) * 26, rot: 0.6, z: 3,
+        x: 1400, y: 620, scale: 1.30,
+        alpha: p * ease((t - 20.4) / 0.8), rise: (1 - ease((t - 20.4) / 0.8)) * 28, z: 3,
       });
     }
 
-    // ======== 7. the drift grid: everything at once (23.4 - 28.8) =========
+    // ======== 7. the cluster: everything at once (23.4 - 28.8) ============
+    // Big, overlapping, cropped at both edges. No eyebrow here — the reference
+    // labels nothing in this section, and a caption behind a card reads as a
+    // bug rather than as a caption.
     if (t >= 23.4 && t < 29.0) {
       const p = win(t, 23.5, 28.8, 0.6);
-      const d = (t - 23.5) * 15;          // slow upward parallax
-      eyebrow('every check, with the evidence under it', p);
+      const d = (t - 23.5) * 16;          // slow upward parallax
       const grid = [
-        ['agents',     700,  120, 0.62, -1.0, 1.00],
-        ['whateach',  1520,   90, 0.72,  1.2, 0.90],
-        ['assistant',  270,  430, 0.70,  0.8, 0.95],
-        ['shortlist', 1150,  560, 0.62,  1.1, 0.93],
-        ['blocked403',1560,  720, 0.62, -0.9, 0.86],
-        ['retrieve',   640,  530, 0.62,  0.7, 0.92],
-        ['fixfiles',   250,  770, 0.62,  1.4, 0.88],
+        ['agents',     640,   80, 1.02, 1.00, 3],
+        ['whateach',  1610,  190, 1.35, 0.92, 4],
+        ['assistant',  330,  520, 1.45, 0.96, 5],
+        ['retrieve',  1230,  660, 1.10, 0.90, 3],
+        ['fixfiles',  1700,  790, 1.30, 0.86, 4],
+        ['shortlist',  790,  880, 1.30, 0.94, 5],
       ];
-      grid.forEach(([n, x, y, s, rot, lag], i) => {
-        const a = ease((t - 23.6 - i * 0.13) / 0.7);
-        put(n, {
-          x, y: y - d * lag, scale: s, alpha: p * a * 0.97,
-          rise: (1 - a) * 34, rot, z: 2 + (i % 3),
-        });
+      grid.forEach(([n, x, y, s, lag, z], i) => {
+        const a = ease((t - 23.6 - i * 0.12) / 0.7);
+        put(n, { x, y: y - d * lag, scale: s, alpha: p * a, rise: (1 - a) * 30, z });
       });
     }
 
@@ -282,29 +301,42 @@ await page.evaluate(({ W, H, C, TOTAL }) => {
     if (t >= 28.6 && t < 32.2) {
       const p = win(t, 28.7, 32.0, 0.5);
       const q = ease((t - 28.9) / 0.8);
-      eyebrow('the files that fix it', p);
       put('fixfiles', {
-        x: W / 2, y: H / 2 - 380, scale: 1.75,
+        x: W / 2, y: 150, scale: 2.15,
         alpha: p * q, rise: (1 - q) * 34, z: 5,
       });
-      const r = ease((t - 29.9) / 0.7);
-      say('', 'Four files. <span class="acc">From your own scan.</span>', p * r, 0);
-      $('l1').style.opacity = '0';
-      $('l2').style.fontSize = '56px';
-      $('l2').style.transform = `translateY(${330 + (1 - r) * 14}px)`;
     }
 
     // ===================== 9. the end card (31.8 - 35) ====================
+    // The one saturated frame: a full field of brand colour, the wordmark
+    // centred on it, the line underneath.
     if (t >= 31.8) {
-      const p = ease((t - 31.9) / 0.6);
+      const p = ease((t - 31.9) / 0.7);
+      $('endwash').style.opacity = String(p);
       $('mark').style.opacity = String(p);
+      document.querySelector('.wm').style.color = C.white;
+      $('tag').style.color = C.white;
       $('tag').textContent = 'The diagnosis is free. The files that fix it are $15.';
-      const c = ease((t - 32.8) / 0.5);
+      const c = ease((t - 32.9) / 0.5);
       $('chip').style.opacity = String(c);
       $('chip').style.transform = `translateY(${(1 - c) * 12}px)`;
     }
   };
 }, { W, H, C, TOTAL });
+
+const PROBE = process.argv.slice(2).includes('--probe');
+if (PROBE) {
+  const dir = join(OUT, 'probe');
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  for (const t of [1.6, 5.4, 9.8, 15.0, 18.0, 21.4, 26.2, 30.4, 34.0]) {
+    await page.evaluate((x) => window.draw(x), t);
+    await page.screenshot({ path: join(dir, `t${String(t).replace('.', '_')}.png`) });
+  }
+  await browser.close();
+  console.log(`probe frames -> ${dir}`);
+  process.exit(0);
+}
 
 rmSync(FRAMES, { recursive: true, force: true });
 mkdirSync(FRAMES, { recursive: true });
