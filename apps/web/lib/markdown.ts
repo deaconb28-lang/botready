@@ -10,6 +10,7 @@
 import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
 import { PUBLIC_PAGES, markdownPathFor, pageFor } from './content';
+import { asymmetryShare, type PublicStats } from './stats-data';
 import {
   CONTACT_EMAIL,
   ENTERPRISE,
@@ -237,10 +238,128 @@ function signIn(): string {
   ].join('\n');
 }
 
+/**
+ * The measured corpus, as markdown.
+ *
+ * Pure in the numbers rather than reading them, because every other builder
+ * here is synchronous and llms-full.txt inlines all of them in one pass. The
+ * `/stats.md` route passes the live figures in; llms-full.txt passes null and
+ * gets the definitions, which is the half of this page that does not change.
+ *
+ * Definitions first in both cases. A rate without the sentence saying what it
+ * counted is the thing this page exists to be an alternative to.
+ */
+export function statsMarkdown(stats: PublicStats | null): string {
+  const lines = [
+    ...heading('/stats'),
+    'Every number below is an aggregate over scans somebody asked for. None of it is modelled, sampled, extrapolated',
+    'or bought. Where a figure is missing it is because nothing has been measured yet, not because it is being held',
+    'back.',
+    '',
+  ];
+
+  if (stats?.outcomes) {
+    const o = stats.outcomes;
+    lines.push(
+      '## Scans',
+      '',
+      `- ${o.scans} scans have settled. ${o.complete} were scored.`,
+      `- ${o.blocked} (${o.blockedPct}%) refused our crawler outright and never reached a score.`,
+      `- ${o.errored} ended in an error of ours or a site that could not be reached.`,
+      '',
+      'Refused means the site answered `BotreadyBot/1.0` with a 401, 403 or 429 on the first request and we stopped',
+      'there rather than working around it. Those scans are absent from every figure below, which means the scores',
+      'here are the scores of sites that let us read them.',
+      '',
+    );
+  }
+
+  if (stats && stats.clients.length > 0) {
+    lines.push(
+      '## Refusal rate by client',
+      '',
+      'Same URL, same address, within a second of each other.',
+      '',
+      ...stats.clients.map(
+        (c) => `- **${c.label}**${c.isControl ? ' (browser control)' : ''} — refused on ${c.refusedPct}% of ${c.asked} scans.`,
+      ),
+      '',
+      'Refused counts a 4xx or a 5xx. A request that produced no response at all is not counted in either direction,',
+      'because nothing was measured.',
+      '',
+    );
+  }
+
+  if (stats?.asymmetry && stats.asymmetry.divergent > 0) {
+    const a = stats.asymmetry;
+    lines.push(
+      '## The Google-Extended asymmetry',
+      '',
+      `Of ${a.divergent} sites that served a browser and refused at least one AI client, ${a.googleAllowedOthersNot} served`,
+      `Google-Extended anyway — ${asymmetryShare(a)}% of them. Taken over ${a.scans} scans with a full client table.`,
+      '',
+      'The explanation is obvious enough — nobody wants to risk their search traffic — and it is worth noticing that',
+      'the risk is the same for all four, because none of these crawlers is the one that ranks you.',
+      '',
+    );
+  }
+
+  if (stats && stats.checks.length > 0) {
+    lines.push(
+      '## What sites fail most',
+      '',
+      ...stats.checks.slice(0, 10).map((c) => `- ${c.label} (\`${c.key}\`) — failed by ${c.failedPct}% of ${c.ran} scans.`),
+      '',
+      'A check that could not run is counted apart from one a site failed: folding a timeout of ours into a failure',
+      'rate would blame a site for our own problem. A check a sector is exempt from leaves the denominator entirely.',
+      '',
+    );
+  }
+
+  if (stats && stats.profiles.length > 0) {
+    lines.push(
+      '## Median score by kind of site',
+      '',
+      ...stats.profiles.map(
+        (p) => `- **${p.profile}** (scoring ${p.scoringVersion}) — median ${p.median}, range ${p.worst} to ${p.best}, from ${p.scored} sites.`,
+      ),
+      '',
+      'Grouped by the profile a site was scored under, because the profile decides which checks were counted. A median',
+      'across mixed profiles averages numbers built from different denominators, which reads like a comparison and is',
+      'not one.',
+      '',
+    );
+  }
+
+  if (!stats) {
+    lines.push(
+      '## The figures',
+      '',
+      'The current numbers are served live at the URL above, because they move every time a scan settles and a',
+      `snapshot copied into this file would go stale without saying so. Fetch \`${absoluteUrl('/stats.md')}\` for them.`,
+      '',
+      '## What each figure counts',
+      '',
+      '- **Refusal rate by client** — the share of scans where that client got a 4xx or a 5xx, out of the scans where',
+      '  it got any answer at all. Every client is sent the same URL from the same address within a second.',
+      '- **The Google-Extended asymmetry** — of the sites that served a browser and refused at least one AI client,',
+      "  the share that served Google's agent crawler anyway.",
+      '- **What sites fail most** — the share of the scans that ran a check which failed it. A check that could not',
+      '  run, and a check a sector is exempt from, both leave the denominator rather than counting as a zero.',
+      '- **Median score by kind of site** — taken within one scoring version and one sector profile, because a median',
+      '  across versions or profiles averages totals built from different check catalogs.',
+      '',
+    );
+  }
+
+  return lines.join('\n');
+}
+
 const BUILDERS: Record<string, () => string> = {
   '/': home,
   '/what-we-check': whatWeCheck,
   '/pricing': pricing,
+  '/stats': () => statsMarkdown(null),
   '/docs': docs,
   '/bot': bot,
   '/sign-in': signIn,

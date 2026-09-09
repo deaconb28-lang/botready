@@ -44,8 +44,8 @@ export const PUBLIC_PAGES: PublicPage[] = [
     path: '/what-we-check',
     title: 'What we check',
     description:
-      'All 21 checks and every weight, published, so you can argue with the score instead of taking our word for it.',
-    updated: '2026-09-02',
+      'All 24 checks and every weight, published, so you can argue with the score instead of taking our word for it.',
+    updated: '2026-09-08',
     sources: ['apps/web/app/what-we-check', 'packages/core/checks.json'],
     changeFrequency: 'monthly',
     priority: 0.8,
@@ -59,6 +59,17 @@ export const PUBLIC_PAGES: PublicPage[] = [
     sources: ['apps/web/app/pricing'],
     changeFrequency: 'monthly',
     priority: 0.7,
+    listed: true,
+  },
+  {
+    path: '/stats',
+    title: 'What we have measured',
+    description:
+      'Refusal rates by client, the checks sites fail most, and the median score by kind of business — every figure an aggregate over real scans, with the count it was taken over.',
+    updated: '2026-09-09',
+    sources: ['apps/web/app/stats', 'apps/web/lib/stats-data.ts', 'db/migrations/0016_public_stats.sql'],
+    changeFrequency: 'daily',
+    priority: 0.8,
     listed: true,
   },
   {

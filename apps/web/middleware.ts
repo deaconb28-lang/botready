@@ -77,5 +77,5 @@ export function middleware(request: NextRequest) {
  * the rescue above only runs because this list contains it.
  */
 export const config = {
-  matcher: ['/', '/what-we-check', '/pricing', '/docs', '/bot', '/sign-in'],
+  matcher: ['/', '/what-we-check', '/pricing', '/stats', '/docs', '/bot', '/sign-in'],
 };

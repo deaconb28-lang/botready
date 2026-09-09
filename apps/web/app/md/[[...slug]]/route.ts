@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { httpDate, pageFor } from '@/lib/content';
-import { markdownFor } from '@/lib/markdown';
+import { markdownFor, statsMarkdown } from '@/lib/markdown';
+import { loadPublicStats } from '@/lib/stats-data';
 
 /**
  * The markdown representation of a public page.
@@ -24,7 +25,11 @@ export async function GET(request: Request, context: { params: Promise<{ slug?: 
   const negotiated = /text\/(x-)?markdown/i.test(request.headers.get('accept') ?? '');
   const path = slug?.length ? `/${slug.join('/')}` : '/';
 
-  const body = markdownFor(path);
+  // The one page whose markdown is not a pure function of the repo. Read here
+  // rather than in the builder so llms-full.txt stays synchronous: it inlines
+  // every page in one pass and gets the definitions half, which is the half
+  // that does not move.
+  const body = path === '/stats' ? statsMarkdown(await loadPublicStats().catch(() => null)) : markdownFor(path);
   const page = pageFor(path);
   if (!body || !page) {
     return new NextResponse('Not found.\n', {
