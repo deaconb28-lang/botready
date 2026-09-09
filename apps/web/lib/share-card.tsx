@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { markSvg } from './logo';
+
 import { ImageResponse } from 'next/og';
 
 import type { CheckStatus, Finding, Grade } from '@botready/core';
@@ -83,6 +85,19 @@ async function faces() {
   ];
 }
 
+/**
+ * The mark as a data URI, for Satori.
+ *
+ * Built from lib/logo.ts so the card cannot drift from the favicon, and
+ * percent-encoded rather than base64 so the string stays readable in a diff
+ * and skips a Buffer round trip. `#` has to be escaped or it terminates the
+ * URI at the first colour.
+ */
+const MARK_DATA_URI = `data:image/svg+xml;utf8,${markSvg(96)
+  .replace(/\n\s*/g, '')
+  .replace(/#/g, '%23')
+  .replace(/"/g, "'")}`;
+
 const displayFace = 'FamiljenGrotesk, sans-serif';
 const bodyFace = 'PublicSans, sans-serif';
 const monoFace = 'JetBrainsMono, monospace';
@@ -164,28 +179,13 @@ export async function renderShareCard(data: CardData): Promise<ImageResponse> {
             >
               {data.domain}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 40,
-                  height: 40,
-                  background: C.violet,
-                  border: `2px solid ${C.ink}`,
-                  borderRadius: 11,
-                  fontFamily: monoFace,
-                  fontSize: 22,
-                  color: C.lime,
-                  // Mono has no bold instance on the card; the lime on violet
-                  // carries the mark at this size.
-                  lineHeight: 1,
-                  paddingBottom: 2,
-                }}
-              >
-                b
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* The real mark rather than a lime b on a violet tile, which is
+                  what stood in here while the mark was a letter. Satori draws
+                  an img from a data URI reliably; its support for a tree of
+                  inline SVG paths is thinner, so the drawing arrives as one
+                  image. */}
+              <img src={MARK_DATA_URI} width={44} height={44} alt="" />
               <div style={{ display: 'flex', fontFamily: displayFace, fontSize: 24, letterSpacing: '-0.02em' }}>
                 BotReady
               </div>

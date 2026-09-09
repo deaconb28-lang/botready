@@ -10,6 +10,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import Link from 'next/link';
 
+import { MARK_BODY, MARK_VIEWBOX } from '@/lib/logo';
 import type { Tone } from '@/lib/theme';
 
 export function cx(...parts: Array<string | false | null | undefined>): string {
@@ -18,39 +19,36 @@ export function cx(...parts: Array<string | false | null | undefined>): string {
 
 // ------------------------------------------------------------------ brand
 
-/** The 28px violet rounded square with a lime `b` in mono. */
 /**
- * The mark, drawn — the same artwork as the favicon rather than a lowercase b
- * set in JetBrains Mono.
+ * The mark: the bot on a wave, the same artwork as the favicon.
  *
- * The two used to be different things that happened to look alike: a browser
- * tab showed a drawn glyph and the header showed a typed one, so the stem
- * weight and the bowl never quite agreed and the header's version depended on
- * a web font having loaded.
- *
- * The paths here are app/icon.svg's, verbatim. That file has to be a literal
- * .svg for Next's icon convention, so this is a copy and there is no way round
- * that — change one and change the other, or the tab and the header start
- * disagreeing again.
+ * The drawing and the reasoning behind it live in lib/logo.ts, which is the
+ * one copy. It used to be five copies with a comment on each asking whoever
+ * edited one to remember the others; tools/build-logo.mjs now writes every
+ * static derivative from that file, so there is nothing to keep in step.
  */
 export function Mark({ size = 28 }: { size?: number }) {
   return (
     <svg
-      viewBox="0 0 512 512"
+      viewBox={MARK_VIEWBOX}
       width={size}
       height={size}
       aria-hidden="true"
       focusable="false"
       className="flex-none"
-    >
-      <rect x="11" y="11" width="490" height="490" rx="132" fill="var(--color-violet)" stroke="var(--color-ink)" strokeWidth="22" />
-      <path d="M168 120V390" fill="none" stroke="var(--color-lime)" strokeWidth="58" strokeLinecap="round" />
-      <circle cx="255" cy="305" r="92" fill="none" stroke="var(--color-lime)" strokeWidth="54" />
-    </svg>
+      // Our own static string from lib/logo.ts, which is also what
+      // tools/build-logo.mjs writes to icon.svg, logo.svg, bimi.svg and the
+      // rasters. Inlined rather than an <img> so it costs no request in the
+      // header, and shared rather than copied so the tab and the header cannot
+      // drift apart again.
+      dangerouslySetInnerHTML={{ __html: MARK_BODY }}
+    />
   );
 }
 
-export function Wordmark({ size = 19, markSize = 28, href = '/' }: { size?: number; markSize?: number; href?: string }) {
+// 32 rather than 28: the mark is a scene now instead of a letter, and it needs
+// the extra four pixels to read beside 19px type.
+export function Wordmark({ size = 19, markSize = 32, href = '/' }: { size?: number; markSize?: number; href?: string }) {
   return (
     <Link href={href} className="flex items-center gap-[9px] whitespace-nowrap text-ink no-underline hover:text-ink">
       <Mark size={markSize} />
