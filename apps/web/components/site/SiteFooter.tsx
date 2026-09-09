@@ -39,6 +39,7 @@ export function SiteFooter() {
             <Link href="/what-we-check">What we check</Link>
             <Link href="/pricing">Pricing</Link>
             <Link href="/stats">What we measured</Link>
+            <Link href="/blog">Writing</Link>
             {PUBLIC_INDEX_LISTED ? <Link href="/chart">The chart</Link> : null}
           </div>
           <div className="grid content-start gap-[9px]">

@@ -189,3 +189,91 @@ export function ArticleStructuredData({
     />
   );
 }
+
+/**
+ * A post, and the blog it belongs to.
+ *
+ * `BlogPosting` rather than `TechArticle` because that is what it is, and
+ * `datePublished` as well as `dateModified` because a post has both and the
+ * pair is what tells a reader whether an old post has been kept current.
+ * Neither date is the build time: they come from the post's own record, for
+ * the same reason the sitemap's lastmod does.
+ */
+export function BlogPostStructuredData({
+  path,
+  headline,
+  description,
+  published,
+  updated,
+  section,
+}: {
+  path: string;
+  headline: string;
+  description: string;
+  published: string;
+  updated: string;
+  section: string;
+}) {
+  return (
+    <Block
+      data={{
+        '@context': 'https://schema.org',
+        '@graph': [
+          ORGANISATION,
+          {
+            '@type': 'BlogPosting',
+            '@id': `${absoluteUrl(path)}#post`,
+            headline,
+            description,
+            url: absoluteUrl(path),
+            datePublished: published,
+            dateModified: updated,
+            articleSection: section,
+            inLanguage: 'en',
+            isPartOf: { '@id': `${SITE.origin}/blog#blog` },
+            publisher: { '@id': `${SITE.origin}/#organization` },
+            author: { '@id': `${SITE.origin}/#organization` },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': absoluteUrl(path) },
+          },
+        ],
+      }}
+    />
+  );
+}
+
+/** The index, with the posts on it named rather than only linked. */
+export function BlogIndexStructuredData({
+  posts,
+}: {
+  posts: Array<{ path: string; title: string; dek: string; published: string }>;
+}) {
+  return (
+    <Block
+      data={{
+        '@context': 'https://schema.org',
+        '@graph': [
+          ORGANISATION,
+          WEBSITE,
+          {
+            '@type': 'Blog',
+            '@id': `${SITE.origin}/blog#blog`,
+            url: absoluteUrl('/blog'),
+            name: 'BotReady writing',
+            description:
+              'What we found measuring how legible websites are to AI agents, and how the measuring works.',
+            inLanguage: 'en',
+            publisher: { '@id': `${SITE.origin}/#organization` },
+            blogPost: posts.map((p) => ({
+              '@type': 'BlogPosting',
+              '@id': `${absoluteUrl(p.path)}#post`,
+              headline: p.title,
+              description: p.dek,
+              url: absoluteUrl(p.path),
+              datePublished: p.published,
+            })),
+          },
+        ],
+      }}
+    />
+  );
+}

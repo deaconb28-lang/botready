@@ -123,13 +123,40 @@ describe('llms.txt', () => {
   });
 });
 
+/** The matcher entries, as written. */
+function matcherPaths(): string[] {
+  const matcher = /matcher:\s*\[([\s\S]*?)\]/.exec(middlewareSource)?.[1] ?? '';
+  return [...matcher.matchAll(/'([^']+)'/g)].map((m) => m[1]!);
+}
+
+/** Whether one matcher entry covers one path. `:param` matches one segment. */
+function matches(entry: string, path: string): boolean {
+  if (!entry.includes(':')) return entry === path;
+  const pattern = entry.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/:[A-Za-z_]+/g, '[^/]+');
+  return new RegExp(`^${pattern}$`).test(path);
+}
+
+function covers(path: string): boolean {
+  return matcherPaths().some((entry) => matches(entry, path));
+}
+
 describe('the middleware', () => {
-  it('matches every public page and nothing else', () => {
+  it('matches every public page', () => {
     // The matcher cannot be computed at build time — Next reads it statically —
     // so it is a hand-written list, and this is what stops it drifting from
     // lib/content.ts the next time a page is added.
-    const matcher = /matcher:\s*\[([^\]]*)\]/.exec(middlewareSource)?.[1] ?? '';
-    const paths = [...matcher.matchAll(/'([^']+)'/g)].map((m) => m[1]!);
-    expect(paths.sort()).toEqual(PUBLIC_PAGES.map((p) => p.path).sort());
+    for (const page of PUBLIC_PAGES) {
+      expect(covers(page.path), `no matcher entry covers ${page.path}`).toBe(true);
+    }
+  });
+
+  it('has no entry that matches nothing', () => {
+    // The other direction. A pattern is allowed — `/blog/:slug` stands in for
+    // ten posts — but an entry matching no registered page is either a page
+    // that was deleted or a typo, and both are silent.
+    for (const entry of matcherPaths()) {
+      const matched = PUBLIC_PAGES.some((p) => matches(entry, p.path));
+      expect(matched, `matcher entry ${entry} matches no public page`).toBe(true);
+    }
   });
 });

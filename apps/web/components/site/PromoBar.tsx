@@ -15,20 +15,26 @@ import { PROMO } from '@/lib/site';
  *
  * Returns null when the promo is off, so taking it down is one boolean in
  * lib/site.ts and not a hunt through JSX.
+ *
+ * Wrapped in a landmark. It sits above the header, so without one it is the
+ * only content on every page of the site outside any region — which is what
+ * axe was reporting, on all of them, as one violation per page.
  */
 export function PromoBar() {
   if (!PROMO.active) return null;
 
   return (
-    <Link
-      href="/pricing"
-      className="block border-b-2 border-ink bg-lime px-4 py-[7px] text-center font-mono text-[12.5px] text-ink no-underline hover:bg-white"
-    >
-      {PROMO.lead} Use code{' '}
-      <span className="mx-[2px] rounded-[6px] border-2 border-ink bg-ink px-[7px] py-[1px] font-bold text-lime">
-        {PROMO.code}
-      </span>{' '}
-      for {PROMO.off}.
-    </Link>
+    <aside aria-label="Offer">
+      <Link
+        href="/pricing"
+        className="block border-b-2 border-ink bg-lime px-4 py-[7px] text-center font-mono text-[12.5px] text-ink no-underline hover:bg-white"
+      >
+        {PROMO.lead} Use code{' '}
+        <span className="mx-[2px] rounded-[6px] border-2 border-ink bg-ink px-[7px] py-[1px] font-bold text-lime">
+          {PROMO.code}
+        </span>{' '}
+        for {PROMO.off}.
+      </Link>
+    </aside>
   );
 }

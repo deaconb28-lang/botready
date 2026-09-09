@@ -9,6 +9,7 @@
 
 import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
+import { BLOG_POSTS, blogPath, postMarkdown } from './blog';
 import { PUBLIC_PAGES, markdownPathFor, pageFor } from './content';
 import { asymmetryShare, type PublicStats } from './stats-data';
 import {
@@ -355,6 +356,21 @@ export function statsMarkdown(stats: PublicStats | null): string {
   return lines.join('\n');
 }
 
+/**
+ * The blog index, as markdown: what the writing is and every post in it.
+ *
+ * The posts themselves come from postMarkdown, which renders the same blocks
+ * the page does. There is one copy of the words.
+ */
+function blogIndex(): string {
+  return [
+    ...heading('/blog'),
+    ...BLOG_POSTS.map((p) =>
+      [`## ${p.title}`, '', p.dek, '', `${p.category}. Published ${p.published}. ${absoluteUrl(blogPath(p))}`, ''].join('\n'),
+    ),
+  ].join('\n');
+}
+
 const BUILDERS: Record<string, () => string> = {
   '/': home,
   '/what-we-check': whatWeCheck,
@@ -363,6 +379,10 @@ const BUILDERS: Record<string, () => string> = {
   '/docs': docs,
   '/bot': bot,
   '/sign-in': signIn,
+  '/blog': blogIndex,
+  // A post's markdown is the post's own blocks. Registered here so a post is
+  // reachable at /blog/x.md and inlined in llms-full.txt like any other page.
+  ...Object.fromEntries(BLOG_POSTS.map((post) => [blogPath(post), () => postMarkdown(post)])),
 };
 
 /** The markdown for a public page, or null if that path has no representation. */
@@ -384,8 +404,17 @@ export function llmsTxt(): string {
     '',
     '## Pages',
     '',
-    ...PUBLIC_PAGES.filter((p) => p.listed).map(
+    ...PUBLIC_PAGES.filter((p) => p.listed && !p.path.startsWith('/blog/')).map(
       (p) => `- [${p.title}](${absoluteUrl(markdownPathFor(p.path))}): ${p.description}`,
+    ),
+    '',
+    // The posts, in their own section. Listed rather than folded into Pages
+    // because a client reading this to find out what the site is should not
+    // have to skim ten essays to reach the pricing.
+    '## Writing',
+    '',
+    ...BLOG_POSTS.map(
+      (p) => `- [${p.title}](${absoluteUrl(markdownPathFor(blogPath(p)))}): ${p.dek}`,
     ),
     '',
     '## API',

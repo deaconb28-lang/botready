@@ -88,8 +88,21 @@ export function asymmetryShare(a: Asymmetry | null): number | null {
   return Math.round((a.googleAllowedOthersNot / a.divergent) * 100);
 }
 
+/** Nothing measured, or nothing readable. The page renders its own gaps. */
+function noStats(): PublicStats {
+  return { clients: [], asymmetry: null, checks: [], outcomes: null, profiles: [], readAt: new Date().toISOString() };
+}
+
 export async function loadPublicStats(): Promise<PublicStats> {
-  const db = publicClient();
+  // The client is built from environment, so this throws rather than rejecting
+  // when a deploy is missing a variable. Caught here for the same reason each
+  // individual read is: a page of gaps beats a 500.
+  let db: ReturnType<typeof publicClient>;
+  try {
+    db = publicClient();
+  } catch {
+    return noStats();
+  }
 
   const [clients, asymmetry, checks, outcomes, profiles] = await Promise.all([
     db.from('client_refusal_rates').select('*').then(

@@ -42,6 +42,13 @@ const config: NextConfig = {
       { source: '/docs.md', destination: '/md/docs' },
       { source: '/bot.md', destination: '/md/bot' },
       { source: '/sign-in.md', destination: '/md/sign-in' },
+      { source: '/stats.md', destination: '/md/stats' },
+      { source: '/blog.md', destination: '/md/blog' },
+      // The one pattern in this list. The set of posts is closed but it is
+      // long, and every member of it has a markdown representation by
+      // construction — which is the property that made a wildcard wrong for
+      // the pages above and right here.
+      { source: '/blog/:slug.md', destination: '/md/blog/:slug' },
     ];
   },
   async redirects() {

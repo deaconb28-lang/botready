@@ -13,6 +13,8 @@
  * check while selling the fix for it.
  */
 
+import { BLOG_POSTS } from './blog-posts';
+
 export interface PublicPage {
   path: string;
   title: string;
@@ -27,6 +29,31 @@ export interface PublicPage {
   /** In the sitemap and in llms.txt. Off for pages that are not content. */
   listed: boolean;
 }
+
+/**
+ * The posts, as public pages.
+ *
+ * Derived rather than listed, so a post added to blog-posts.ts appears in the
+ * sitemap, in llms.txt, in the markdown negotiation and in the `Last-Modified`
+ * header without anybody remembering to add it in four places. That is the
+ * whole argument of this file applied one level down.
+ *
+ * `priority` sits below the marketing pages and above sign-in, and
+ * `changeFrequency` is yearly because a post that quotes a dated figure is not
+ * rewritten when the figure moves — it links to the live one. Telling a
+ * crawler to come back weekly for a page that will not have changed is the
+ * same kind of false claim as a build-stamped lastmod.
+ */
+const BLOG_PAGES: PublicPage[] = BLOG_POSTS.map((post) => ({
+  path: `/blog/${post.slug}`,
+  title: post.title,
+  description: post.dek,
+  updated: post.updated,
+  sources: ['apps/web/lib/blog-posts.ts'],
+  changeFrequency: 'yearly' as const,
+  priority: 0.6,
+  listed: true,
+}));
 
 export const PUBLIC_PAGES: PublicPage[] = [
   {
@@ -59,6 +86,17 @@ export const PUBLIC_PAGES: PublicPage[] = [
     sources: ['apps/web/app/pricing'],
     changeFrequency: 'monthly',
     priority: 0.7,
+    listed: true,
+  },
+  {
+    path: '/blog',
+    title: 'Notes from the scanner',
+    description:
+      'What we found measuring how legible websites are to AI agents, and how the measuring works. Ten posts, every figure taken over sites we actually scanned.',
+    updated: '2026-09-09',
+    sources: ['apps/web/app/blog', 'apps/web/lib/blog-posts.ts'],
+    changeFrequency: 'weekly',
+    priority: 0.85,
     listed: true,
   },
   {
@@ -103,6 +141,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
     priority: 0.2,
     listed: false,
   },
+  ...BLOG_PAGES,
 ];
 
 export function pageFor(path: string): PublicPage | undefined {

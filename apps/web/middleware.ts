@@ -77,5 +77,18 @@ export function middleware(request: NextRequest) {
  * the rescue above only runs because this list contains it.
  */
 export const config = {
-  matcher: ['/', '/what-we-check', '/pricing', '/stats', '/docs', '/bot', '/sign-in'],
+  matcher: [
+    '/',
+    '/what-we-check',
+    '/pricing',
+    '/stats',
+    '/docs',
+    '/bot',
+    '/sign-in',
+    '/blog',
+    // Every post, one at a time. Next reads this array statically, so it
+    // cannot be computed — the test in legibility.test.ts is what stops it
+    // drifting from the page list.
+    '/blog/:slug',
+  ],
 };

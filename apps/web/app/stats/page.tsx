@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { Card, Container, Eyebrow, PageTitle, ThinBar, cx } from '@/components/ui';
+import { PROSE_LINK } from '@/components/blog/prose';
 import { pageMetadata } from '@/lib/metadata';
 import { asymmetryShare, loadPublicStats, type ClientRate, type PublicStats } from '@/lib/stats-data';
 
@@ -41,6 +42,7 @@ export default async function StatsPage() {
             What we have measured so far
           </PageTitle>
 
+          <Nothing stats={stats} />
           <Outcomes stats={stats} />
           <Clients stats={stats} />
           <AsymmetryPanel stats={stats} />
@@ -51,13 +53,41 @@ export default async function StatsPage() {
             Read at {stats.readAt.slice(0, 16).replace('T', ' ')} UTC, from the scan record. A scan enters this page the
             moment it settles, so the figures move. If one of them disagrees with something we have said elsewhere, this
             page is the one that is current.{' '}
-            <Link href="/what-we-check">Every check and weight is published</Link>, so a rate here can be traced to the
-            rule that produced it.
+            <Link href="/what-we-check" className={PROSE_LINK}>
+              Every check and weight is published
+            </Link>
+            , so a rate here can be traced to the rule that produced it.
           </p>
         </Container>
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+/**
+ * When not one aggregate came back.
+ *
+ * Which is a different thing from "we have measured nothing", and the page
+ * should not imply the second when it means the first. Says which it is only
+ * as far as it can honestly tell, and does not invent a reason.
+ */
+function Nothing({ stats }: { stats: PublicStats }) {
+  const empty =
+    !stats.outcomes && !stats.asymmetry && stats.clients.length === 0 && stats.checks.length === 0;
+  if (!empty) return null;
+  return (
+    <Card radius="panel" shadow={5} className="mt-8 p-6 sm:p-7">
+      <Eyebrow>Nothing to show</Eyebrow>
+      <p className="mt-4 max-w-[68ch] text-[15px] leading-[1.6] text-muted">
+        We could not read the scan record just now, so rather than print figures we are not sure of, this page is
+        showing none. Nothing has been lost — try again shortly, or{' '}
+        <Link href="/what-we-check" className={PROSE_LINK}>
+          read what each of these numbers counts
+        </Link>{' '}
+        in the meantime.
+      </p>
+    </Card>
   );
 }
 
@@ -157,7 +187,7 @@ function AsymmetryPanel({ stats }: { stats: PublicStats }) {
 
   return (
     <Card surface="violet" radius="panel" shadow={7} className="mt-5 p-6 sm:p-8">
-      <Eyebrow className="text-on-violet-2">The Google-Extended asymmetry</Eyebrow>
+      <Eyebrow tone="on-violet">The Google-Extended asymmetry</Eyebrow>
       <p className="display mt-4 max-w-[40ch] text-[clamp(24px,3.2vw,38px)] leading-[1.06] tracking-[-0.03em] text-white">
         {pct}% of the sites that block an AI client let Google&rsquo;s through.
       </p>

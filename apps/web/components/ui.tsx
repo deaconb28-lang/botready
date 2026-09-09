@@ -156,7 +156,7 @@ export function Eyebrow({
   as: As = 'span',
 }: {
   children: ReactNode;
-  tone?: 'subtle' | 'lime' | 'violet' | 'ink' | 'body' | 'on-ink';
+  tone?: 'subtle' | 'lime' | 'violet' | 'ink' | 'body' | 'on-ink' | 'on-violet';
   className?: string;
   as?: 'span' | 'p' | 'div';
 }) {
@@ -167,6 +167,11 @@ export function Eyebrow({
     ink: 'text-ink',
     body: 'text-body',
     'on-ink': 'text-on-ink-label',
+    // Overriding the default with a second text colour in `className` does
+    // not work — which of the two wins depends on stylesheet order, and
+    // text-subtle-2 on violet measures 3.0:1. A tone is the only reliable way
+    // to change it.
+    'on-violet': 'text-on-violet',
   }[tone];
   return <As className={cx('eyebrow block', color, className)}>{children}</As>;
 }
