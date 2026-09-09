@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { currentUser, hasFixpackFor, ownsAnyFixpack } from '@/lib/auth';
 import { standingFor } from '@/lib/chart-data';
+import { cohortStandingFor } from '@/lib/cohort-data';
 import { loadScanView } from '@/lib/scan-data';
 import { absoluteUrl } from '@/lib/site';
 import { relativeTime } from '@/lib/theme';
@@ -69,6 +70,13 @@ export default async function ScanPage({ params }: PageProps) {
   const checkedLabel = scan.effective_url
     ? `scanned ${relativeTime(scan.finished_at ?? scan.created_at)} · you asked for ${bareHost(scan.url)}, which did not answer`
     : `scanned ${relativeTime(scan.finished_at ?? scan.created_at)}`;
+  // Where this total sits among sites measured on the same checks. Awaited
+  // here rather than in the view because it is a database read and the view is
+  // a component; null when the cohort is too thin, which the view renders as
+  // nothing rather than as a hedge.
+  const cohort = score
+    ? (await cohortStandingFor(score.total, score.profile, score.scoringVersion)).sentence
+    : null;
   const user = await currentUser();
   const owned = user ? await hasFixpackFor(user.id, view.site.domain) : false;
   // Owns a pack, but not this one: the button offers to add this domain at the
@@ -96,6 +104,7 @@ export default async function ScanPage({ params }: PageProps) {
             owned={owned}
             repeat={repeat}
             standing={standing}
+            cohort={cohort}
           />
         ) : (
           <UnscoredView domain={site.domain} url={readUrl} checkedLabel={checkedLabel} status={scan.status} message={scan.error_message} results={results} />

@@ -49,6 +49,7 @@ export function ResultsView({
   scannerVersion,
   owned,
   standing = null,
+  cohort = null,
   repeat = false,
   fixture = false,
 }: {
@@ -64,6 +65,13 @@ export function ResultsView({
   owned: boolean;
   /** Where this score places against every other site measured. */
   standing?: Standing | null;
+  /**
+   * Where it places among sites measured on the same checks, which is the
+   * comparison a reader can act on: the global rank above mixes a plumber and
+   * a CDN, and the spread between cohorts is wider than the spread inside one.
+   * Null when the cohort is too thin to quote.
+   */
+  cohort?: string | null;
   /** Owns a pack for another domain, so this one is the extra-domain price. */
   repeat?: boolean;
   fixture?: boolean;
@@ -143,6 +151,7 @@ export function ResultsView({
         summary={summary}
         categories={score.categories.map((c) => ({ key: c.key, label: c.label, pct: c.score }))}
         profileNote={profileNote}
+        cohort={cohort}
         verdict={verdict}
         action={action}
       />

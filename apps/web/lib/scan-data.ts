@@ -90,6 +90,11 @@ export async function persistScore(scanId: string, results: CheckResult[]): Prom
         total: computed.total,
         grade: computed.grade,
         category_scores: computed.categoryScores,
+        // The profile is half of what a total means: it decides which checks
+        // were counted, so two totals are only comparable when it matches.
+        // Recorded here rather than re-inferred later, because inference reads
+        // the evidence and the evidence can be re-scored.
+        profile: computed.profile.key,
         // The stored list is the failures plus the errors, because that is what
         // "checks that did not earn their points" means to a reader of the
         // table. The interface keeps them apart; the archive does not need to.

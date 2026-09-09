@@ -21,3 +21,4 @@ export * from './engines';
 export * from './visibility';
 export * from './identity';
 export * from './divergence';
+export * from './cohort';

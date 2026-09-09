@@ -27,6 +27,7 @@ export function ReportHeader({
   summary,
   profileNote,
   verdict,
+  cohort,
   categories,
   action,
   animate = true,
@@ -39,6 +40,11 @@ export function ReportHeader({
   profileNote?: string | null;
   /** For anything below an A: what it costs, revealed as the number lands. */
   verdict?: string | null;
+  /**
+   * Where this score sits among sites measured the same way. Null when the
+   * cohort is too thin to quote, which is a normal state and not an error.
+   */
+  cohort?: string | null;
   categories: CategoryCell[];
   action: React.ReactNode;
   animate?: boolean;
@@ -138,6 +144,16 @@ export function ReportHeader({
           {verdict && showVerdict ? (
             <p className="anim-rise-fast mt-[7px] max-w-[52ch] font-mono text-[12.5px] leading-[1.5] text-ink/75">
               {verdict}
+            </p>
+          ) : null}
+          {/* What the number means next to comparable numbers. A total on its
+              own says how a site did against the catalog; this says how it did
+              against sites measured on the same checks, which is the question
+              somebody actually has. Absent rather than hedged when the cohort
+              is too thin to quote. */}
+          {cohort && showVerdict ? (
+            <p className="anim-rise-fast mt-[7px] max-w-[52ch] font-mono text-[12.5px] leading-[1.5] text-ink/75">
+              {cohort}
             </p>
           ) : null}
         </div>
