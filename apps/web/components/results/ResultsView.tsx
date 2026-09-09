@@ -20,7 +20,10 @@ import { DeliveryNote } from './DeliveryNote';
 import { ClientPanel } from './ClientPanel';
 import { SitePanel } from './SitePanel';
 import { SitePanelAsync, SitePanelSkeleton } from './SitePanelAsync';
+import { divergenceFor } from '@/lib/divergence-view';
+
 import { CriticalAlert } from './CriticalAlert';
+import { DivergencePanel } from './DivergencePanel';
 import { ReportHeader } from './ReportHeader';
 import { ScoreReveal } from './ScoreReveal';
 import { ScoreStanding } from './ScoreStanding';
@@ -81,6 +84,9 @@ export function ResultsView({
   // say that the thing which failed is the thing everything else was measured
   // on top of.
   const critical = criticalFailures(results);
+  // Derived from the same evidence rows the checks came from, so it cannot
+  // disagree with the client table further down the page.
+  const divergenceVerdict = divergenceFor(results);
   // Said out loud, because an exemption that changes a number silently is a
   // number nobody can check. Only when it actually changed something.
   const profileNote =
@@ -122,6 +128,11 @@ export function ResultsView({
       </div>
 
       <ScoreReveal grade={score.grade} scanId={scanId} />
+
+      {/* The differential, before the critical alert and before the number.
+          Both of those describe what the score is; this describes what
+          happened, and it is the reason somebody ran the scan. */}
+      {divergenceVerdict ? <DivergencePanel v={divergenceVerdict} /> : null}
 
       <CriticalAlert keys={critical} findings={findings} />
 

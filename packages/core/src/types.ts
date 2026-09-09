@@ -70,6 +70,18 @@ export interface AgentDef {
   id: string;
   ua: string;
   role: AgentRole;
+  /** How the client is named in full: "Google-Extended". */
+  label: string;
+  /**
+   * How it is named where space is short — a table column, a share card.
+   * "Claude" rather than "ClaudeBot", because the vendor is the useful half
+   * when five of these sit side by side.
+   *
+   * Both live in the catalog rather than in a map in a component. There was
+   * such a map, in lib/finding-copy.ts, and constraint 3 is the reason it is
+   * not there any more: adding a client should be an edit to checks.json.
+   */
+  short: string;
 }
 
 /**

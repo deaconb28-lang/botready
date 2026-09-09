@@ -33,7 +33,7 @@
       "key": "discovery",
       "label": "Discovery",
       "weight": 20,
-      "rationale": "The files a client asks for before it reads anything: robots.txt, a sitemap, llms.txt. Weighted high for their cost \u2014 they are the cheapest things on this list to fix and they decide what gets fetched next."
+      "rationale": "The files a client asks for before it reads anything: robots.txt, a sitemap, llms.txt. Weighted high for their cost — they are the cheapest things on this list to fix and they decide what gets fetched next."
     },
     {
       "key": "representation",
@@ -64,27 +64,37 @@
     {
       "id": "chrome",
       "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
-      "role": "control"
+      "role": "control",
+      "label": "Chrome",
+      "short": "Chrome"
     },
     {
       "id": "claudebot",
       "ua": "ClaudeBot/1.0",
-      "role": "agent"
+      "role": "agent",
+      "label": "ClaudeBot",
+      "short": "Claude"
     },
     {
       "id": "gptbot",
       "ua": "GPTBot/1.2",
-      "role": "agent"
+      "role": "agent",
+      "label": "GPTBot",
+      "short": "GPT"
     },
     {
       "id": "perplexity",
       "ua": "PerplexityBot/1.0",
-      "role": "agent"
+      "role": "agent",
+      "label": "Perplexity",
+      "short": "Perplexity"
     },
     {
       "id": "googleext",
       "ua": "Google-Extended",
-      "role": "agent"
+      "role": "agent",
+      "label": "Google-Extended",
+      "short": "Google"
     }
   ],
   "checks": [
@@ -128,7 +138,7 @@
       "category": "retrievability",
       "points": 3,
       "label": "First byte arrives quickly",
-      "rationale": "A slow first byte gets the request abandoned. Small because real timeouts are rare, and because this is the noisiest measurement in the catalog \u2014 see S2 in SCORING-PLAN.md.",
+      "rationale": "A slow first byte gets the request abandoned. Small because real timeouts are rare, and because this is the noisiest measurement in the catalog — see S2 in SCORING-PLAN.md.",
       "fails_when": "ttfb above 2500 ms",
       "observed_shape": {
         "ttfb_ms": 0,
@@ -396,7 +406,7 @@
         "actionability": 7,
         "freshness": 5
       },
-      "rationale": "A plumber has no API, no agent manifest and no developer documentation to leave unwalled, and quoted work is not a published price list. Scoring them against those four is scoring them against somebody else\u2019s business. What is left matters more, not less: whether a client can reach the page and read who you are and where you work, so retrievability and discovery carry the weight the exempt checks gave up. A profile is selected only by a type that names the kind of business. Product, Offer and WebPage are not: a SaaS company declares all three, and matching on them filed every site with a price on it as a shop."
+      "rationale": "A plumber has no API, no agent manifest and no developer documentation to leave unwalled, and quoted work is not a published price list. Scoring them against those four is scoring them against somebody else’s business. What is left matters more, not less: whether a client can reach the page and read who you are and where you work, so retrievability and discovery carry the weight the exempt checks gave up. A profile is selected only by a type that names the kind of business. Product, Offer and WebPage are not: a SaaS company declares all three, and matching on them filed every site with a price on it as a shop."
     },
     {
       "key": "ecommerce",

@@ -10,7 +10,7 @@
  * every sentence had to be written twice and only one of them was ever read.
  */
 
-import type { Finding, PerAgentFetch } from '@botready/core';
+import { catalog, type Finding, type PerAgentFetch } from '@botready/core';
 
 
 export interface FindingCopy {
@@ -96,7 +96,8 @@ function refusedAgents(o: Record<string, unknown>): string[] {
     .map(([id]) => shortName(id));
 }
 
+/** From the catalog, per constraint 3. This used to be a map in this file. */
 function shortName(id: string): string {
-  return { chrome: 'Chrome', claudebot: 'Claude', gptbot: 'GPT', perplexity: 'Perplexity', googleext: 'Google' }[id] ?? id;
+  return catalog.agents.find((a) => a.id === id)?.short ?? id;
 }
 

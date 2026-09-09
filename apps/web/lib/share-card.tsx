@@ -5,7 +5,7 @@ import { markSvg } from './logo';
 
 import { ImageResponse } from 'next/og';
 
-import type { CheckStatus, Finding, Grade } from '@botready/core';
+import { divergence, type CheckStatus, type Finding, type Grade } from '@botready/core';
 
 import { SITE } from './site';
 
@@ -464,21 +464,32 @@ function tileLabel(data: CardData): string {
  * most cards; falls back to whatever cost the most points.
  */
 export function cardCopy(input: {
-  perAgent: Record<string, { status: number }>;
+  perAgent: Record<string, { status: number; cf_mitigated?: string; transport_error?: string }>;
   controlId: string;
   findings: Finding[];
   ratio: { value: number; status: CheckStatus } | null;
   checksTotal: number;
+  robotsPerAgent?: Record<string, { allowed: boolean }>;
 }): { headline: string; secondary: string } {
-  const clients = Object.keys(input.perAgent).length;
-  const refused = Object.entries(input.perAgent).filter(([, f]) => f.status >= 400);
+  /**
+   * The divergence verdict, so the card says the same sentence the page does.
+   *
+   * What stood here counted every status at or above 400 across per_agent and
+   * divided by the size of that map — which includes the control. A site
+   * refusing three agents while serving Chrome came out as "3 of 5 clients get
+   * a 403", a figure that quietly folds the browser into the denominator and
+   * drops the only comparison that matters. The card is the unit that travels,
+   * so that was the wrong sentence in the most public place.
+   */
+  const v = divergence({
+    perAgent: input.perAgent,
+    controlId: input.controlId,
+    robotsPerAgent: input.robotsPerAgent,
+  });
 
   const headline =
-    refused.length > 0 && clients > 0
-      ? `${refused.length} of ${clients} clients get a ${refused[0]?.[1].status ?? 403}.`
-      : input.findings[0]
-        ? sentence(input.findings[0].headline)
-        : 'Every check passed.';
+    v.headline ??
+    (input.findings[0] ? sentence(input.findings[0].headline) : 'Every check passed.');
 
   const secondary =
     input.ratio && input.ratio.status !== 'error'
