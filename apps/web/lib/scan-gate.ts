@@ -80,14 +80,38 @@ export function limitedMessage(verdict: RateLimitVerdict, signedIn: boolean, sig
 }
 
 /**
- * How long a scan may run before we call it dead.
+ * How long a scan may *run* before we call it dead.
  *
- * Six pages a second apart, five clients, and a headless render: the slowest
- * real scan on record finished in 90 seconds. Five minutes is far outside
- * that, so anything past it is not slow, it is gone — almost always a worker
- * that restarted mid-scan and took the run with it.
+ * Measured from `started_at`, and only for a scan that has actually started.
+ * That distinction is the whole point of this constant now, and it was the bug
+ * it exists to fix: this deadline used to be applied to queued scans too,
+ * counting from creation, which meant a scan waiting behind others for its
+ * turn was reported to the caller as a failed scan. Nothing was wrong with it
+ * and nothing was wrong with the site.
+ *
+ * Twenty minutes rather than five. The five came with a comment saying the
+ * slowest real scan on record took 90 seconds; the slowest that has actually
+ * completed took 1,008 — sixteen minutes — which is the figure REAP_AFTER_MS
+ * below was already set from. Two constants in one file disagreeing about the
+ * same measurement is how a healthy scan gets called dead, so this one now
+ * reads from the same number.
  */
-export const STUCK_AFTER_MS = 5 * 60 * 1000;
+export const STUCK_AFTER_MS = 20 * 60 * 1000;
+
+/**
+ * How long a scan may sit *queued* before something is genuinely wrong.
+ *
+ * The worker runs SCANNER_CONCURRENCY scans at a time (2 by default) and
+ * queues the rest, so waiting is normal operation rather than a symptom. What
+ * is not normal is waiting longer than the queue could plausibly be: at two at
+ * a time and a minute each, an hour is thirty scans deep, which is far past
+ * anything a single caller produces.
+ *
+ * Deliberately longer than the running deadline. A queued scan has consumed
+ * nothing and is still going to run; a running scan whose worker restarted
+ * never will.
+ */
+export const QUEUED_TOO_LONG_MS = 60 * 60 * 1000;
 
 /**
  * How long the batch reaper waits before settling a scan, which is much
@@ -134,7 +158,17 @@ export function isStuck(
   now: number = Date.now(),
 ): boolean {
   if (status !== 'running' && status !== 'queued') return false;
-  const began = Date.parse(startedAt ?? createdAt);
+
+  // A scan that has not started cannot have died mid-run. It is waiting for a
+  // worker slot, which is what the queue is for, and the only question worth
+  // asking about it is whether the queue itself has stopped moving.
+  if (status === 'queued' || !startedAt) {
+    const created = Date.parse(createdAt);
+    if (!Number.isFinite(created)) return false;
+    return now - created > QUEUED_TOO_LONG_MS;
+  }
+
+  const began = Date.parse(startedAt);
   if (!Number.isFinite(began)) return false;
   return now - began > STUCK_AFTER_MS;
 }

@@ -9,27 +9,69 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { REAP_AFTER_MS, STOPPED_MESSAGE, STUCK_AFTER_MS, isStuck } from '../lib/scan-gate';
+import { QUEUED_TOO_LONG_MS, REAP_AFTER_MS, STOPPED_MESSAGE, STUCK_AFTER_MS, isStuck } from '../lib/scan-gate';
 
 const NOW = Date.parse('2026-09-05T22:30:00Z');
 const at = (msAgo: number) => new Date(NOW - msAgo).toISOString();
 
 describe('isStuck', () => {
   it('leaves a scan that is merely slow alone', () => {
-    // The slowest real scan on record finished in 90 seconds.
+    // The slowest scan that has actually completed took 1,008 seconds, which
+    // is the figure both ceilings in scan-gate.ts are now set from. The 90
+    // seconds this line used to cite is where the five-minute deadline came
+    // from, and it was wrong by an order of magnitude.
     expect(isStuck('running', at(90_000), at(91_000), NOW)).toBe(false);
+    expect(isStuck('running', at(1_008_000), at(1_009_000), NOW)).toBe(false);
     expect(isStuck('running', at(STUCK_AFTER_MS - 1), at(STUCK_AFTER_MS), NOW)).toBe(false);
   });
 
-  it('calls a scan dead once it has outlived any possible run', () => {
+  it('calls a running scan dead once it has outlived any possible run', () => {
     expect(isStuck('running', at(STUCK_AFTER_MS + 1), at(STUCK_AFTER_MS + 2), NOW)).toBe(true);
-    expect(isStuck('queued', at(10 * 60_000), at(10 * 60_000), NOW)).toBe(true);
   });
 
-  it('measures from creation when the worker never started it', () => {
-    // Queued and never picked up: QStash dropped it, or the worker was down.
-    expect(isStuck('queued', null, at(STUCK_AFTER_MS + 1), NOW)).toBe(true);
-    expect(isStuck('queued', null, at(1000), NOW)).toBe(false);
+  it('measures a running scan from when it started, not from when it was asked for', () => {
+    // The gap between the two is queue wait, and it is not the scan's fault.
+    // A scan created half an hour ago that started ten seconds ago is ten
+    // seconds old as far as this question is concerned.
+    expect(isStuck('running', at(10_000), at(30 * 60_000), NOW)).toBe(false);
+  });
+
+  /**
+   * The bug this group exists for.
+   *
+   * The worker runs SCANNER_CONCURRENCY scans at a time and queues the rest,
+   * so a caller who submits several at once has some of them waiting — which
+   * is the queue working. This deadline was being applied to those waiting
+   * scans, counted from creation, so anything sitting behind a few others was
+   * reported to the caller as a failed scan with "nothing was measured".
+   *
+   * Observed as 8 of 30 scans failing at client concurrency 4, 2 of 50 at
+   * concurrency 2, and every one of them completing normally when re-run one
+   * at a time. Nothing was wrong with those sites and nothing was wrong with
+   * those scans.
+   */
+  describe('a queued scan is waiting, not dying', () => {
+    it('is not stuck at ten minutes, which is a normal queue depth', () => {
+      expect(isStuck('queued', null, at(10 * 60_000), NOW)).toBe(false);
+    });
+
+    it('is not stuck past the running deadline either', () => {
+      expect(isStuck('queued', null, at(STUCK_AFTER_MS + 1), NOW)).toBe(false);
+    });
+
+    it('is still caught when the queue itself has stopped moving', () => {
+      expect(isStuck('queued', null, at(QUEUED_TOO_LONG_MS + 1), NOW)).toBe(true);
+    });
+
+    it('gets the queued ceiling even if a started_at somehow exists', () => {
+      // Status is the authority on whether it is running. A stale started_at
+      // on a queued row must not resurrect the running deadline.
+      expect(isStuck('queued', at(STUCK_AFTER_MS + 1), at(STUCK_AFTER_MS + 2), NOW)).toBe(false);
+    });
+
+    it('waits longer than a running scan does, never less', () => {
+      expect(QUEUED_TOO_LONG_MS).toBeGreaterThan(STUCK_AFTER_MS);
+    });
   });
 
   it('never touches a scan that already settled', () => {
