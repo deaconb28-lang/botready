@@ -16,6 +16,7 @@
 import rawCatalog from '../checks.json';
 import v12 from '../catalogs/v1.2.json';
 import v13 from '../catalogs/v1.3.json';
+import v14 from '../catalogs/v1.4.json';
 import type { AgentDef, Catalog, CategoryDef, CategoryKey, CheckDef } from './types';
 
 export const catalog = rawCatalog as unknown as Catalog;
@@ -27,6 +28,10 @@ export const CATALOGS: Record<string, Catalog> = {
   // could only fail or be exempted from. Rows scored under it are scored
   // against that catalog, which is what they meant when they were written.
   '1.3': v13 as unknown as Catalog,
+  // 1.4 measured discovery on three checks. It could not tell a site whose
+  // navigation only exists after JavaScript runs from a site with three pages,
+  // because both read as "1 of 6 allowed" and neither cost anything.
+  '1.4': v14 as unknown as Catalog,
   // 1.2 had no sector profiles, so anything scored under it is scored against
   // every check, which is what those rows meant when they were written.
   '1.2': v12 as unknown as Catalog,

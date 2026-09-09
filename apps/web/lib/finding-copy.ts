@@ -69,6 +69,11 @@ function plainTitle(f: Finding, o: Record<string, unknown>): string {
       return 'No robots.txt';
     case 'sitemap_present':
       return 'No sitemap, or an empty one';
+    case 'pages_reachable':
+      // The findings headline already says which of the reasons it is, and
+      // each of them is a different sentence rather than a variant of one. So
+      // this defers rather than rewriting five titles worse.
+      return f.headline;
     case 'markdown_alternate':
       return 'No plain-text version is advertised';
     case 'canonical_og':

@@ -12,6 +12,7 @@
  */
 
 import { catalogFor, checkDef } from './catalog';
+import { crawlAccount, type CrawlObserved } from './crawl';
 import { pointsLost } from './scoring';
 import type { CategoryKey, CheckResult, CheckStatus } from './types';
 
@@ -130,6 +131,8 @@ function describe(key: string, result: CheckResult, all: CheckResult[]): Written
       return sitemap(o);
     case 'llms_txt_present':
       return llmsTxt(o, failed);
+    case 'pages_reachable':
+      return reachable(o);
     case 'markdown_alternate':
       return markdown(o, failed);
     case 'semantic_landmarks':
@@ -352,6 +355,64 @@ function llmsTxt(o: Record<string, unknown>, failed: boolean): Written {
     headline: 'Your llms.txt has no links in it',
     body: `The file is served and has ${links} followable ${plural(links, 'link')}. The point of it is to name the pages that matter, so a file without links is a heading with nothing under it.`,
     evidence: `GET /llms.txt → ${status}\n${links} links found`,
+  };
+}
+
+/**
+ * Why the scan stopped where it did.
+ *
+ * The reason is derived rather than written per case, so this and the "N of 6"
+ * line on the result cannot disagree about the same crawl: both read
+ * crawlAccount. What is written here is the consequence, which the account
+ * deliberately does not state.
+ */
+function reachable(o: Record<string, unknown>): Written {
+  const account = crawlAccount(o as unknown as CrawlObserved);
+  const read = num(o.pages_read) + 1;
+  const allowed = num(o.budget) + 1;
+
+  const evidence = [
+    `pages read          ${read} of ${allowed}`,
+    `links in the HTML   ${num(o.raw_links)} on your own site`,
+    `links after render  ${num(o.rendered_links)} on your own site`,
+    `links off-site      ${num(o.off_origin_links)}`,
+    `sitemap offered     ${num(o.sitemap_urls)}`,
+    ...(num(o.robots_blocked) > 0 ? [`robots.txt blocked  ${num(o.robots_blocked)}`] : []),
+    ...(num(o.attempted) > 0 ? [`requested           ${num(o.attempted)}, of which ${num(o.failed)} failed`] : []),
+  ].join('\n');
+
+  if (account.limit === 'links_js_only') {
+    return {
+      headline: 'Your navigation only exists after JavaScript runs',
+      body: `${account.sentence} It is the same problem as content behind a bundle, one level up: the words on your homepage may be fine, and there is still no route from it to your pricing, your services or your contact page.`,
+      evidence,
+    };
+  }
+  if (account.limit === 'links_off_origin') {
+    return {
+      headline: 'Every link on your homepage leaves your site',
+      body: `${account.sentence} An assistant asked a follow-up question about you has one page of yours and then somebody else's platform, which is where the answer will come from.`,
+      evidence,
+    };
+  }
+  if (account.limit === 'robots_disallowed') {
+    return {
+      headline: 'Your robots.txt keeps us off the rest of your site',
+      body: `${account.sentence} Worth checking that the rule is still the one you meant: a Disallow written for a scraper years ago applies to every well-behaved client, including the ones answering questions about you now.`,
+      evidence,
+    };
+  }
+  if (account.limit === 'fetches_failed') {
+    return {
+      headline: 'The links we followed from your homepage were dead',
+      body: `${account.sentence} A reading agent following the same links gets the same errors, and the pages you meant it to find are not the ones it will describe.`,
+      evidence,
+    };
+  }
+  return {
+    headline: 'We could read one page of your site',
+    body: `${account.sentence} A site an agent can see one page of is a site it cannot answer questions about — it will answer from a directory listing or a competitor instead.`,
+    evidence,
   };
 }
 

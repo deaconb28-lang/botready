@@ -162,7 +162,7 @@ function bot(): string {
     '1. `GET /robots.txt` — first, always. If it disallows us, the scan ends there.',
     '2. The target page, once as each client in the catalog, sequentially.',
     '3. `/sitemap.xml`, `/llms.txt`, `/llms-full.txt` and four `.well-known` manifests.',
-    `4. Up to ${LIMITS.maxPagesPerScan - 1} further pages linked from the target, ${LIMITS.pageDelayMs}ms apart.`,
+    `4. Up to ${LIMITS.maxPagesPerScan - 1} further pages, linked from the target or named in your sitemap, ${LIMITS.pageDelayMs}ms apart. Every one is checked against your robots.txt before we ask for it.`,
     '',
     '## What we never do',
     '',

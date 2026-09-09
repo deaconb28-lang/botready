@@ -71,8 +71,8 @@ export const PUBLIC_PAGES: PublicPage[] = [
     path: '/what-we-check',
     title: 'What we check',
     description:
-      'All 24 checks and every weight, published, so you can argue with the score instead of taking our word for it.',
-    updated: '2026-09-08',
+      'All 25 checks and every weight, published, so you can argue with the score instead of taking our word for it.',
+    updated: '2026-09-09',
     sources: ['apps/web/app/what-we-check', 'packages/core/checks.json'],
     changeFrequency: 'monthly',
     priority: 0.8,

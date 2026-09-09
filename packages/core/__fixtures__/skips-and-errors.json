@@ -192,6 +192,14 @@
     "durationMs": 89
   },
   {
+    "key": "pages_reachable",
+    "status": "skip",
+    "observed": {
+      "crawl": "did not run"
+    },
+    "durationMs": 0
+  },
+  {
     "key": "markdown_alternate",
     "status": "pass",
     "observed": {
@@ -231,25 +239,25 @@
         {
           "url": "https://linear.app/pricing",
           "status": 200,
-          "title": "Pricing — Linear",
+          "title": "Pricing \u2014 Linear",
           "description": "Free, Basic, Business and Enterprise plans."
         },
         {
           "url": "https://linear.app/docs",
           "status": 200,
-          "title": "Docs — Linear",
+          "title": "Docs \u2014 Linear",
           "description": "How to use the API and the CLI."
         },
         {
           "url": "https://linear.app/about",
           "status": 200,
-          "title": "About — Linear",
+          "title": "About \u2014 Linear",
           "description": "Who builds Linear."
         },
         {
           "url": "https://linear.app/changelog",
           "status": 200,
-          "title": "Changelog — Linear",
+          "title": "Changelog \u2014 Linear",
           "description": "What shipped, weekly."
         }
       ],

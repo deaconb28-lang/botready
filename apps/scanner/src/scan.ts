@@ -43,7 +43,7 @@ import {
   type CrawledPage,
 } from './passes/document';
 
-import type { CheckResult } from '@botready/core';
+import type { CheckResult, CrawlObserved } from '@botready/core';
 
 export interface ScanJob {
   scanId: string;
@@ -281,10 +281,21 @@ export async function scan(url: string, onResults?: ProgressSink): Promise<ScanO
   await pause();
   let pages: CrawledPage[] = [];
   let pagesCrawled = 1;
+  let crawlObserved: CrawlObserved | null = null;
   try {
-    const crawl = await crawlExtraPages(target, renderedFacts);
+    const crawl = await crawlExtraPages(target, {
+      rawLinks: rawFacts.links,
+      renderedLinks: renderFailed ? [] : renderedFacts.links,
+      // The sitemap Pass C already read, so following it costs no extra
+      // request. It is a fallback rather than a source: a client arriving at
+      // the site has the homepage's links, and the sitemap only if it asks.
+      sitemapUrls: passC.sitemap.urls.map((entry) => entry.loc),
+      robots: robots.robots,
+      renderFailed,
+    });
     pages = crawl.pages;
     pagesCrawled = Math.min(crawl.pagesCrawled, MAX_PAGES_PER_SCAN);
+    crawlObserved = crawl.observed;
   } catch (err) {
     log.warn('the page crawl stopped early', {
       url,
@@ -301,6 +312,7 @@ export async function scan(url: string, onResults?: ProgressSink): Promise<ScanO
     renderFailed,
     pages,
     negotiation,
+    crawl: crawlObserved,
   });
   results.push(...documents);
   await flush(documents);

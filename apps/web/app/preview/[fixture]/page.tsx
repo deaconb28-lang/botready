@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { findings, scoreDetail, type CheckResult } from '@botready/core';
+import { findings, scoreDetail, type CheckResult, type CrawlObserved } from '@botready/core';
 
 import { ResultsView, UnscoredView } from '@/components/results/ResultsView';
 import { SiteFooter } from '@/components/site/SiteFooter';
@@ -29,6 +29,20 @@ export const metadata: Metadata = {
 
 export function generateStaticParams() {
   return FIXTURES.map((fixture) => ({ fixture }));
+}
+
+/**
+ * Pages read, from the fixture rather than hardcoded.
+ *
+ * It was 6, always, which since 1.5 could contradict the fixture beside it:
+ * the SPA fixture reads one page and the facts table claimed six. A fixture is
+ * a real result rendered by the real components, so a number invented by the
+ * route defeats the point of having one.
+ */
+function pagesRead(results: CheckResult[]): number {
+  const row = results.find((r) => r.key === 'pages_reachable');
+  const observed = row?.observed as unknown as CrawlObserved | undefined;
+  return typeof observed?.pages_read === 'number' ? observed.pages_read + 1 : 1;
 }
 
 export default async function PreviewPage({
@@ -78,7 +92,7 @@ export default async function PreviewPage({
             score={scoreDetail(results)}
             results={results}
             findings={findings(results)}
-            pagesCrawled={6}
+            pagesCrawled={pagesRead(results)}
             scannerVersion="1.0.0"
             owned={false}
             fixture

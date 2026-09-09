@@ -144,7 +144,7 @@ function score(results: CheckResult[], version?: string): ScanScore;  // pure, n
 
 ## Categories and weights
 
-Live in `checks.json`. Current v1.4 weights: retrievability 25, discovery 20, representation 20, structure 15, actionability 15, freshness 5. Weights are published on the site, so changing them is a versioned event, not a tweak. v1.2 and v1.3 are archived under `packages/core/catalogs/` and still scorable, because rows written under them recorded that version.
+Live in `checks.json`. Current v1.5 weights: retrievability 25, discovery 20, representation 20, structure 15, actionability 15, freshness 5. Weights are published on the site, so changing them is a versioned event, not a tweak. v1.2, v1.3 and v1.4 are archived under `packages/core/catalogs/` and still scorable, because rows written under them recorded that version.
 
 Category weights did not change in 1.4; the checks inside actionability did. It
 was four checks — an agent manifest, API docs, form semantics, a wall on docs —
@@ -156,6 +156,17 @@ show progress. 1.4 adds `contact_reachable`, `action_declared` and
 afternoon, taking the category from 15 catalog points to 26. Points inside a
 category are normalised against the category weight, so a check is worth less
 of the total than its catalog number — see `effectivePoints`.
+
+The weights did not change in 1.5 either. It adds one check, `pages_reachable`,
+to discovery — 21 catalog points to 26 — because 43 of 342 complete scans read
+exactly one page and nothing in the catalog could tell a site whose navigation
+only exists after JavaScript runs from a site that has three pages. Both read
+as "1 of 6 allowed" and neither cost anything. The reason a crawl stopped is
+now derived by `crawlAccount` in `packages/core/crawl.ts`, which also decides
+whether the limit was the site's or ours: our cap, a site with genuinely few
+pages, and a round of requests nothing answered all earn a pass or a skip,
+because charging a site for our own timeout would make the score partly a
+measure of our uptime.
 
 ## Sector profiles
 

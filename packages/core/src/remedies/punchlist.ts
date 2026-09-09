@@ -94,6 +94,13 @@ const REMEDIES: Record<string, Remedy> = {
     rationale:
       'The link tags are a paste. Producing the markdown behind them is the actual work, and if your content is already markdown before it becomes HTML, most of it is done.',
   },
+  pages_reachable: {
+    title: 'Put real links to your own pages in the HTML you send',
+    effort: 'hours',
+    owner: 'frontend',
+    rationale:
+      'A client that does not run JavaScript arrives at your homepage and finds no route to anything else, so one page is the whole of what it can say about you. Server-render the navigation, or add plain anchors alongside whatever the router does — the two can coexist.',
+  },
   sitemap_present: {
     title: 'Publish a sitemap and declare it in robots.txt',
     effort: 'hours',

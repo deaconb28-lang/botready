@@ -46,7 +46,9 @@ describe('the catalog the fixtures are scored against', () => {
   it('has the points per category the arithmetic assumes', () => {
     expect(Object.fromEntries(CATEGORY_KEYS.map((k) => [k, categoryPoints(k)]))).toEqual({
       retrievability: 35,
-      discovery: 21,
+      // 26 since 1.5 added pages_reachable, for the same reason and with the
+      // same arithmetic as actionability below.
+      discovery: 26,
       representation: 20,
       structure: 15,
       // 26 since scoring 1.4 split actionability. The category weight is still
@@ -113,29 +115,31 @@ describe('reference-f: every check fails', () => {
 });
 
 describe('waf-blocked-spa: the archetype the product exists for', () => {
-  it('scores 48 and grades D', () => {
+  it('scores 45 and grades D', () => {
     // retrievability  0 + 0 + 3 + 3           =  6 / 35 = 17.142857
-    // discovery       4 + 8 + 4 + 0           = 16 / 21 = 76.190476
+    // discovery       4 + 8 + 4 + 0 + 0       = 16 / 26 = 61.538462
     // representation  0 + 6 + 2 + 1.5         =  9.5/ 20 = 47.5
     // structure       6 + 0 + 4               = 10 / 15 = 66.666667
     // actionability   0 + 4 + 2 + 2 + 2 + 0 + 0 = 10 / 26 = 38.461538
     // freshness       3 + 0                   =  3 /  5 = 60
     //
-    // Actionability fell from 53 to 38 without the site changing, which is
-    // what a catalog version is for: 1.4 asks three questions 1.3 did not,
-    // and this fixture answers one of them with a warn and two with fails.
+    // Discovery fell from 76 to 62 without the site changing, and this is the
+    // fixture where that is most obviously right: it is a single-page app, so
+    // its navigation exists only after the bundle runs, so a client that does
+    // not run one arrives at the front door and finds no doors. 1.4 could not
+    // see that and 1.5 can. Actionability fell the same way in 1.4.
     //
-    // total = (25(17.142857) + 20(76.190476) + 20(47.5)
+    // total = (25(17.142857) + 20(61.538462) + 20(47.5)
     //          + 15(66.666667) + 15(38.461538) + 5(60)) / 100
-    //       = (428.5714 + 1523.8095 + 950 + 1000 + 576.9231 + 300) / 100
-    //       = 4779.3040 / 100
-    //       = 47.7930  ->  48
+    //       = (428.5714 + 1230.7692 + 950 + 1000 + 576.9231 + 300) / 100
+    //       = 4486.2637 / 100
+    //       = 44.8626  ->  45
     const result = score(fixture('waf-blocked-spa'));
-    expect(result.total).toBe(48);
+    expect(result.total).toBe(45);
     expect(result.grade).toBe('D');
     expect(result.categoryScores).toEqual({
       retrievability: 17,
-      discovery: 76,
+      discovery: 62, // 61.54 under 1.5; it was 76 under 1.4
       representation: 48, // 47.5 rounds away from zero
       structure: 67,
       actionability: 38, // 38.46 under scoring 1.4; it was 53 under 1.3
@@ -145,6 +149,7 @@ describe('waf-blocked-spa: the archetype the product exists for', () => {
       'agent_status_parity',
       'js_dependency_ratio',
       'llms_txt_present',
+      'pages_reachable',
       'markdown_alternate',
       'pricing_structured',
       'agent_manifest',
@@ -214,6 +219,7 @@ describe('skips-and-errors: the two statuses that are not failures', () => {
     expect(result.erroredChecks).toEqual(['agent_status_parity', 'js_dependency_ratio', 'contact_reachable']);
     expect(result.failedChecks).toEqual([]);
     expect(result.skippedChecks).toEqual([
+      'pages_reachable',
       'content_negotiation',
       'pricing_structured',
       'form_semantics',
@@ -237,25 +243,32 @@ describe('skips-and-errors: the two statuses that are not failures', () => {
 });
 
 describe('retrievable-but-undescribed: retrievability passes, everything else warns', () => {
-  it('scores 62 and grades C', () => {
+  it('scores 64 and grades C', () => {
     // retrievability  35 / 35            = 100
     // every other     half of everything =  50
     //
-    // Except actionability, which is no longer half of everything: the
-    // fixture warns on the four checks it shares with 1.3, fails
-    // action_declared and passes action_not_js_only.
+    // Except two. Actionability is not half of everything: the fixture warns
+    // on the four checks it shares with 1.3, fails action_declared and passes
+    // action_not_js_only.
     // actionability   2.5 + 2 + 2 + 1 + 2 + 0 + 3 = 12.5 / 26 = 48.076923
     //
-    // total = (25(100) + 20(50) + 20(50) + 15(50) + 15(48.076923) + 5(50)) / 100
-    //       = (2500 + 1000 + 1000 + 750 + 721.1538 + 250) / 100
-    //       = 6221.1538 / 100
-    //       = 62.2115  ->  62
+    // And discovery went up rather than down, which is worth a word because
+    // every other 1.5 movement is downward. The site is retrievable and its
+    // homepage links to pages that open, so it passes pages_reachable
+    // outright — five points at full weight against a category that was
+    // otherwise all warns.
+    // discovery       2 + 4 + 2 + 2.5 + 5 = 15.5 / 26 = 59.615385
+    //
+    // total = (25(100) + 20(59.615385) + 20(50) + 15(50) + 15(48.076923) + 5(50)) / 100
+    //       = (2500 + 1192.3077 + 1000 + 750 + 721.1538 + 250) / 100
+    //       = 6413.4615 / 100
+    //       = 64.1346  ->  64
     const result = score(fixture('retrievable-but-undescribed'));
-    expect(result.total).toBe(62);
+    expect(result.total).toBe(64);
     expect(result.grade).toBe('C');
     expect(result.categoryScores).toEqual({
       retrievability: 100,
-      discovery: 50,
+      discovery: 60, // 59.62: a pass among warns, since 1.5
       representation: 50,
       structure: 50,
       actionability: 48, // no longer a flat half: one fail and one pass among the new three

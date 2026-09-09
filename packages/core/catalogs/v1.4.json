@@ -1,5 +1,5 @@
 {
-  "scoringVersion": "1.5",
+  "scoringVersion": "1.4",
   "grades": [
     {
       "grade": "A",
@@ -211,29 +211,6 @@
         "broken_links": []
       },
       "remedy": "llms_txt"
-    },
-    {
-      "key": "pages_reachable",
-      "category": "discovery",
-      "points": 5,
-      "label": "A second page is reachable without a browser",
-      "rationale": "A site an agent can only see one page of is a site an agent cannot answer questions about. Fails when the HTML you send carries no link to another page of your own site and the sitemap offers none either — most often because the navigation is built by JavaScript, which means a client that does not run one arrives at your front door and finds no doors.",
-      "fails_when": "no page beyond the target could be reached from the HTML as sent, and the cause is the site rather than our own cap or a request nothing answered",
-      "warns_when": "your robots.txt disallows the pages we would otherwise have read",
-      "observed_shape": {
-        "budget": 0,
-        "pages_read": 0,
-        "raw_links": 0,
-        "rendered_links": 0,
-        "off_origin_links": 0,
-        "sitemap_urls": 0,
-        "robots_blocked": 0,
-        "attempted": 0,
-        "failed": 0,
-        "no_response": 0,
-        "render_failed": false,
-        "limit": ""
-      }
     },
     {
       "key": "markdown_alternate",

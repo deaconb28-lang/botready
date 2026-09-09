@@ -19,7 +19,7 @@ const REQUESTS = [
   'GET /sitemap.xml, /llms.txt, /llms-full.txt and four /.well-known/ paths.',
   'GET the target page five more times, once as each of Chrome, ClaudeBot, GPTBot, PerplexityBot and Google-Extended, so the responses can be compared.',
   'One headless render of the target page, with images, fonts and media declined.',
-  `GET up to ${LIMITS.maxPagesPerScan - 1} more pages linked from the target, preferring /pricing and /docs.`,
+  `GET up to ${LIMITS.maxPagesPerScan - 1} more pages, linked from the target or named in your sitemap, preferring /pricing and /docs. Each one is checked against your robots.txt before we ask for it, so a path you disallow is not requested even when the target is allowed.`,
 ];
 
 const NOT_DO = [

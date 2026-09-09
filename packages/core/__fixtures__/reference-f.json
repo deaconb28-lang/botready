@@ -180,6 +180,25 @@
     "durationMs": 89
   },
   {
+    "key": "pages_reachable",
+    "status": "fail",
+    "observed": {
+      "budget": 5,
+      "pages_read": 0,
+      "raw_links": 0,
+      "rendered_links": 0,
+      "off_origin_links": 0,
+      "sitemap_urls": 0,
+      "robots_blocked": 0,
+      "attempted": 0,
+      "failed": 0,
+      "no_response": 0,
+      "render_failed": false,
+      "limit": "no_internal_links"
+    },
+    "durationMs": 0
+  },
+  {
     "key": "markdown_alternate",
     "status": "fail",
     "observed": {

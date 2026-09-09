@@ -14,12 +14,13 @@
  * and "two hops from the homepage" is not a question you can ask of one page.
  */
 
-import { originOf, type CheckResult, type JsDependencyObserved } from '@botready/core';
+import { crawlAccount, originOf, type CheckResult, type CrawlObserved, type JsDependencyObserved } from '@botready/core';
 
 import { domFacts, type DomFacts } from '../extract';
 import { crawlSequentially, guardedFetch, type FetchOutcome } from '../fetcher';
+import { isAllowed, type ParsedRobots } from '../robots';
 import type { Comparison } from './render';
-import { MAX_PAGES_PER_SCAN, PAGE_DELAY_MS } from '../version';
+import { MAX_PAGES_PER_SCAN, PAGE_DELAY_MS, ROBOTS_TOKEN } from '../version';
 
 /**
  * Paths worth spending part of the page budget on, in priority order. Pricing
@@ -47,6 +48,21 @@ export interface PageCrawlResult {
   pages: CrawledPage[];
   /** Distinct content pages read, the target included. Capped at six. */
   pagesCrawled: number;
+  /** What the crawl counted, for the check and for the explanation. */
+  observed: CrawlObserved;
+}
+
+export interface CrawlInput {
+  /** Internal links in the HTML as sent, before any script ran. */
+  rawLinks: string[];
+  /** Internal links in the rendered DOM. The superset, and what we follow. */
+  renderedLinks: string[];
+  /** URLs the sitemap offered, used when the homepage offers too few. */
+  sitemapUrls: string[];
+  /** Their robots.txt, obeyed per candidate rather than only for the target. */
+  robots: ParsedRobots | null;
+  /** Whether our headless browser produced a document at all. */
+  renderFailed: boolean;
 }
 
 /**
@@ -58,16 +74,42 @@ export interface PageCrawlResult {
  * sequential and a second apart, which is the constraint that actually protects
  * the site being measured.
  */
-export async function crawlExtraPages(
-  targetUrl: string,
-  homepageFacts: DomFacts,
-): Promise<PageCrawlResult> {
+export async function crawlExtraPages(targetUrl: string, input: CrawlInput): Promise<PageCrawlResult> {
   const origin = originOf(targetUrl);
   const budget = MAX_PAGES_PER_SCAN - 1; // the target is page one
 
-  const candidates = rankInternalLinks(homepageFacts.links, targetUrl, origin).slice(0, budget);
+  const raw = rankInternalLinks(input.rawLinks, targetUrl, origin);
+  const rendered = rankInternalLinks(input.renderedLinks, targetUrl, origin);
+  const sitemap = rankInternalLinks(input.sitemapUrls, targetUrl, origin);
 
-  const responses = await crawlSequentially(candidates, PAGE_DELAY_MS, (url) =>
+  // The rendered DOM is what we follow, because the object is to read as much
+  // of the site as we can. The raw list is counted rather than followed: the
+  // gap between the two is the finding, and it is measured in the check.
+  //
+  // The sitemap is a fallback rather than a first source. A homepage's links
+  // are what a client arriving at the site actually has, and the sitemap is
+  // what it has if it thinks to ask — so the order here is the order an agent
+  // would try, and the sitemap is why several sites now read six pages that
+  // used to read one.
+  const preferred = rendered.length > 0 ? rendered : raw;
+  const candidates = [...new Set([...preferred, ...sitemap])];
+
+  // robots.txt, per candidate. It was only ever consulted for the target,
+  // which meant a site that allows / and disallows /search got its /search
+  // fetched — by a crawler whose own page promises it reads robots on every
+  // scan and stops. This is that promise, applied where it was missing.
+  const blocked: string[] = [];
+  const allowed: string[] = [];
+  for (const candidate of candidates) {
+    const path = pathOf(candidate);
+    const verdict = input.robots ? isAllowed(input.robots, ROBOTS_TOKEN, path) : null;
+    if (verdict && !verdict.allowed) blocked.push(candidate);
+    else allowed.push(candidate);
+  }
+
+  const taken = allowed.slice(0, budget);
+
+  const responses = await crawlSequentially(taken, PAGE_DELAY_MS, (url) =>
     guardedFetch(url).catch(
       (): FetchOutcome => ({
         url,
@@ -94,7 +136,60 @@ export async function crawlExtraPages(
     fromHomepage: true,
   }));
 
-  return { pages, pagesCrawled: 1 + pages.length };
+  const readable = pages.filter((page) => page.status >= 200 && page.status < 400);
+
+  const observed: CrawlObserved = {
+    budget,
+    pages_read: readable.length,
+    raw_links: raw.length,
+    rendered_links: rendered.length,
+    off_origin_links: countOffOrigin(
+      input.renderedLinks.length > 0 ? input.renderedLinks : input.rawLinks,
+      targetUrl,
+      origin,
+    ),
+    sitemap_urls: sitemap.length,
+    robots_blocked: blocked.length,
+    attempted: taken.length,
+    failed: pages.length - readable.length,
+    no_response: pages.filter((page) => page.status === 0).length,
+    render_failed: input.renderFailed,
+  };
+
+  // Pages read, not pages requested. Five dead links used to report "6 of 6",
+  // which said we had read the site when we had read one page of it.
+  return { pages, pagesCrawled: 1 + readable.length, observed };
+}
+
+/** The path a candidate URL asks for, which is what robots.txt matches on. */
+function pathOf(url: string): string {
+  try {
+    return new URL(url).pathname || '/';
+  } catch {
+    return '/';
+  }
+}
+
+/**
+ * Links that are links and point somewhere else.
+ *
+ * Counted because "every link on this page leaves the site" and "this page has
+ * no links" are different findings with the same page count, and the first one
+ * is common on a single-page site whose booking lives on a platform.
+ */
+function countOffOrigin(hrefs: string[], baseUrl: string, origin: string): number {
+  let off = 0;
+  for (const href of hrefs) {
+    let url: URL;
+    try {
+      url = new URL(href, baseUrl);
+    } catch {
+      continue;
+    }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') continue;
+    if (url.origin !== origin) off += 1;
+  }
+  return off;
 }
 
 /**
@@ -153,6 +248,8 @@ export interface DocumentCheckInput {
   pages: CrawledPage[];
   /** The Accept: text/markdown probe, run once against the target. */
   negotiation: FetchOutcome | null;
+  /** What the page crawl counted. Null when the crawl itself threw. */
+  crawl: CrawlObserved | null;
 }
 
 export function documentChecks(input: DocumentCheckInput): CheckResult[] {
@@ -171,7 +268,57 @@ export function documentChecks(input: DocumentCheckInput): CheckResult[] {
     contactReachableCheck(input),
     actionDeclaredCheck(input),
     actionNotJsOnlyCheck(input),
+    pagesReachableCheck(input),
   ];
+}
+
+/**
+ * Whether a client that does not run a browser can reach a second page.
+ *
+ * Forty-three of the 342 complete scans in the corpus read exactly one page,
+ * and the report said "1 of 6 allowed" and nothing else — so the reader could
+ * not tell whether the limit was their site or our scanner. Those are opposite
+ * conclusions, and we were holding the facts to separate them.
+ *
+ * A site an agent can only see one page of is a site an agent cannot answer
+ * questions about, so where the limit is the site's this is worth points. Where
+ * it is ours — our cap, our timeout, nothing answering — it is a skip, because
+ * charging a site for our infrastructure would make the score a measure of us.
+ *
+ * The gradation is not "how many pages" but "can a non-executing client get
+ * past the first one". A three-page brochure site passes. A site with thirty
+ * links that exist only after React mounts does not, and that is the same
+ * finding as js_dependency_ratio arriving by a different route: there, the
+ * words are missing; here, the way to the rest of the site is.
+ */
+function pagesReachableCheck(input: DocumentCheckInput): CheckResult {
+  const o = input.crawl;
+  // The crawl threw, so we do not know what the site offers. A skip rather
+  // than an error: error is zero points inside the denominator, and this is
+  // our exception rather than anything about the site. Charging five points
+  // for it would make the score partly a measure of our own uptime.
+  if (!o) {
+    return { key: 'pages_reachable', status: 'skip', observed: { crawl: 'did not run' }, durationMs: 0 };
+  }
+
+  const account = crawlAccount(o);
+  const observed = { ...o, limit: account.limit };
+
+  // Ours, not theirs: the cap we set, a site with genuinely few pages, or a
+  // round of requests that nothing answered.
+  if (!account.onTheSite) {
+    const ours = account.limit === 'fetches_failed';
+    return { key: 'pages_reachable', status: ours ? 'skip' : 'pass', observed, durationMs: 0 };
+  }
+
+  // Their robots.txt is a decision they made and we obeyed. It has the same
+  // consequence as a broken link — an agent reads one page — but it is not a
+  // defect, and a fail would read as one.
+  if (account.limit === 'robots_disallowed') {
+    return { key: 'pages_reachable', status: 'warn', observed, durationMs: 0 };
+  }
+
+  return { key: 'pages_reachable', status: 'fail', observed, durationMs: 0 };
 }
 
 /**

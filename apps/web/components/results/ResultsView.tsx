@@ -4,8 +4,10 @@ import Link from 'next/link';
 import {
   buildFixPack,
   catalog,
+  crawlAccount,
   criticalFailures,
   type CheckResult,
+  type CrawlObserved,
   type Effort,
   type Finding,
   type FixPack,
@@ -229,7 +231,14 @@ export function ResultsView({
             <FindingsList items={items} pointsMissing={100 - score.total} />
           </div>
 
-          <ScanFacts url={url} pagesCrawled={pagesCrawled} scannerVersion={scannerVersion} scoringVersion={score.scoringVersion} checkCount={results.length} />
+          <ScanFacts
+            url={url}
+            pagesCrawled={pagesCrawled}
+            crawlNote={crawlNote(results)}
+            scannerVersion={scannerVersion}
+            scoringVersion={score.scoringVersion}
+            checkCount={results.length}
+          />
         </div>
 
         {/* The right column reads top to bottom as one argument: here is what
@@ -342,15 +351,38 @@ function stripScheme(url: string): string {
   return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 }
 
+/**
+ * Why the scan stopped where it did, in one sentence.
+ *
+ * "1 of 6 allowed" was the most confusing number on this page: 43 of the 342
+ * complete scans in the corpus read exactly one page, and the reader had no
+ * way to tell whether the limit was their site or our scanner. Those are
+ * opposite conclusions and the crawl was already counting the facts that
+ * separate them.
+ *
+ * Derived rather than stored, and derived by the same function the finding
+ * uses, so the sentence here and the finding below it cannot disagree about
+ * the same crawl.
+ */
+function crawlNote(results: CheckResult[]): string | null {
+  const row = results.find((r) => r.key === 'pages_reachable');
+  if (!row || row.status === 'skip' || row.status === 'error') return null;
+  const observed = row.observed as unknown as CrawlObserved;
+  if (typeof observed?.budget !== 'number') return null;
+  return crawlAccount(observed).sentence;
+}
+
 function ScanFacts({
   url,
   pagesCrawled,
+  crawlNote: note,
   scannerVersion,
   scoringVersion,
   checkCount,
 }: {
   url: string;
   pagesCrawled: number;
+  crawlNote: string | null;
   scannerVersion: string | null;
   scoringVersion: string;
   checkCount: number;
@@ -376,9 +408,16 @@ function ScanFacts({
           </div>
         ))}
       </dl>
+      {note ? (
+        <p className="mt-4 max-w-[72ch] text-[14px] leading-[1.6] text-body">
+          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-subtle-2">Why that many · </span>
+          {note}
+        </p>
+      ) : null}
       <p className="mt-4 max-w-[72ch] text-[13.5px] leading-[1.6] text-subtle-2">
-        We read at most 6 pages a scan, sequentially, one second apart, and obey your robots.txt. <Link href="/what-we-check">The full catalog and the weights</Link>{' '}
-        are published, and <Link href="/bot">blocking us</Link> takes one line.
+        We read at most 6 pages a scan, sequentially, one second apart, and obey your robots.txt on every page rather
+        than only the first. <Link href="/what-we-check">The full catalog and the weights</Link> are published, and{' '}
+        <Link href="/bot">blocking us</Link> takes one line.
       </p>
     </section>
   );
