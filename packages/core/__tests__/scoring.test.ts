@@ -49,7 +49,11 @@ describe('the catalog the fixtures are scored against', () => {
       discovery: 21,
       representation: 20,
       structure: 15,
-      actionability: 15,
+      // 26 since scoring 1.4 split actionability. The category weight is still
+      // 15; points inside a category are normalised against that weight, so
+      // adding checks changes what a point is worth rather than what the
+      // category is worth.
+      actionability: 26,
       freshness: 5,
     });
   });
@@ -109,28 +113,32 @@ describe('reference-f: every check fails', () => {
 });
 
 describe('waf-blocked-spa: the archetype the product exists for', () => {
-  it('scores 50 and grades D', () => {
+  it('scores 48 and grades D', () => {
     // retrievability  0 + 0 + 3 + 3           =  6 / 35 = 17.142857
     // discovery       4 + 8 + 4 + 0           = 16 / 21 = 76.190476
     // representation  0 + 6 + 2 + 1.5         =  9.5/ 20 = 47.5
     // structure       6 + 0 + 4               = 10 / 15 = 66.666667
-    // actionability   0 + 4 + 2 + 2           =  8 / 15 = 53.333333
+    // actionability   0 + 4 + 2 + 2 + 2 + 0 + 0 = 10 / 26 = 38.461538
     // freshness       3 + 0                   =  3 /  5 = 60
     //
+    // Actionability fell from 53 to 38 without the site changing, which is
+    // what a catalog version is for: 1.4 asks three questions 1.3 did not,
+    // and this fixture answers one of them with a warn and two with fails.
+    //
     // total = (25(17.142857) + 20(76.190476) + 20(47.5)
-    //          + 15(66.666667) + 15(53.333333) + 5(60)) / 100
-    //       = (428.5714 + 1523.8095 + 950 + 1000 + 800 + 300) / 100
-    //       = 5002.3809 / 100
-    //       = 50.0238  ->  50
+    //          + 15(66.666667) + 15(38.461538) + 5(60)) / 100
+    //       = (428.5714 + 1523.8095 + 950 + 1000 + 576.9231 + 300) / 100
+    //       = 4779.3040 / 100
+    //       = 47.7930  ->  48
     const result = score(fixture('waf-blocked-spa'));
-    expect(result.total).toBe(50);
+    expect(result.total).toBe(48);
     expect(result.grade).toBe('D');
     expect(result.categoryScores).toEqual({
       retrievability: 17,
       discovery: 76,
       representation: 48, // 47.5 rounds away from zero
       structure: 67,
-      actionability: 53,
+      actionability: 38, // 38.46 under scoring 1.4; it was 53 under 1.3
       freshness: 60,
     });
     expect(result.failedChecks).toEqual([
@@ -140,6 +148,8 @@ describe('waf-blocked-spa: the archetype the product exists for', () => {
       'markdown_alternate',
       'pricing_structured',
       'agent_manifest',
+      'action_declared',
+      'action_not_js_only',
       'sitemap_lastmod_real',
     ]);
   });
@@ -160,7 +170,7 @@ describe('waf-blocked-spa: the archetype the product exists for', () => {
 });
 
 describe('skips-and-errors: the two statuses that are not failures', () => {
-  it('scores 78 and grades B', () => {
+  it('scores 73 and grades B', () => {
     // An error scores as a fail but stays in the denominator, so the two
     // errored retrievability checks cost their points:
     //   retrievability  0 + 0 + 3 + 3 =  6 / 35 = 17.142857
@@ -170,23 +180,29 @@ describe('skips-and-errors: the two statuses that are not failures', () => {
     //   discovery       21 / 21                    = 100
     //   representation  17 / (20 - 3 skipped)      = 100
     //   structure       10 / (15 - 5 skipped)      = 100
-    //   actionability    9 / (15 - 4 - 2 skipped)  = 100
+    //   actionability    9 / 13                     = 69.230769
+    //
+    // Actionability is no longer 100 here: contact_reachable errored, and an
+    // error stays in the denominator where a skip does not. Three of the
+    // seven checks skipped, one errored, and 9 of the remaining 13 points
+    // were earned.
     //
     // Freshness was skipped entirely, so its 5% is redistributed rather than
     // counted as zero, which means the denominator is 95 and not 100:
-    //   total = (25(17.142857) + 20(100) + 20(100) + 15(100) + 15(100)) / 95
-    //         = (428.5714 + 2000 + 2000 + 1500 + 1500) / 95
+    //   total = (25(17.142857) + 20(100) + 20(100) + 15(100)
+    //             + 15(69.230769)) / 95
+    //         = (428.5714 + 2000 + 2000 + 1500 + 1038.4615) / 95
     //         = 7428.5714 / 95
     //         = 78.1955  ->  78
     const result = score(fixture('skips-and-errors'));
-    expect(result.total).toBe(78);
+    expect(result.total).toBe(73);
     expect(result.grade).toBe('B');
     expect(result.categoryScores).toEqual({
       retrievability: 17,
       discovery: 100,
       representation: 100,
       structure: 100,
-      actionability: 100,
+      actionability: 69, // an error stays in the denominator; three checks skipped out of it
       freshness: 0, // nothing was measured; the weight moved rather than the score
     });
   });
@@ -195,13 +211,15 @@ describe('skips-and-errors: the two statuses that are not failures', () => {
     // So the interface can say the check could not run rather than implying the
     // site failed it.
     const result = score(fixture('skips-and-errors'));
-    expect(result.erroredChecks).toEqual(['agent_status_parity', 'js_dependency_ratio']);
+    expect(result.erroredChecks).toEqual(['agent_status_parity', 'js_dependency_ratio', 'contact_reachable']);
     expect(result.failedChecks).toEqual([]);
     expect(result.skippedChecks).toEqual([
       'content_negotiation',
       'pricing_structured',
       'form_semantics',
       'no_wall_on_docs',
+      'action_declared',
+      'action_not_js_only',
       'cache_headers',
       'sitemap_lastmod_real',
     ]);
@@ -219,26 +237,31 @@ describe('skips-and-errors: the two statuses that are not failures', () => {
 });
 
 describe('retrievable-but-undescribed: retrievability passes, everything else warns', () => {
-  it('scores 63 and grades C', () => {
+  it('scores 62 and grades C', () => {
     // retrievability  35 / 35            = 100
     // every other     half of everything =  50
     //
-    // total = (25(100) + 20(50) + 20(50) + 15(50) + 15(50) + 5(50)) / 100
-    //       = (2500 + 1000 + 1000 + 750 + 750 + 250) / 100
-    //       = 6250 / 100
-    //       = 62.5  ->  63
+    // Except actionability, which is no longer half of everything: the
+    // fixture warns on the four checks it shares with 1.3, fails
+    // action_declared and passes action_not_js_only.
+    // actionability   2.5 + 2 + 2 + 1 + 2 + 0 + 3 = 12.5 / 26 = 48.076923
+    //
+    // total = (25(100) + 20(50) + 20(50) + 15(50) + 15(48.076923) + 5(50)) / 100
+    //       = (2500 + 1000 + 1000 + 750 + 721.1538 + 250) / 100
+    //       = 6221.1538 / 100
+    //       = 62.2115  ->  62
     const result = score(fixture('retrievable-but-undescribed'));
-    expect(result.total).toBe(63);
+    expect(result.total).toBe(62);
     expect(result.grade).toBe('C');
     expect(result.categoryScores).toEqual({
       retrievability: 100,
       discovery: 50,
       representation: 50,
       structure: 50,
-      actionability: 50,
+      actionability: 48, // no longer a flat half: one fail and one pass among the new three
       freshness: 50,
     });
-    expect(result.failedChecks).toEqual([]);
+    expect(result.failedChecks).toEqual(['action_declared']);
   });
 });
 

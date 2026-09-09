@@ -159,6 +159,22 @@ export interface DomFacts {
   links: string[];
   /** Text nodes that look like a price, counted in whatever HTML was given. */
   priceMatches: number;
+  /**
+   * Ways an agent could reach a person, counted rather than collected. The
+   * addresses themselves are somebody's phone number and inbox and there is no
+   * check that needs them, so what gets recorded is that they exist.
+   */
+  telLinks: number;
+  mailtoLinks: number;
+  /** A JSON-LD node carrying telephone, email or contactPoint. */
+  jsonLdContact: boolean;
+  /**
+   * schema.org action types declared anywhere in the JSON-LD — under
+   * potentialAction or as a node's own @type. This is a site saying what can be
+   * done here rather than only what it is, which is the difference between a
+   * page an agent can describe and a service an agent can use.
+   */
+  actionTypes: string[];
 }
 
 export interface FormFacts {
@@ -195,6 +211,10 @@ export function domFacts(html: string, url: string): DomFacts {
     forms: [],
     links: [],
     priceMatches: 0,
+    telLinks: 0,
+    mailtoLinks: 0,
+    jsonLdContact: false,
+    actionTypes: [],
   };
 
   if (!html.trim()) return empty;
@@ -220,7 +240,7 @@ export function domFacts(html: string, url: string): DomFacts {
       previousLevel = level;
     }
 
-    const { types: jsonLdTypes, errors: jsonLdErrors, offers } = readJsonLd(doc);
+    const { types: jsonLdTypes, errors: jsonLdErrors, offers, contact, actions } = readJsonLd(doc);
 
     const ogPresent = ['og:title', 'og:description', 'og:image', 'og:url', 'og:type'].filter(
       (property) => Boolean(meta(doc, `meta[property="${property}"]`)),
@@ -252,6 +272,10 @@ export function domFacts(html: string, url: string): DomFacts {
         .map((a) => a.getAttribute('href') ?? '')
         .filter(Boolean),
       priceMatches: countPrices(doc.body?.textContent ?? ''),
+      telLinks: doc.querySelectorAll('a[href^="tel:" i]').length,
+      mailtoLinks: doc.querySelectorAll('a[href^="mailto:" i]').length,
+      jsonLdContact: contact,
+      actionTypes: actions,
     };
   } finally {
     dom.window.close();
@@ -332,10 +356,30 @@ function cssQuote(value: string): string {
   return value.replace(/["\\]/g, '\\$&');
 }
 
-function readJsonLd(doc: Document): { types: string[]; errors: string[]; offers: number } {
+/**
+ * `contact` and `actions` are read on the same walk as the types.
+ *
+ * Both answer actionability questions the type list cannot. A LocalBusiness
+ * node with a telephone is contactable, but `telephone` is a property rather
+ * than a @type, so it never appeared in `types`. And an OrderAction under
+ * potentialAction is the site stating what can be done here, which is the
+ * whole of what actionability is asking.
+ */
+const ACTION_TYPE = /Action$/;
+const CONTACT_KEYS = new Set(['telephone', 'email', 'contactpoint', 'faxnumber']);
+
+function readJsonLd(doc: Document): {
+  types: string[];
+  errors: string[];
+  offers: number;
+  contact: boolean;
+  actions: string[];
+} {
   const types = new Set<string>();
+  const actions = new Set<string>();
   const errors: string[] = [];
   let offers = 0;
+  let contact = false;
 
   for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
     const source = script.textContent ?? '';
@@ -359,20 +403,27 @@ function readJsonLd(doc: Document): { types: string[]; errors: string[]; offers:
 
     const record = node as Record<string, unknown>;
     const type = record['@type'];
-    if (typeof type === 'string') {
-      types.add(type);
-      if (type === 'Offer' || type === 'AggregateOffer') offers += 1;
-    } else if (Array.isArray(type)) {
-      for (const t of type) {
-        if (typeof t !== 'string') continue;
-        types.add(t);
-        if (t === 'Offer' || t === 'AggregateOffer') offers += 1;
-      }
+    const named = typeof type === 'string' ? [type] : Array.isArray(type) ? type.filter((t) => typeof t === 'string') : [];
+    for (const t of named as string[]) {
+      types.add(t);
+      if (t === 'Offer' || t === 'AggregateOffer') offers += 1;
+      // Anything ending in Action: OrderAction, ReserveAction, SearchAction.
+      // Matched on the suffix rather than an allowlist, because schema.org has
+      // dozens and a new one is still a site saying what can be done here.
+      if (ACTION_TYPE.test(t)) actions.add(t);
     }
-    for (const value of Object.values(record)) walk(value);
+
+    for (const [key, value] of Object.entries(record)) {
+      const lower = key.toLowerCase();
+      if (CONTACT_KEYS.has(lower) && value) contact = true;
+      // A potentialAction whose child carries no @type still counts as an
+      // action being declared; the child's own types are added by the walk.
+      if (lower === 'potentialaction' && value) actions.add('potentialAction');
+      walk(value);
+    }
   }
 
-  return { types: [...types].sort(), errors, offers };
+  return { types: [...types].sort(), errors, offers, contact, actions: [...actions].sort() };
 }
 
 /**

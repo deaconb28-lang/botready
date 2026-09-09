@@ -47,11 +47,17 @@ describe('effectivePoints', () => {
   });
 
   it('is the raw points only where a category already sums to its weight', () => {
-    // Not a rule, an observation that explains why this went unnoticed: four of
-    // the six categories happen to satisfy it, and their checks read correctly
-    // on both pages.
+    // Not a rule, an observation that explains why this went unnoticed: some
+    // categories happen to satisfy it, and their checks read correctly on both
+    // pages.
+    //
+    // Actionability used to be among them and is not since scoring 1.4, which
+    // split it into seven checks worth 26 points against a weight of 15. That
+    // makes this distinction load-bearing there rather than academic: a check
+    // worth 4 catalog points is worth 4 * 15/26 = 2.3 points of the total, and
+    // a page printing the raw number would overstate every one of them.
     const coincidental = catalog.categories.filter((c) => categoryPoints(c.key) === c.weight);
-    expect(coincidental.map((c) => c.key)).toEqual(['representation', 'structure', 'actionability', 'freshness']);
+    expect(coincidental.map((c) => c.key)).toEqual(['representation', 'structure', 'freshness']);
 
     for (const category of coincidental) {
       for (const check of catalog.checks.filter((c) => c.category === category.key)) {

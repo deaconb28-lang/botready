@@ -168,7 +168,109 @@ export function documentChecks(input: DocumentCheckInput): CheckResult[] {
     apiDocsCheck(input),
     formSemanticsCheck(input),
     noWallOnDocsCheck(input),
+    contactReachableCheck(input),
+    actionDeclaredCheck(input),
+    actionNotJsOnlyCheck(input),
   ];
+}
+
+/**
+ * Whether a person is reachable in a form an agent can hand over.
+ *
+ * The most common thing anybody asks an assistant about a business is how to
+ * reach it, and this was not measured at all. Actionability was four checks —
+ * an agent manifest, API docs, form semantics, a wall on docs — three of which
+ * a bakery can only fail or be exempted from. 38 of 44 local businesses in the
+ * last sweep scored zero on the category, which is not a signal, it is a wall:
+ * nothing to act on and no way to show progress.
+ *
+ * A phone number in an image is not a finding about design, it is a number an
+ * agent cannot pass on. So the gradation is about machine-readability rather
+ * than about having a phone: a link is usable, a link plus structured data is
+ * unambiguous, and neither is a fail somebody can fix this afternoon.
+ */
+function contactReachableCheck(input: DocumentCheckInput): CheckResult {
+  const f = input.renderedFacts;
+  const linked = f.telLinks > 0 || f.mailtoLinks > 0;
+  const observed = {
+    tel_links: f.telLinks,
+    mailto_links: f.mailtoLinks,
+    json_ld_contact: f.jsonLdContact,
+  };
+
+  if (f.jsonLdContact && linked) {
+    return { key: 'contact_reachable', status: 'pass', observed, durationMs: 0 };
+  }
+  if (f.jsonLdContact || linked) {
+    return { key: 'contact_reachable', status: 'warn', observed, durationMs: 0 };
+  }
+  return { key: 'contact_reachable', status: 'fail', observed, durationMs: 0 };
+}
+
+/**
+ * Whether the site says what can be done here, not only what it is.
+ *
+ * A schema.org Action — OrderAction, ReserveAction — is a site stating that
+ * booking or ordering is possible and where. An Offer is weaker and still
+ * worth partial credit: it says what is sold without saying how to get it,
+ * which is a description rather than an action.
+ *
+ * This is the check most sites can pass with one block of JSON-LD, which is
+ * exactly what the fix pack generates.
+ */
+function actionDeclaredCheck(input: DocumentCheckInput): CheckResult {
+  const f = input.renderedFacts;
+  const observed = { action_types: f.actionTypes, offer_nodes: f.offerNodes };
+
+  if (f.actionTypes.length > 0) {
+    return { key: 'action_declared', status: 'pass', observed, durationMs: 0 };
+  }
+  if (f.offerNodes > 0) {
+    return { key: 'action_declared', status: 'warn', observed, durationMs: 0 };
+  }
+  return { key: 'action_declared', status: 'fail', observed, durationMs: 0 };
+}
+
+/**
+ * Whether the way to act survives without JavaScript.
+ *
+ * Same comparison as the JS dependency ratio, asked of the actionable parts
+ * rather than of the prose: a booking button that appears only once a script
+ * has run is a button no non-rendering client can find.
+ *
+ * Skips when neither the raw response nor the rendered DOM has anything to
+ * act on. The two checks above already fail for that absence, and failing this
+ * one as well would charge a site three times for one missing phone number.
+ */
+function actionNotJsOnlyCheck(input: DocumentCheckInput): CheckResult {
+  const actionable = (f: DomFacts) => ({
+    contacts: f.telLinks + f.mailtoLinks + (f.jsonLdContact ? 1 : 0),
+    actions: f.actionTypes.length,
+  });
+  const raw = actionable(input.rawFacts);
+  const rendered = actionable(input.renderedFacts);
+  const observed = {
+    raw_contacts: raw.contacts,
+    rendered_contacts: rendered.contacts,
+    raw_actions: raw.actions,
+    rendered_actions: rendered.actions,
+  };
+
+  // A failed render leaves nothing to compare against, and the JS dependency
+  // check already reports the render itself as the problem.
+  if (input.renderFailed) {
+    return { key: 'action_not_js_only', status: 'skip', observed, durationMs: 0 };
+  }
+  if (rendered.contacts === 0 && rendered.actions === 0) {
+    return { key: 'action_not_js_only', status: 'skip', observed, durationMs: 0 };
+  }
+  if (raw.contacts === 0 && raw.actions === 0) {
+    return { key: 'action_not_js_only', status: 'fail', observed, durationMs: 0 };
+  }
+  if (rendered.contacts > raw.contacts || rendered.actions > raw.actions) {
+    return { key: 'action_not_js_only', status: 'warn', observed, durationMs: 0 };
+  }
+  return { key: 'action_not_js_only', status: 'pass', observed, durationMs: 0 };
 }
 
 function jsDependencyCheck(input: DocumentCheckInput): CheckResult {

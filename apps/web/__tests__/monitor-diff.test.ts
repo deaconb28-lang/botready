@@ -41,7 +41,7 @@ describe('diff', () => {
     expect(delta.newlyRefused[0]?.from).toBe(200);
     expect(delta.newlyRefused[0]?.to).toBe(403);
     expect(delta.categoryDrops[0]?.category).toBe('retrievability');
-    expect(delta.total).toBe(50 - 100);
+    expect(delta.total).toBe(48 - 100);
     expect(shouldAlert(delta)).toBe(true);
   });
 
@@ -49,7 +49,7 @@ describe('diff', () => {
     const before = snapshot('waf-blocked-spa', 's1', '2026-08-21T06:00:00Z');
     const after = snapshot('reference-a', 's2', '2026-08-28T06:00:00Z');
     const delta = diff(before, after);
-    expect(delta.total).toBe(50);
+    expect(delta.total).toBe(100 - 48);
     expect(delta.categoryDrops).toEqual([]);
     expect(delta.newlyRefused).toEqual([]);
     expect(shouldAlert(delta)).toBe(false);

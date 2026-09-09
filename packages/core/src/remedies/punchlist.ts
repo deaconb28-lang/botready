@@ -196,6 +196,36 @@ const REMEDIES: Record<string, Remedy> = {
     rationale:
       'Worth the most points on this list and last in it, because it is a rule in a product in front of your application and usually owned by someone other than whoever is reading this. Start the conversation now and do the quick wins above while it happens.',
   },
+  /**
+   * The three actionability checks added in scoring 1.4.
+   *
+   * Without an entry here a finding is silently dropped from the punch list —
+   * buildPunchList skips any key it has no remedy for — which would have
+   * reproduced the problem splitting the category was meant to solve: a score
+   * with nothing to do about it.
+   */
+  contact_reachable: {
+    title: 'Link your phone number and put it in your structured data',
+    effort: 'minutes',
+    owner: 'content',
+    rationale:
+      'The shortest item on this list and the one most often asked of an assistant. Wrap the number you already publish in a tel: link, the address in a mailto:, and add telephone and email to your Organization block. Nothing here needs a decision from anybody.',
+  },
+  action_declared: {
+    title: 'Declare what can be done here, not only what you are',
+    effort: 'minutes',
+    owner: 'content',
+    file: 'jsonld.html',
+    rationale:
+      'One block of JSON-LD naming an OrderAction, ReserveAction or the equivalent, pointing at the page that already does it. An agent that can only describe you sends somebody to a competitor it can act through.',
+  },
+  action_not_js_only: {
+    title: 'Render the contact and booking links on the server',
+    effort: 'hours',
+    owner: 'frontend',
+    rationale:
+      'Narrower than rendering the whole page: the links that let somebody act need to exist in the HTML, whatever the rest of the app does. Usually the header and footer, which are the cheapest part to move.',
+  },
   js_dependency_ratio: {
     title: 'Serve your page text without JavaScript',
     effort: 'days',

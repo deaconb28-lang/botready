@@ -15,6 +15,7 @@
 
 import rawCatalog from '../checks.json';
 import v12 from '../catalogs/v1.2.json';
+import v13 from '../catalogs/v1.3.json';
 import type { AgentDef, Catalog, CategoryDef, CategoryKey, CheckDef } from './types';
 
 export const catalog = rawCatalog as unknown as Catalog;
@@ -22,6 +23,10 @@ export const catalog = rawCatalog as unknown as Catalog;
 /** Every catalog version this build can score against, newest first. */
 export const CATALOGS: Record<string, Catalog> = {
   [catalog.scoringVersion]: catalog,
+  // 1.3 had four actionability checks, three of which a business with no API
+  // could only fail or be exempted from. Rows scored under it are scored
+  // against that catalog, which is what they meant when they were written.
+  '1.3': v13 as unknown as Catalog,
   // 1.2 had no sector profiles, so anything scored under it is scored against
   // every check, which is what those rows meant when they were written.
   '1.2': v12 as unknown as Catalog,

@@ -359,5 +359,35 @@
       "urls_seen": 214
     },
     "durationMs": 180
+  },
+  {
+    "key": "contact_reachable",
+    "status": "warn",
+    "observed": {
+      "tel_links": 0,
+      "mailto_links": 1,
+      "json_ld_contact": false
+    },
+    "durationMs": 0
+  },
+  {
+    "key": "action_declared",
+    "status": "fail",
+    "observed": {
+      "action_types": [],
+      "offer_nodes": 0
+    },
+    "durationMs": 0
+  },
+  {
+    "key": "action_not_js_only",
+    "status": "pass",
+    "observed": {
+      "raw_contacts": 1,
+      "rendered_contacts": 1,
+      "raw_actions": 0,
+      "rendered_actions": 0
+    },
+    "durationMs": 0
   }
 ]

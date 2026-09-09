@@ -152,6 +152,12 @@ function describe(key: string, result: CheckResult, all: CheckResult[]): Written
       return forms(o, failed);
     case 'no_wall_on_docs':
       return wall(o);
+    case 'contact_reachable':
+      return contact(o, failed);
+    case 'action_declared':
+      return declaredAction(o, failed);
+    case 'action_not_js_only':
+      return actionJs(o);
     case 'cache_headers':
       return cache(o, failed);
     case 'sitemap_lastmod_real':
@@ -505,6 +511,64 @@ function manifest(o: Record<string, unknown>): Written {
     headline: 'No agent manifest under /.well-known',
     body: 'Nothing declares what an agent can do here beyond reading. This is the newest and least settled of the conventions we check, which is why it is worth five points, but it is also the only one that describes actions rather than text.',
     evidence: probed.map((p) => `GET ${p.path} → ${p.status || 'no reply'}`).join('\n'),
+  };
+}
+
+/**
+ * The three writers below are the point of splitting this category.
+ *
+ * Actionability used to be four checks a business with no API could only fail
+ * or be exempted from, so 38 of 44 local businesses scored zero on it — a
+ * number with nothing to act on and no way to show progress. Each of these
+ * names one thing, in the units it was measured in, with a fix somebody can
+ * do this afternoon.
+ */
+function contact(o: Record<string, unknown>, failed: boolean): Written {
+  const tel = num(o.tel_links);
+  const mail = num(o.mailto_links);
+  const structured = o.json_ld_contact === true;
+
+  return {
+    headline: failed
+      ? 'No phone number or email an agent could pass on'
+      : structured
+        ? 'Your contact details are in your structured data but not linked on the page'
+        : 'Your contact details are linked but not in your structured data',
+    body: failed
+      ? 'The most common question anybody asks an assistant about a business is how to reach it. We found no tel: or mailto: link and no telephone or email in your structured data. A number set as an image, or as plain text with no link, is a number an agent cannot dial or read out.'
+      : 'One of the two is enough to be usable and both together leave no room for a wrong guess: the link is what a person taps, the structured data is what an agent quotes.',
+    evidence: `tel: links        ${tel}\nmailto: links     ${mail}\nin structured data ${structured ? 'yes' : 'no'}`,
+  };
+}
+
+function declaredAction(o: Record<string, unknown>, failed: boolean): Written {
+  const types = (o.action_types ?? []) as string[];
+  const offers = num(o.offer_nodes);
+
+  return {
+    headline: failed
+      ? 'Nothing on this page says what can be done here'
+      : 'You describe what you sell without saying how to get it',
+    body: failed
+      ? 'Booking a table, ordering, requesting a quote, subscribing — a schema.org Action says which of those your site supports and where. Without one an agent can describe you and cannot act for you, which is the difference this whole category measures. It is one block of JSON-LD.'
+      : `We found ${count(offers)} ${plural(offers, 'Offer')} and no Action. An Offer says what is sold; an OrderAction or ReserveAction says how somebody gets it.`,
+    evidence: `declared actions  ${types.length > 0 ? types.join(', ') : 'none'}\noffer nodes       ${offers}`,
+  };
+}
+
+function actionJs(o: Record<string, unknown>): Written {
+  const rawContacts = num(o.raw_contacts);
+  const renderedContacts = num(o.rendered_contacts);
+  const rawActions = num(o.raw_actions);
+  const renderedActions = num(o.rendered_actions);
+  const nothingRaw = rawContacts === 0 && rawActions === 0;
+
+  return {
+    headline: nothingRaw
+      ? 'The way to act on this page only exists after JavaScript runs'
+      : 'Some of the ways to act on this page only appear after JavaScript runs',
+    body: 'We compared the raw response against the rendered page. A booking button or a phone number that a script adds is one a non-rendering client never sees — and those are most of the clients this report is about.',
+    evidence: `                raw   rendered\ncontact links   ${rawContacts}     ${renderedContacts}\ndeclared actions ${rawActions}     ${renderedActions}`,
   };
 }
 

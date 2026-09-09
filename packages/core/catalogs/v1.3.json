@@ -1,5 +1,5 @@
 {
-  "scoringVersion": "1.4",
+  "scoringVersion": "1.3",
   "grades": [
     {
       "grade": "A",
@@ -333,42 +333,6 @@
       "rationale": "Docs behind a login are docs no client reads. Small because it is rare, and because when it is deliberate it is a legitimate choice we should not punish hard.",
       "observed_shape": {
         "walled_paths": []
-      }
-    },
-    {
-      "key": "contact_reachable",
-      "category": "actionability",
-      "points": 4,
-      "label": "A person is reachable in a way an agent can hand over",
-      "rationale": "The most common thing anybody asks an assistant about a business is how to reach it. A tel: or mailto: link, or a telephone in your JSON-LD, is something an agent can read out or dial. A phone number set as an image, or as text with no link, is a number it cannot pass on. Every business has this answer already; this check is about whether it is machine-readable.",
-      "observed_shape": {
-        "tel_links": null,
-        "mailto_links": null,
-        "json_ld_contact": null
-      }
-    },
-    {
-      "key": "action_declared",
-      "category": "actionability",
-      "points": 4,
-      "label": "What can be done here is declared, not just described",
-      "rationale": "Booking a table, ordering, requesting a quote, subscribing: a schema.org Action or an Offer says which of those your site supports. Without one an agent can describe you and cannot act for you, which is the difference the whole category is measuring. This is the check most sites can pass with one block of JSON-LD.",
-      "observed_shape": {
-        "action_types": [],
-        "offer_nodes": null
-      }
-    },
-    {
-      "key": "action_not_js_only",
-      "category": "actionability",
-      "points": 3,
-      "label": "The way to act is in the HTML, not only after JavaScript",
-      "rationale": "A booking button that only exists once a script has run is a button no non-rendering client can find. Measured by comparing the raw response against the rendered DOM: contact links or declared actions present in one and not the other.",
-      "observed_shape": {
-        "raw_contacts": null,
-        "rendered_contacts": null,
-        "raw_actions": null,
-        "rendered_actions": null
       }
     },
     {

@@ -144,7 +144,18 @@ function score(results: CheckResult[], version?: string): ScanScore;  // pure, n
 
 ## Categories and weights
 
-Live in `checks.json`. Current v1.3 weights: retrievability 25, discovery 20, representation 20, structure 15, actionability 15, freshness 5. Weights are published on the site, so changing them is a versioned event, not a tweak. v1.2 is archived under `packages/core/catalogs/` and still scorable, because rows written under it recorded that version.
+Live in `checks.json`. Current v1.4 weights: retrievability 25, discovery 20, representation 20, structure 15, actionability 15, freshness 5. Weights are published on the site, so changing them is a versioned event, not a tweak. v1.2 and v1.3 are archived under `packages/core/catalogs/` and still scorable, because rows written under them recorded that version.
+
+Category weights did not change in 1.4; the checks inside actionability did. It
+was four checks — an agent manifest, API docs, form semantics, a wall on docs —
+three of which a business with no API could only fail or be exempted from, so
+38 of 44 local businesses in a 44-site sweep scored exactly zero on the
+category. That is not a signal, it is a wall: nothing to act on and no way to
+show progress. 1.4 adds `contact_reachable`, `action_declared` and
+`action_not_js_only`, which any business can pass and most can fix in an
+afternoon, taking the category from 15 catalog points to 26. Points inside a
+category are normalised against the category weight, so a check is worth less
+of the total than its catalog number — see `effectivePoints`.
 
 ## Sector profiles
 

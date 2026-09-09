@@ -393,5 +393,38 @@
       "urls_seen": 214
     },
     "durationMs": 180
+  },
+  {
+    "key": "contact_reachable",
+    "status": "pass",
+    "observed": {
+      "tel_links": 2,
+      "mailto_links": 1,
+      "json_ld_contact": true
+    },
+    "durationMs": 0
+  },
+  {
+    "key": "action_declared",
+    "status": "pass",
+    "observed": {
+      "action_types": [
+        "OrderAction",
+        "SearchAction"
+      ],
+      "offer_nodes": 3
+    },
+    "durationMs": 0
+  },
+  {
+    "key": "action_not_js_only",
+    "status": "pass",
+    "observed": {
+      "raw_contacts": 3,
+      "rendered_contacts": 3,
+      "raw_actions": 2,
+      "rendered_actions": 2
+    },
+    "durationMs": 0
   }
 ]
