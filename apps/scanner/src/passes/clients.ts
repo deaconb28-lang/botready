@@ -6,7 +6,7 @@
  * Everything here is an observation. Nothing in this file knows what a point is.
  */
 
-import { catalog, type AgentDef, type CheckResult, type PerAgentFetch } from '@botready/core';
+import { catalog, type AgentDef, type CheckResult, type CheckStatus, type PerAgentFetch } from '@botready/core';
 
 import { crawlSequentially, guardedFetch, type FetchOutcome } from '../fetcher';
 import { CLIENT_PROBE_TIMEOUT_MS, PAGE_DELAY_MS } from '../version';
@@ -103,22 +103,65 @@ function parityCheck(
     return { key: 'agent_status_parity', status: 'error', observed, durationMs };
   }
 
-  const controlClass = klass(control.outcome.status);
   const agents = probes.filter((p) => p.agent.role === 'agent');
-  const disagreeing = agents.filter((p) => klass(p.outcome.status) !== controlClass);
+  const status = parityStatus(
+    control.outcome.status,
+    agents.map((p) => p.outcome.status),
+  );
+  return { key: 'agent_status_parity', status, observed, durationMs };
+}
 
-  if (disagreeing.length === 0) {
-    return { key: 'agent_status_parity', status: 'pass', observed, durationMs };
-  }
+/**
+ * The parity rule, with no fetch in it.
+ *
+ * Pure and exported so the rule is tested as a rule rather than through a
+ * fixture server, which is how the one bug it has had went unnoticed: the
+ * agreement test sat above the control test, so a site answering 403 to all
+ * five clients had no disagreement, took the early return, and scored full
+ * points for perfect parity. doctorswithoutborders.org did exactly that — 403
+ * from every client including the Chrome control — and came out a B 71.
+ *
+ * Uniform refusal is agreement in the arithmetic and the opposite of what this
+ * check exists to reward, so the order matters and is now fixed by a test.
+ *
+ *   control unreachable   error — our problem, not a finding about the site
+ *   control refused       warn  — nobody can read it, but that is not this
+ *                                 check's finding, and failing four agents for
+ *                                 a wall they all hit would blame them for it
+ *   all agree with 2xx    pass
+ *   any disagreement      fail  — the headline the product exists for
+ */
+export function parityStatus(controlStatus: number, agentStatuses: readonly number[]): CheckStatus {
+  if (controlStatus === 0) return 'error';
+  const controlClass = klass(controlStatus);
+  if (controlClass !== '2xx') return 'warn';
+  return agentStatuses.every((s) => klass(s) === controlClass) ? 'pass' : 'fail';
+}
 
-  // A control that is itself an error means nobody can read the page. That is a
-  // real finding but not this check's finding, so it warns rather than failing
-  // every agent for a problem they all share.
-  if (controlClass !== '2xx') {
-    return { key: 'agent_status_parity', status: 'warn', observed, durationMs };
-  }
-
-  return { key: 'agent_status_parity', status: 'fail', observed, durationMs };
+/**
+ * Whether the control's response describes the site at all.
+ *
+ * The three checks below read latency, redirects and cache headers off the
+ * control response, which is only the site's response when the site actually
+ * answered. A 403 from a WAF has its own time to first byte, its own redirect
+ * count and no ETag, and reporting those as the site's would be three false
+ * findings about a page we never saw.
+ *
+ * They skip rather than error in that case. Error is zero points inside the
+ * denominator, which would dock a site for a wall its WAF put in front of us;
+ * skip leaves the denominator, which is what "we could not measure this"
+ * honestly costs.
+ *
+ * A 3xx counts as answering, and the difference from parityStatus above —
+ * which demands a strict 2xx — is deliberate rather than an oversight. The
+ * fetcher follows redirects, so a 3xx here is the final status after the hop
+ * cap was hit: the site was talking to us and redirect_depth is about to fail
+ * it for exactly that, which is the right finding in the right place. Parity
+ * is stricter because a redirect-capped control is not a usable baseline to
+ * compare four other clients against.
+ */
+function measuredTheSite(outcome: FetchOutcome): boolean {
+  return outcome.status >= 200 && outcome.status < 400;
 }
 
 function latencyCheck(outcome: FetchOutcome): CheckResult {
@@ -129,6 +172,10 @@ function latencyCheck(outcome: FetchOutcome): CheckResult {
   };
   if (outcome.status === 0) {
     return { key: 'raw_fetch_latency', status: 'error', observed, durationMs: outcome.totalMs };
+  }
+  // How fast a block page came back is not how fast the site is.
+  if (!measuredTheSite(outcome)) {
+    return { key: 'raw_fetch_latency', status: 'skip', observed, durationMs: outcome.totalMs };
   }
   // fails above 2500 ms, per checks.json. Warn from 1200, because a page an
   // agent has to wait a second for is measurably worse without being broken.
@@ -145,6 +192,12 @@ function redirectCheck(outcome: FetchOutcome): CheckResult {
   if (outcome.status === 0 && outcome.redirects.length === 0) {
     return { key: 'redirect_depth', status: 'error', observed, durationMs: outcome.totalMs };
   }
+  // A refused request's hop count is the WAF's chain, not the site's. Judged
+  // on the final status rather than on status 0, so a 403 after two hops is
+  // not scored as a clean two-hop site.
+  if (!measuredTheSite(outcome)) {
+    return { key: 'redirect_depth', status: 'skip', observed, durationMs: outcome.totalMs };
+  }
   // fails above 3 hops, per checks.json.
   const status =
     outcome.redirects.length > 3 ? 'fail' : outcome.redirects.length > 1 ? 'warn' : 'pass';
@@ -158,6 +211,11 @@ function cacheHeaderCheck(outcome: FetchOutcome): CheckResult {
 
   if (outcome.status === 0) {
     return { key: 'cache_headers', status: 'error', observed, durationMs: outcome.totalMs };
+  }
+  // A block page has no ETag, and failing the site for that would be a
+  // finding about somebody else's error page.
+  if (!measuredTheSite(outcome)) {
+    return { key: 'cache_headers', status: 'skip', observed, durationMs: outcome.totalMs };
   }
   const status = lastModified || etag ? 'pass' : 'fail';
   return { key: 'cache_headers', status, observed, durationMs: outcome.totalMs };
