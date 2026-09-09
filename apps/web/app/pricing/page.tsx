@@ -56,32 +56,19 @@ interface Tier {
  * live engine, and the action plane generates fixes but proves nothing yet.
  * Rounding either up to "built" would be the same species of claim this
  * product exists to catch on other people's sites.
+ *
+ * The glosses are phrases rather than sentences, because these render as one
+ * row beside their state chips. Each one only has to say which plane it is;
+ * the section above has already said what the tier does.
  */
-const PLANES: Array<{ icon: string; name: string; body: string; state: 'built' | 'part' | 'none' }> = [
-  {
-    icon: '🔍',
-    name: 'The site',
-    body: 'What each AI client got back from the same URL, scored and public.',
-    state: 'built',
-  },
-  {
-    icon: '🗣️',
-    name: 'The answers',
-    body: `What an assistant says when asked about your category. ${LIVE_ENGINES.length} of ${ENGINES.length} engines live.`,
-    state: 'part',
-  },
-  {
-    icon: '🤖',
-    name: 'The crawlers',
-    body: 'Which fetches were provably the crawler they claimed to be, from your own logs.',
-    state: 'built',
-  },
-  {
-    icon: '🧵',
-    name: 'One timeline',
-    body: 'Your change, then the crawler, then the answer — as cause and effect.',
-    state: 'none',
-  },
+/** How a plane's state reads on its chip. Short enough not to wrap a column. */
+const STATE_LABEL = { built: 'Built', part: 'Part', none: 'Not yet' } as const;
+
+const PLANES: Array<{ name: string; body: string; state: 'built' | 'part' | 'none' }> = [
+  { name: 'The site', body: 'what each client retrieved', state: 'built' },
+  { name: 'The answers', body: `${LIVE_ENGINES.length} of ${ENGINES.length} engines live`, state: 'part' },
+  { name: 'The crawlers', body: 'proved, not claimed', state: 'built' },
+  { name: 'One timeline', body: 'cause and effect', state: 'none' },
 ];
 
 const TIERS: Tier[] = [
@@ -220,135 +207,118 @@ export default function PricingPage() {
             Its own band rather than a fifth card, because a card in the grid
             reads as something you can buy and this is a waiting list.
 
-            Built out rather than teased. Somebody deciding whether to wait for
-            this needs four things: what it does, what already exists under it,
-            what it costs, and what we will not do. Withholding any of them
-            makes the section an advertisement for a product that does not
-            exist, which is the one thing it must not be. The price is the one
-            from the cost model in docs/platform-architecture.md, and the
-            arithmetic under it is derived from engines.json rather than
-            retyped, so an engine's cost changing moves the justification with
-            it. */}
-        <section className="edge mt-[18px] rounded-[20px] bg-white p-[30px] shadow-hard-4 sm:p-[38px]" aria-labelledby="whats-next">
-          <div className="grid items-start gap-9 lg:grid-cols-[1.15fr_1fr]">
+            Dense on purpose. The first version of this gave each of the four
+            things a reader needs — what it does, what exists under it, what it
+            costs, what it will never do — its own headed block, and the band
+            came out taller than the three tiers above it put together. A
+            waiting list that outweighs the products is the wrong shape
+            whatever it says, so the same four answers are here at a quarter of
+            the height: the planes are one row of glosses rather than four
+            cards of prose, and the price justification and the two refusals
+            are one line each. Nothing was dropped; it is all said shorter. */}
+        <section className="edge mt-[18px] rounded-[20px] bg-white p-[26px] shadow-hard-4 sm:p-[32px]" aria-labelledby="whats-next">
+          {/* Two columns from md rather than lg. Stacked, the illustration
+              panel stretched to the full width of the band and became a
+              near-square of empty tint with a small robot in the middle —
+              which is where most of this section's height went at tablet
+              widths. */}
+          <div className="grid items-center gap-7 md:grid-cols-[1.3fr_1fr]">
             <div>
               <span className="eyebrow text-placeholder">Not for sale yet</span>
-              <h2 id="whats-next" className="display-tight mt-3 text-[clamp(28px,3.4vw,40px)]">
+              <h2 id="whats-next" className="display-tight mt-2 text-[clamp(25px,3vw,34px)]">
                 The other half of the question
               </h2>
-              <p className="mt-3 max-w-[46ch] text-[16px] leading-[1.6] text-muted">
-                Everything above is measured on one site at a time. This is the whole category at once — every engine, every
-                rival, one timeline. Not finished, and we would rather build it with a few people than announce it to everyone.
+              <p className="mt-[10px] max-w-[50ch] text-[15px] leading-[1.55] text-muted">
+                Everything above measures one site. This is the whole category at once, and we would rather build it with a
+                few people than announce it.
               </p>
-              <div className="mt-5 flex items-baseline gap-[9px]">
-                <span className="display-tight text-[38px]">{EARLY_ACCESS.scale.label}</span>
-                <span className="font-mono text-[12.5px] text-quiet">{EARLY_ACCESS.scale.cadence}, when it opens</span>
-              </div>
-              <a
-                href={contactHref('Early access')}
-                className="edge mt-5 inline-block rounded-[12px] bg-lime px-[26px] py-[14px] font-body text-[15px] font-bold text-ink no-underline shadow-hard-3 transition-colors duration-150 hover:bg-white"
-              >
-                Ask for early access
-              </a>
 
-              <ul className="m-0 mt-7 grid list-none content-start gap-[13px] p-0">
+              <ul className="m-0 mt-4 grid list-none gap-x-6 gap-y-[8px] p-0 sm:grid-cols-2">
                 {[
-                  ['🗣️', 'Every engine asked, not one — answers side by side'],
-                  ['📊', 'Your whole category ranked, week over week'],
-                  ['💸', 'What the visits an assistant sent you were worth'],
-                  ['🧵', 'One timeline: your change, the crawlers, then the answers'],
+                  ['🗣️', 'Every engine, side by side'],
+                  ['📊', 'Your category ranked, weekly'],
+                  ['💸', 'What an assistant’s visits were worth'],
+                  ['🧵', 'All three on one timeline'],
                 ].map(([icon, line]) => (
-                  <li key={line} className="grid grid-cols-[22px_1fr] gap-[10px] text-[15px] leading-[1.5] text-muted">
-                    <span aria-hidden className="text-[16px] leading-[1.4]">
+                  <li key={line} className="grid grid-cols-[20px_1fr] gap-[8px] text-[14px] leading-[1.45] text-muted">
+                    <span aria-hidden className="text-[14px] leading-[1.4]">
                       {icon}
                     </span>
                     <span>{line}</span>
                   </li>
                 ))}
               </ul>
+
+              {/* Price and button on one line rather than stacked, which is
+                  most of the height the old version spent here. */}
+              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+                <span className="display-tight text-[32px]">{EARLY_ACCESS.scale.label}</span>
+                <span className="font-mono text-[12px] text-quiet">{EARLY_ACCESS.scale.cadence}, when it opens</span>
+                <a
+                  href={contactHref('Early access')}
+                  className="edge rounded-[12px] bg-lime px-[22px] py-[12px] font-body text-[14.5px] font-bold text-ink no-underline shadow-hard-3 transition-colors duration-150 hover:bg-white"
+                >
+                  Ask for early access
+                </a>
+              </div>
             </div>
 
-            {/* The claim as a shape. One question up, several engines back,
-                ranked — which is the whole difference between this plane and
-                the scan above it. */}
-            <div className="edge rounded-[18px] bg-surface-alt p-5 shadow-hard-3 sm:p-6">
-              <ScaleBot />
-              <p className="mt-4 border-t-2 border-hairline-4 pt-4 font-mono text-[11.5px] leading-[1.5] text-subtle-2">
+            {/* The claim as a shape: one question up, several engines back,
+                ranked — the whole difference between this plane and the scan. */}
+            {/* Capped on a phone too, where it does still stack. */}
+            <div className="edge mx-auto w-full max-w-[330px] rounded-[16px] bg-surface-alt p-4 shadow-hard-3 md:max-w-none">
+              <div className="mx-auto max-w-[300px]">
+                <ScaleBot />
+              </div>
+              <p className="mt-3 border-t-2 border-hairline-4 pt-3 text-center font-mono text-[11px] text-subtle-2">
                 {ENGINES.length} engines in the catalog, {LIVE_ENGINES.length} live today
               </p>
             </div>
           </div>
 
-          {/* What already exists under it. A waiting list is easier to join
-              when three quarters of the machinery is already running, and
-              saying which quarter is not is what makes the other three
+          {/* What already exists under it, as four glosses on one row. A
+              waiting list is easier to join when most of the machinery is
+              running, and saying which part is not is what makes the rest
               believable. */}
-          <div className="mt-8 border-t border-hairline-4 pt-7">
-            <span className="eyebrow text-placeholder">Four planes, one timeline</span>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {PLANES.map((plane) => (
-                <div key={plane.name} className="edge rounded-[14px] bg-surface-alt p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <span aria-hidden className="text-[17px] leading-none">
-                      {plane.icon}
-                    </span>
-                    <span
-                      className={cx(
-                        'edge rounded-[99px] px-[9px] py-[3px] font-mono text-[10px] uppercase tracking-[0.1em]',
-                        plane.state === 'built' ? 'bg-lime text-ink' : plane.state === 'part' ? 'bg-amber text-ink' : 'bg-white text-subtle-2',
-                      )}
-                    >
-                      {plane.state === 'built' ? 'Built' : plane.state === 'part' ? 'Part built' : 'Not built'}
-                    </span>
-                  </div>
-                  <div className="mt-3 font-body text-[14.5px] font-semibold text-ink">{plane.name}</div>
-                  <p className="mt-[6px] text-[13px] leading-[1.5] text-muted">{plane.body}</p>
-                </div>
-              ))}
-            </div>
+          <div className="mt-6 grid gap-x-7 gap-y-4 border-t border-hairline-4 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+            {PLANES.map((plane) => (
+              // Name over gloss rather than beside it. Inline, the four
+              // columns wrapped at different words and left hanging second
+              // lines that read as broken rather than as columns.
+              <div key={plane.name} className="grid grid-cols-[auto_1fr] items-start gap-x-[9px]">
+                <span
+                  className={cx(
+                    'edge mt-[2px] flex-none rounded-[99px] px-[7px] py-[2px] font-mono text-[9.5px] uppercase tracking-[0.08em]',
+                    plane.state === 'built' ? 'bg-lime text-ink' : plane.state === 'part' ? 'bg-amber text-ink' : 'bg-white text-subtle-2',
+                  )}
+                >
+                  {STATE_LABEL[plane.state]}
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-body text-[13.5px] font-semibold leading-[1.3] text-ink">{plane.name}</span>
+                  <span className="mt-[1px] block text-[12.5px] leading-[1.4] text-muted">{plane.body}</span>
+                </span>
+              </div>
+            ))}
           </div>
 
-          {/* Why the number is the number. Printed because a reader deciding
-              whether to build a year around us is entitled to know whether the
-              price is a cost or a guess, and because it is the same table that
-              says why the $5 plan cannot carry this. */}
-          <div className="mt-7 grid gap-6 border-t border-hairline-4 pt-7 lg:grid-cols-[1fr_1fr]">
-            <div>
-              <span className="eyebrow text-placeholder">Why {EARLY_ACCESS.scale.label.replace('From ', '')}</span>
-              <p className="mt-3 max-w-[48ch] text-[14.5px] leading-[1.6] text-muted">
-                Asking is the cost. {WATCHED_PER_WEEK} questions a week across every engine in our catalog is about{' '}
-                <span className="font-mono text-[13.5px] text-ink">${monthlyAskCostUsd(WATCHED_PER_WEEK)}</span> a month of model calls before we have
-                paid for anything else, and that figure is read from the same catalog the prober uses.
-              </p>
-              <p className="mt-3 max-w-[48ch] text-[14.5px] leading-[1.6] text-muted">
-                Which is why cadence is a plan and not a switch: weekly and daily differ by seven times the cost, so a toggle
-                that quietly multiplied our bill would eventually be paid for by making the answers worse.
-              </p>
-            </div>
-            <div>
-              <span className="eyebrow text-placeholder">Two things it will never do</span>
-              <ul className="m-0 mt-3 grid list-none gap-[11px] p-0">
-                {[
-                  ['🚫', 'Quote how many people asked something', 'Nobody can measure that without buying somebody else’s conversation logs, and a number we cannot check is a number we will not print.'],
-                  ['✍️', 'Write your content for you', 'The write side we want is narrower: a fix, applied, then proved by a re-scan. Generating a page and hoping is the part of this category that ages worst.'],
-                ].map(([icon, title, body]) => (
-                  <li key={title} className="grid grid-cols-[22px_1fr] gap-[10px]">
-                    <span aria-hidden className="text-[15px] leading-[1.5]">
-                      {icon}
-                    </span>
-                    <span>
-                      <span className="font-body text-[14.5px] font-semibold text-ink">{title}</span>
-                      <span className="mt-[3px] block text-[13px] leading-[1.5] text-muted">{body}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* The price justification and the two refusals, one line each.
+              Both were headed blocks and neither needed to be: the figure is
+              derived from engines.json so it cannot go stale, and the refusals
+              are constraints rather than features. */}
+          <div className="mt-5 grid gap-x-8 gap-y-[10px] border-t border-hairline-4 pt-4 lg:grid-cols-2">
+            <p className="text-[13px] leading-[1.55] text-quiet">
+              <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-placeholder">Why the price</span>{' '}
+              — {WATCHED_PER_WEEK} questions a week across {ENGINES.length} engines is about{' '}
+              <span className="font-mono text-[12px] text-ink">${monthlyAskCostUsd(WATCHED_PER_WEEK)}</span> a month of model
+              calls. Which is why cadence is a plan and not a switch.
+            </p>
+            <p className="text-[13px] leading-[1.55] text-quiet">
+              <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-placeholder">Never</span> — no bought
+              conversation logs, so no invented prompt volumes. And no generated content: the write side we want is a fix,
+              applied, then proved by a re-scan.
+            </p>
           </div>
-
-          <p className="mt-7 border-t border-hairline-4 pt-5 text-[14px] leading-[1.6] text-quiet">
-            The timeline is not built yet. The price is here because you will want to know it before you build a year around us.
-          </p>
         </section>
 
         {/* Enterprise, which is a conversation rather than a tier.
