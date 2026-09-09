@@ -54,7 +54,21 @@ export default async function ScanPage({ params }: PageProps) {
     redirect(`/scan/live?id=${id}`);
   }
 
-  const checkedLabel = `scanned ${relativeTime(scan.finished_at ?? scan.created_at)}`;
+  /**
+   * Which host the result is about.
+   *
+   * A great many small-business sites answer on www and not on the bare domain
+   * — Squarespace certificates cover one and not the other — and the scanner
+   * now retries the sibling rather than reporting the silence as the site's.
+   * When that happened the reader has to be told: a scan of www.example.com is
+   * not a scan of example.com, and they typed the other one. It also matters
+   * on its own account, because a bare domain that will not serve TLS is
+   * losing more than agent traffic.
+   */
+  const readUrl = scan.effective_url ?? scan.url;
+  const checkedLabel = scan.effective_url
+    ? `scanned ${relativeTime(scan.finished_at ?? scan.created_at)} · you asked for ${bareHost(scan.url)}, which did not answer`
+    : `scanned ${relativeTime(scan.finished_at ?? scan.created_at)}`;
   const user = await currentUser();
   const owned = user ? await hasFixpackFor(user.id, view.site.domain) : false;
   // Owns a pack, but not this one: the button offers to add this domain at the
@@ -72,7 +86,7 @@ export default async function ScanPage({ params }: PageProps) {
           <ResultsView
             scanId={id}
             domain={site.domain}
-            url={scan.url}
+            url={readUrl}
             checkedLabel={checkedLabel}
             score={score}
             results={results}
@@ -84,10 +98,19 @@ export default async function ScanPage({ params }: PageProps) {
             standing={standing}
           />
         ) : (
-          <UnscoredView domain={site.domain} url={scan.url} checkedLabel={checkedLabel} status={scan.status} message={scan.error_message} results={results} />
+          <UnscoredView domain={site.domain} url={readUrl} checkedLabel={checkedLabel} status={scan.status} message={scan.error_message} results={results} />
         )}
       </main>
       <SiteFooter />
     </div>
   );
+}
+
+/** Hostname only, for a sentence rather than for a link. */
+function bareHost(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
 }

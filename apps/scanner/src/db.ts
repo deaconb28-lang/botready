@@ -66,13 +66,14 @@ export async function markRunning(scanId: string): Promise<void> {
 export async function markFinished(
   scanId: string,
   status: Extract<ScanStatus, 'complete' | 'blocked' | 'error'>,
-  opts: { pagesCrawled: number; errorMessage?: string },
+  opts: { pagesCrawled: number; errorMessage?: string; effectiveUrl?: string },
 ): Promise<void> {
   await sql`
     update scans
        set status        = ${status},
            pages_crawled = ${opts.pagesCrawled},
            error_message = ${opts.errorMessage ?? null},
+           effective_url = ${opts.effectiveUrl ?? null},
            finished_at   = now()
      where id = ${scanId}
   `;

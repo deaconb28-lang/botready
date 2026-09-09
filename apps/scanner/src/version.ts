@@ -35,8 +35,37 @@ function pageDelayMs(): number {
   return Number.isFinite(override) && override >= 0 ? override : 1000;
 }
 
-/** Per-request ceiling on a plain fetch. */
-export const FETCH_TIMEOUT_MS = 15_000;
+/**
+ * Per-request ceiling on a plain fetch.
+ *
+ * Thirty seconds, not fifteen. At fifteen, npr.org failed every attempt hours
+ * apart with "No response within 14986 ms" on both apex and www — and NPR was
+ * not down. A ceiling low enough to time out a large, slow, working origin
+ * turns "slow" into "unreachable", and the person reading the result concludes
+ * their site is broken when what we measured was our own patience.
+ *
+ * Slow is a finding. Time to first byte is already a scored check, so an
+ * origin that takes twenty seconds is reported as an origin that takes twenty
+ * seconds, which is the truth and is worth knowing. Timing it out reports
+ * nothing at all.
+ */
+export const FETCH_TIMEOUT_MS = 30_000;
+
+/**
+ * The ceiling on the five parity probes, which is deliberately shorter.
+ *
+ * Pass A asks five clients for the same URL and compares the answers, so
+ * latency is part of the measurement rather than an obstacle to it — and five
+ * probes a second apart at thirty seconds each is two and a half minutes of
+ * worst case on one check. Twelve seconds is long enough that a working origin
+ * answers and short enough that five of them cannot run away with the scan.
+ *
+ * A probe that times out is recorded as a probe that timed out. It is not
+ * retried at the longer ceiling, because "this client waited twelve seconds
+ * and the control did not" is exactly the kind of divergence Pass A exists to
+ * find.
+ */
+export const CLIENT_PROBE_TIMEOUT_MS = 12_000;
 
 /** Per-request ceiling on the headless render, which is allowed to be slower. */
 export const RENDER_TIMEOUT_MS = 30_000;

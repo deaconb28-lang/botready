@@ -57,6 +57,12 @@ export interface ScanOutcome {
   /** Set when we were refused, naming what refused us and how. */
   blockedBy?: string;
   errorMessage?: string;
+  /**
+   * The origin that answered, when it is not the one asked for. Undefined in
+   * the ordinary case, so a value here always means the apex-or-www fallback
+   * fired and the reader is looking at a different hostname than they typed.
+   */
+  effectiveUrl?: string;
 }
 
 /**
@@ -111,6 +117,7 @@ export async function runScan(job: ScanJob): Promise<void> {
     pagesCrawled: outcome.pagesCrawled,
     ...(outcome.blockedBy ? { errorMessage: outcome.blockedBy } : {}),
     ...(outcome.errorMessage ? { errorMessage: outcome.errorMessage } : {}),
+    ...(outcome.effectiveUrl ? { effectiveUrl: outcome.effectiveUrl } : {}),
   });
 
   log.info('scan finished', {
@@ -178,6 +185,22 @@ export async function scan(url: string, onResults?: ProgressSink): Promise<ScanO
   results.push(...robots.results);
   await flush(robots.results);
 
+  /**
+   * From here on, the host that answered.
+   *
+   * probeRobots resolves apex-versus-www, because robots.txt is the one URL we
+   * may read before knowing whether we may read anything. Every request below
+   * has to use its answer: scanning `example.com` after learning that only
+   * `www.example.com` is listening would produce a page of transport errors
+   * about a hostname we already know is the wrong one.
+   *
+   * `url` stays in scope deliberately and is only used for the two error
+   * messages that are about the request the caller made.
+   */
+  const target = robots.effectiveUrl;
+  const switched = target === url ? {} : { effectiveUrl: target };
+  if (target !== url) log.info('the apex did not answer; reading www instead', { asked: url, reading: target });
+
   if (!robots.weAreAllowed) {
     log.info('robots.txt disallows us, stopping', { url, rule: robots.ourMatchedRule });
     return {
@@ -187,25 +210,27 @@ export async function scan(url: string, onResults?: ProgressSink): Promise<ScanO
       blockedBy: `Your robots.txt disallows ${ROBOTS_TOKEN} on this path${
         robots.ourMatchedRule ? ` (${robots.ourMatchedRule})` : ''
       }. We stopped there and did not read the page.`,
+      ...switched,
     };
   }
 
   // ---------------------------------------------------------------- 2. identity fetch
 
   await pause();
-  const identity = await guardedFetch(url);
+  const identity = await guardedFetch(target);
 
   if (identity.status === 0) {
     return {
       status: 'error',
       results,
       pagesCrawled: 0,
-      errorMessage: `We could not reach ${url}. ${identity.transportError ?? 'No response.'}`,
+      errorMessage: `We could not reach ${target}. ${identity.transportError ?? 'No response.'}`,
+      ...switched,
     };
   }
 
   if (identity.status === 401 || identity.status === 403 || identity.status === 429) {
-    log.info('the site refuses our scanner, stopping', { url, status: identity.status });
+    log.info('the site refuses our scanner, stopping', { url: target, status: identity.status });
     const mitigated = identity.headers['cf-mitigated'];
     return {
       status: 'blocked',
@@ -214,49 +239,50 @@ export async function scan(url: string, onResults?: ProgressSink): Promise<ScanO
       blockedBy: `This site answers ${ROBOTS_TOKEN} with HTTP ${identity.status}${
         mitigated ? ` (cf-mitigated: ${mitigated})` : ''
       }. We record that as refused and do not work around it.`,
+      ...switched,
     };
   }
 
   const rawHtml = identity.body;
-  const rawFacts = domFacts(rawHtml, url);
+  const rawFacts = domFacts(rawHtml, target);
 
   // ---------------------------------------------------------------- 3. the rest of Pass C
 
   await pause();
-  const passC = await runPassC(url, robots.robots);
+  const passC = await runPassC(target, robots.robots);
   results.push(...passC.results);
   await flush(passC.results);
 
   // ---------------------------------------------------------------- 4. Pass A
 
   await pause();
-  const passA = await runPassA(url);
+  const passA = await runPassA(target);
   results.push(...passA.results);
   await flush(passA.results);
 
   // ---------------------------------------------------------------- 5. Pass B
 
   await pause();
-  const render = await renderPage(url);
+  const render = await renderPage(target);
   const renderFailed = Boolean(render.error) || !render.html;
 
   if (renderFailed) {
-    log.warn('the render produced nothing', { url, error: render.error });
+    log.warn('the render produced nothing', { url: target, error: render.error });
   }
 
-  const comparison = compare(rawHtml, renderFailed ? '' : render.html, url);
-  const renderedFacts = renderFailed ? rawFacts : domFacts(render.html, url);
+  const comparison = compare(rawHtml, renderFailed ? '' : render.html, target);
+  const renderedFacts = renderFailed ? rawFacts : domFacts(render.html, target);
 
   // ---------------------------------------------------------------- 6. the rest
 
   await pause();
-  const negotiation = await probeContentNegotiation(url);
+  const negotiation = await probeContentNegotiation(target);
 
   await pause();
   let pages: CrawledPage[] = [];
   let pagesCrawled = 1;
   try {
-    const crawl = await crawlExtraPages(url, renderedFacts);
+    const crawl = await crawlExtraPages(target, renderedFacts);
     pages = crawl.pages;
     pagesCrawled = Math.min(crawl.pagesCrawled, MAX_PAGES_PER_SCAN);
   } catch (err) {
@@ -267,7 +293,7 @@ export async function scan(url: string, onResults?: ProgressSink): Promise<ScanO
   }
 
   const documents = documentChecks({
-    targetUrl: url,
+    targetUrl: target,
     rawResponse: identity,
     rawFacts,
     renderedFacts,
@@ -279,7 +305,7 @@ export async function scan(url: string, onResults?: ProgressSink): Promise<ScanO
   results.push(...documents);
   await flush(documents);
 
-  return { status: 'complete', results, pagesCrawled };
+  return { status: 'complete', results, pagesCrawled, ...switched };
 }
 
 function pause(): Promise<void> {

@@ -9,7 +9,7 @@
 import { catalog, type AgentDef, type CheckResult, type PerAgentFetch } from '@botready/core';
 
 import { crawlSequentially, guardedFetch, type FetchOutcome } from '../fetcher';
-import { PAGE_DELAY_MS } from '../version';
+import { CLIENT_PROBE_TIMEOUT_MS, PAGE_DELAY_MS } from '../version';
 
 export interface ClientProbe {
   agent: AgentDef;
@@ -41,7 +41,7 @@ export async function runPassA(url: string): Promise<PassAResult> {
       if (!agent) throw new Error(`No agent at index ${index}`);
       return {
         agent,
-        outcome: await guardedFetch(target, { userAgent: agent.ua }),
+        outcome: await guardedFetch(target, { userAgent: agent.ua, timeoutMs: CLIENT_PROBE_TIMEOUT_MS }),
       };
     },
   );

@@ -150,7 +150,14 @@ export type ScanTrigger = 'manual' | 'cron' | 'monitor' | 'index' | 'competitor'
 export interface ScanRow {
   id: string;
   site_id: string;
+  /** The exact URL requested. */
   url: string;
+  /**
+   * The origin that answered, when it differs from `url`. Null in the ordinary
+   * case, so a value here always means the apex-or-www fallback fired and the
+   * reader is looking at a hostname they did not type.
+   */
+  effective_url: string | null;
   status: ScanStatus;
   trigger: ScanTrigger;
   scanner_version: string | null;

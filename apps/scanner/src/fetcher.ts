@@ -259,7 +259,12 @@ function once(
     );
 
     req.on('timeout', () => {
-      req.destroy(new Error(`No response within ${Math.round(options.timeoutMs)} ms.`));
+      // Worded as a fact about their server rather than about our clock,
+      // because this string is shown to the reader verbatim and "no response
+      // within 14986 ms" reads as the scanner giving up on an arbitrary number.
+      // A server that did not answer in thirty seconds is a finding.
+      const seconds = Math.round(options.timeoutMs / 1000);
+      req.destroy(new Error(`Your server did not respond within ${seconds}s.`));
     });
     req.on('error', reject);
     req.end();

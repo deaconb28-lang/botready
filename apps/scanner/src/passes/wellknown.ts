@@ -16,6 +16,7 @@ import {
 } from '@botready/core';
 
 import { crawlSequentially, guardedFetch, type FetchOutcome } from '../fetcher';
+import { looksLikeWrongHost, siblingUrl } from '../host';
 import { isAllowed, parseRobots, type ParsedRobots } from '../robots';
 import { PAGE_DELAY_MS, ROBOTS_TOKEN } from '../version';
 
@@ -52,6 +53,12 @@ export interface RobotsProbe {
   weAreAllowed: boolean;
   ourMatchedRule: string;
   results: CheckResult[];
+  /**
+   * The origin that actually answered, which is not always the one asked for.
+   * The rest of the scan runs against this. Equal to the requested URL unless
+   * the apex-or-www fallback fired; see host.ts for when it may.
+   */
+  effectiveUrl: string;
 }
 
 export interface PassCResult {
@@ -65,8 +72,28 @@ export async function probeRobots(url: string, targetPath: string): Promise<Robo
   const results: CheckResult[] = [];
 
   const robotsStartedAt = performance.now();
-  const robotsUrl = atOrigin(url, '/robots.txt');
-  const robotsResponse = await guardedFetch(robotsUrl);
+  // robots.txt is the probe for which hostname answers, rather than a request
+  // of its own. It is the one URL we may fetch before knowing whether we are
+  // allowed to fetch anything, so resolving the host here costs nothing and
+  // keeps the ordering this file's header describes: permission first, page
+  // second. Probing with `/` instead would mean reading the site before
+  // reading its robots.txt.
+  let effectiveUrl = url;
+  let robotsResponse = await guardedFetch(atOrigin(url, '/robots.txt'));
+
+  if (robotsResponse.status === 0 && looksLikeWrongHost(robotsResponse.transportError ?? '')) {
+    const sibling = siblingUrl(url);
+    if (sibling) {
+      const retry = await guardedFetch(atOrigin(sibling, '/robots.txt'));
+      // Any HTTP response at all, including a 404, means something is
+      // listening there. A site with no robots.txt still has a hostname that
+      // answers, and that is the whole question being asked here.
+      if (retry.status !== 0) {
+        effectiveUrl = sibling;
+        robotsResponse = retry;
+      }
+    }
+  }
   const robotsMs = performance.now() - robotsStartedAt;
 
   const hasRobots = robotsResponse.status >= 200 && robotsResponse.status < 300;
@@ -87,6 +114,7 @@ export async function probeRobots(url: string, targetPath: string): Promise<Robo
     weAreAllowed: ours.allowed,
     ourMatchedRule: ours.matchedRule,
     results,
+    effectiveUrl,
   };
 }
 
