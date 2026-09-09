@@ -1,6 +1,6 @@
 import { catalog } from '@botready/core';
 
-import { CONTACT_EMAIL, EARLY_ACCESS, ENTERPRISE, PLAN_LIMITS, PRICING, SITE, absoluteUrl } from '@/lib/site';
+import { CONTACT_EMAIL, ENTERPRISE, PLAN_LIMITS, PRICING, SITE, absoluteUrl } from '@/lib/site';
 
 /**
  * JSON-LD, server-rendered so a client that does not run JavaScript sees it.
@@ -59,18 +59,6 @@ function offers() {
       PRICING.agency.amount,
       PRICING.agency.currency,
     ),
-    // PreOrder rather than InStock, because it is not built and the page says
-    // so. An offer that claims availability it does not have is exactly the
-    // kind of thing this product exists to find on other people's sites.
-    {
-      ...subscription(
-        'Early access',
-        'What the answer engines say about you, and which crawlers verifiably reached your pages. In development.',
-        EARLY_ACCESS.scale.amount,
-        EARLY_ACCESS.scale.currency,
-      ),
-      availability: 'https://schema.org/PreOrder',
-    },
     // No price, only a floor. `priceSpecification` with a `minPrice` is
     // schema.org's way of saying "from", and it is the only honest shape for
     // an offer whose cost depends on a cadence we have not agreed yet. Quoting

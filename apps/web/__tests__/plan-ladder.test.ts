@@ -95,9 +95,15 @@ describe('the readable pricing page', () => {
     expect(md).toContain(String(PLAN_LIMITS.agency.domains));
   });
 
-  it('says the early-access tier is not for sale', () => {
-    expect(md).toContain(EARLY_ACCESS.scale.label);
-    expect(md.toLowerCase()).toContain('not for sale');
+  it('does not offer the early-access tier at all', () => {
+    // Stronger than the assertion this replaces, which only checked that the
+    // tier was labelled "not for sale" where it appeared. It has been pulled
+    // from the page for now, and the markdown is the page — a tier described
+    // here but absent from the HTML is exactly the disagreement this file
+    // exists to catch. EARLY_ACCESS itself stays: it is still the floor the
+    // enterprise band quotes, and still `available: false` below.
+    expect(md).not.toContain('Early access');
+    expect(md).not.toContain(EARLY_ACCESS.scale.label);
   });
 });
 

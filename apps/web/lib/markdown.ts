@@ -7,12 +7,11 @@
  * generated from the same data the HTML renders, so the two cannot disagree.
  */
 
-import { ENGINES, catalog, checksInCategory, effectivePoints, monthlyAskCostUsd } from '@botready/core';
+import { catalog, checksInCategory, effectivePoints } from '@botready/core';
 
 import { PUBLIC_PAGES, markdownPathFor, pageFor } from './content';
 import {
   CONTACT_EMAIL,
-  EARLY_ACCESS,
   ENTERPRISE,
   LIMITS,
   PLAN_LIMITS,
@@ -20,7 +19,6 @@ import {
   PUBLIC_INDEX_LISTED,
   SITE,
   USER_AGENT,
-  WATCHED_PER_WEEK,
   absoluteUrl,
 } from './site';
 
@@ -131,16 +129,6 @@ function pricing(): string {
     'is checked against that vendor\'s published address ranges and reverse DNS. Verified, unproven and proven-fake are',
     'reported as three separate numbers, because a user-agent string is a claim and counting claims as visits is what',
     'the rest of this category does. Your visitors\' addresses are never stored, in any form.',
-    '',
-    `## Early access — ${EARLY_ACCESS.scale.label} ${EARLY_ACCESS.scale.cadence}`,
-    '',
-    'Not built and not for sale. Every engine asked rather than one, with the answers side by side; your whole category',
-    'ranked week over week; what the visits an assistant sent you were worth; and all of it on one timeline, so a change',
-    'you made can be lined up against the crawlers that followed and the answers that moved after them.',
-    '',
-    `The price is what asking costs. ${WATCHED_PER_WEEK} questions a week across all ${ENGINES.length} engines in our catalog is`,
-    `about $${monthlyAskCostUsd(WATCHED_PER_WEEK)} a month of model calls before anything else, which is also why cadence is a plan rather`,
-    'than a switch. Write to us if you want to be early.',
     '',
     '## Enterprise — from $' +
       String(ENTERPRISE.from.amount) +
