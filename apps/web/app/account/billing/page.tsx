@@ -8,7 +8,7 @@ import { Bar, PillEyebrow } from '@/components/ui';
 import { planFor, usageFor } from '@/lib/account-data';
 import { currentUser } from '@/lib/auth';
 import { cardOnFile, listInvoices, type InvoiceLine } from '@/lib/billing';
-import { EARLY_ACCESS, PLAN_LIMITS, contactHref, nextRung, rung, upgradeHref } from '@/lib/site';
+import { ENTERPRISE, PLAN_LIMITS, contactHref, nextRung, rung, upgradeHref } from '@/lib/site';
 import { formatDate } from '@/lib/theme';
 
 export const metadata: Metadata = {
@@ -123,24 +123,26 @@ export default async function BillingPage() {
             </a>
           </section>
         ) : (
+          /* Somebody already on the top plan. This slot used to advertise the
+             unbuilt answer plane as a waiting list; that offer is pulled from
+             the site for now, and the honest thing in its place is the same
+             conversation /pricing sends a large customer to.
+
+             No figure on it, deliberately. ENTERPRISE.from is the floor for
+             somebody arriving new, and printing "From $179" on the billing
+             page of a customer paying $29 reads as a price rise rather than as
+             a ceiling being lifted. */
           <section className="edge rounded-[18px] bg-white p-[26px] shadow-hard-5" aria-labelledby="next-plan">
             <span id="next-plan" className="font-mono text-[10.5px] font-medium uppercase tracking-[0.12em] text-subtle">
-              What comes next
+              Bigger than this plan
             </span>
-            <div className="mb-[2px] mt-4 flex items-baseline gap-[9px]">
-              <span className="font-display text-[40px] font-bold leading-none tracking-[-0.035em]">{EARLY_ACCESS.scale.label}</span>
-              <span className="font-mono text-[12.5px] text-quiet">early access</span>
-            </div>
-            {/* Named, priced and explicitly not for sale. Constraint 11 is
-                about not inventing data; the same honesty applies to not
-                inventing a product, so this is a waiting list and says so. */}
-            <p className="mb-[18px] mt-2 text-[15px] leading-[1.55] text-muted">
-              We are building the other half: what the engines actually say when somebody asks about your category, and which
-              crawlers really reached your pages. Not finished, not for sale yet, and we would rather build it with a few people
-              than announce it to everybody.
+            <p className="mb-[18px] mt-3 text-[15px] leading-[1.55] text-muted">
+              More than {here.domains} domains, a cadence this plan does not offer, or logs going somewhere we do not reach
+              yet. Each of those is a number in our cost model rather than a switch, so it is a conversation rather than a
+              checkout — and you get told what exists today and what does not.
             </p>
-            <a href={contactHref('Early access')} className={LIME_BUTTON}>
-              Ask for early access
+            <a href={contactHref(ENTERPRISE.subject)} className={LIME_BUTTON}>
+              Talk to us
             </a>
           </section>
         )}
