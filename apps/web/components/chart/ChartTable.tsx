@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import type { ChartRow } from '@/lib/chart-data';
+import { DEFAULT_CHART_SORT, shortSince, type ChartRow, type ChartSort } from '@/lib/chart-data';
 import { SiteFavicon } from '@/components/results/SiteFavicon';
 import { cx } from '@/components/ui';
 
@@ -18,8 +18,15 @@ import { cx } from '@/components/ui';
  *
  * Number one gets the lime box. Everything else is white, because a chart
  * where every row shouts is a list.
+ *
+ * `sort` changes the order of the rows and never the numbers in them. A row's
+ * rank is its chart position, earned by score, so in recency order the top row
+ * can carry a 40 — which is correct, and is why the box is lime only for the
+ * site that actually holds number one. What does change is the first line of
+ * the stats block: an order the reader cannot see the basis of looks arbitrary,
+ * so sorting by when a site was checked prints when it was checked.
  */
-export function ChartTable({ rows }: { rows: ChartRow[] }) {
+export function ChartTable({ rows, sort = DEFAULT_CHART_SORT }: { rows: ChartRow[]; sort?: ChartSort }) {
   if (rows.length === 0) {
     return (
       <div className="edge rounded-[18px] bg-white p-[26px]">
@@ -34,13 +41,13 @@ export function ChartTable({ rows }: { rows: ChartRow[] }) {
   return (
     <ol className="m-0 grid list-none gap-[10px] p-0">
       {rows.map((row) => (
-        <ChartEntry key={row.siteId} row={row} />
+        <ChartEntry key={row.siteId} row={row} sort={sort} />
       ))}
     </ol>
   );
 }
 
-function ChartEntry({ row }: { row: ChartRow }) {
+function ChartEntry({ row, sort }: { row: ChartRow; sort: ChartSort }) {
   const top = row.rank === 1;
 
   return (
@@ -89,7 +96,7 @@ function ChartEntry({ row }: { row: ChartRow }) {
         </span>
 
         <span className="flex items-center gap-[14px] sm:gap-[18px]">
-          <Stats row={row} />
+          <Stats row={row} sort={sort} />
           <Grade row={row} />
         </span>
       </Link>
@@ -97,12 +104,21 @@ function ChartEntry({ row }: { row: ChartRow }) {
   );
 }
 
-/** LW, PEAK, WEEKS. The three numbers that turn a list into a chart. */
-function Stats({ row }: { row: ChartRow }) {
+/**
+ * LW, PEAK, WEEKS. The three numbers that turn a list into a chart.
+ *
+ * In recency order the first of them becomes SEEN, because last week's rank is
+ * the score chart's history and how long ago we looked is this order's. Three
+ * lines either way, so the row does not change height when the order does.
+ */
+function Stats({ row, sort }: { row: ChartRow; sort: ChartSort }) {
+  const recent = sort === 'recent';
   return (
     <span className="hidden grid-cols-[auto_auto] gap-x-[10px] gap-y-[1px] font-mono text-[10.5px] leading-[1.35] md:grid">
-      <span className="text-placeholder">LW</span>
-      <span className="text-right tabular-nums text-ink">{row.prevRank ?? '—'}</span>
+      <span className="text-placeholder">{recent ? 'SEEN' : 'LW'}</span>
+      <span className="text-right tabular-nums text-ink">
+        {recent ? (row.finishedAt ? shortSince(row.finishedAt) : '—') : (row.prevRank ?? '—')}
+      </span>
       <span className="text-placeholder">PEAK</span>
       <span className="text-right tabular-nums text-ink">{row.peakTotal ?? '—'}</span>
       <span className="text-placeholder">WEEKS</span>

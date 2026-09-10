@@ -17,6 +17,79 @@ import { publicClient } from './supabase';
 
 export type Move = 'new' | 'up' | 'down' | 'same';
 
+/** The two orders the chart can be read in. */
+export type ChartSort = 'score' | 'recent';
+
+export const CHART_SORTS: ReadonlyArray<{ key: ChartSort; label: string; hint: string }> = [
+  {
+    key: 'score',
+    label: 'By score',
+    hint: 'The chart order. Highest score first, and the position beside each row is that ranking.',
+  },
+  {
+    key: 'recent',
+    label: 'Recently checked',
+    hint: 'Newest scan first. The number beside each row is still its chart position, not its place in this list.',
+  },
+];
+
+export const DEFAULT_CHART_SORT: ChartSort = 'score';
+
+export function isChartSort(value: string | undefined): value is ChartSort {
+  return value === 'score' || value === 'recent';
+}
+
+/**
+ * The rows in the order asked for. Pure, so the ordering rule is testable
+ * without a database — the same reason `rank` in index-data.ts is.
+ *
+ * The load-bearing decision is what this does not do: it never renumbers.
+ * `rank` is the chart position, earned by score, and a row keeps it in every
+ * order. Sorting a chart by when each entry was last touched and then calling
+ * the top row "number one" would be a different number wearing the same name,
+ * and the lime box would move to a site that had not earned it.
+ *
+ * Recency ties break by rank rather than by domain, because the nightly sweep
+ * finishes many scans within the same second and an alphabetical tiebreak
+ * would shuffle the chart's own order for no reason a reader could see.
+ */
+export function sortChart(rows: ChartRow[], sort: ChartSort): ChartRow[] {
+  if (sort === 'score') return [...rows].sort((a, b) => a.rank - b.rank);
+
+  return [...rows].sort((a, b) => {
+    // A site we have never finished checking has no recency. Last, rather than
+    // first, which is where an empty string would sort it.
+    if (!a.finishedAt || !b.finishedAt) {
+      if (a.finishedAt === b.finishedAt) return a.rank - b.rank;
+      return a.finishedAt ? -1 : 1;
+    }
+    if (a.finishedAt !== b.finishedAt) return a.finishedAt < b.finishedAt ? 1 : -1;
+    return a.rank - b.rank;
+  });
+}
+
+/**
+ * "4 hours ago". Coarse on purpose: a chart is not a stopwatch, and a minute
+ * of precision on a nightly sweep is precision about nothing.
+ */
+export function since(iso: string, now: number = Date.now()): string {
+  const minutes = Math.max(1, Math.round((now - new Date(iso).getTime()) / 60000));
+  if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  const days = Math.round(hours / 24);
+  return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+}
+
+/** The same span, short enough for a mono column: 4h, 2d, 30m. */
+export function shortSince(iso: string, now: number = Date.now()): string {
+  const minutes = Math.max(1, Math.round((now - new Date(iso).getTime()) / 60000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.round(hours / 24)}d`;
+}
+
 export interface ChartRow {
   rank: number;
   siteId: string;
